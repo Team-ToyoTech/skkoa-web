@@ -1,3 +1,3 @@
-# SKKOA-web-compiler
+# SKKOA web
 
-Web Compiler for SKKOA; LTW
+Info Web and Web Compiler for SKKOA; LTW
