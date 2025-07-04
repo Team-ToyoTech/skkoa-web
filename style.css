@@ -150,3 +150,30 @@ pre {
     border-top: 1px solid #222;
     background: #18181c;
 }
+
+.fixed-box {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 84px;
+    height: 84px;
+    min-width: 60px;
+    min-height: 60px;
+    aspect-ratio: 1 / 1;
+    background: #23232a;
+    color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px #0005;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    padding: 8px;
+    box-sizing: border-box;
+}
+.fixed-box-content {
+    width: 100%;
+    text-align: center;
+    word-break: break-all;
+}
