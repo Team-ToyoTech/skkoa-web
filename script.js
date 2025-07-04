@@ -13,25 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        const onlineBtn = document.getElementById("online-compiler-btn");
-        if (onlineBtn) {
-            onlineBtn.addEventListener("click", function () {
-                const newWin = window.open("/compiler", "_blank");
-                if (newWin) {
-                    try {
-                        newWin.opener = null;
-                    } catch (e) {}
-                }
-            });
-        }
-
-        const downloadBtn = document.getElementById("download-btn");
-        if (downloadBtn) {
-            downloadBtn.addEventListener("click", function () {
-                alert("다운로드 기능은 현재 지원되지 않습니다.");
-            });
-        }
-
         // 오른쪽 아래 3D 큐브 마우스 위치에 따라 회전
         const cube = document.querySelector(".cube3d-inner");
         if (cube) {
@@ -64,6 +45,46 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
                 { passive: false }
             );
+        }
+
+        // 큐브 클릭 시 메뉴 토글
+        const cubeBtn = document.getElementById("cube-toggle-btn");
+        const cubeMenu = document.getElementById("cube-menu");
+        if (cubeBtn && cubeMenu) {
+            cubeBtn.addEventListener("click", function (e) {
+                e.stopPropagation();
+                if (
+                    cubeMenu.style.display === "none" ||
+                    cubeMenu.style.display === ""
+                ) {
+                    cubeMenu.style.display = "flex";
+                } else {
+                    cubeMenu.style.display = "none";
+                }
+            });
+            // 메뉴 바깥 클릭 시 닫기
+            window.addEventListener("click", function (e) {
+                if (cubeMenu.style.display === "flex") {
+                    cubeMenu.style.display = "none";
+                }
+            });
+            // 메뉴 클릭 시 닫힘 방지
+            cubeMenu.addEventListener("click", function (e) {
+                e.stopPropagation();
+            });
+            // Online/Download 버튼 기능 연결
+            const onlineMenu = document.getElementById("cube-menu-online");
+            if (onlineMenu) {
+                onlineMenu.addEventListener("click", function () {
+                    window.open("/compiler", "_blank");
+                });
+            }
+            const downloadMenu = document.getElementById("cube-menu-download");
+            if (downloadMenu) {
+                downloadMenu.addEventListener("click", function () {
+                    alert("다운로드 기능은 현재 지원되지 않습니다.");
+                });
+            }
         }
     } catch (err) {
         console.error("Button event error:", err);

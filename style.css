@@ -162,9 +162,9 @@ pre {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    overflow: hidden;
     flex-direction: column;
+    padding: 0;
+    overflow: visible;
 }
 .cube3d {
     width: 48px;
@@ -172,6 +172,7 @@ pre {
     perspective: 300px;
     position: relative;
     z-index: 1;
+    cursor: pointer;
 }
 .cube3d-inner {
     width: 100%;
@@ -234,4 +235,45 @@ pre {
     right: 24px;
     bottom: 8px;
     z-index: 3001;
+}
+
+.cube-menu {
+    position: absolute;
+    left: 50%;
+    bottom: 100%;
+    transform: translateX(-50%) translateY(-8px);
+    background: #23232a;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px #0007;
+    display: flex;
+    flex-direction: column;
+    min-width: 90px;
+    z-index: 4000;
+    padding: 6px 0;
+    gap: 2px;
+    animation: cube-menu-fadein-up 0.18s;
+}
+@keyframes cube-menu-fadein-up {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-8px);
+    }
+}
+.cube-menu-item {
+    color: #fff;
+    text-decoration: none;
+    padding: 7px 18px;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    transition: background 0.2s, color 0.2s;
+    text-align: center;
+    cursor: pointer;
+}
+.cube-menu-item:hover {
+    background: #7c1fff;
+    color: #fff;
 }
