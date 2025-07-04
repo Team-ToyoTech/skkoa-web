@@ -22,7 +22,11 @@
             </div>
             <nav class="header-nav">
                 <a href="#" class="nav-link">Docs</a>
-                <a href="https://github.com/team-toyotech/" class="nav-link"
+                <a
+                    href="https://github.com/team-toyotech/"
+                    class="nav-link"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     >GitHub</a
                 >
             </nav>
@@ -31,7 +35,7 @@
             <section class="download-section">
                 <h2>SKKOA 다운로드</h2>
                 <div class="button-row">
-                    <button onclick="window.open('/compiler', '_blank')">
+                    <button id="online-compiler-btn" type="button">
                         Online Compiler
                     </button>
                     <button type="button" id="download-btn">
@@ -68,12 +72,5 @@
         <footer class="main-footer">
             <p>© 2025 Team ToyoTech. All rights reserved.</p>
         </footer>
-        <script>
-            document
-                .getElementById("download-btn")
-                .addEventListener("click", function () {
-                    alert("다운로드 기능은 현재 지원되지 않습니다.");
-                });
-        </script>
     </body>
 </html>

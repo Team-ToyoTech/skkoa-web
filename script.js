@@ -1,18 +1,37 @@
-// SKKOA 소개 페이지용 스크립트
-// 향후 인터랙션, 테마 토글 등 확장 가능
-
 document.addEventListener("DOMContentLoaded", function () {
-    // 예시: 버튼 클릭 시 애니메이션 효과
-    const btn = document.querySelector("button");
-    if (btn) {
-        btn.addEventListener("mousedown", () => {
-            btn.style.transform = "scale(0.96)";
+    try {
+        const buttons = document.querySelectorAll("button");
+        buttons.forEach((btn) => {
+            btn.addEventListener("mousedown", (e) => {
+                (e.currentTarget || btn).style.transform = "scale(0.96)";
+            });
+            btn.addEventListener("mouseup", (e) => {
+                (e.currentTarget || btn).style.transform = "scale(1)";
+            });
+            btn.addEventListener("mouseleave", (e) => {
+                (e.currentTarget || btn).style.transform = "scale(1)";
+            });
         });
-        btn.addEventListener("mouseup", () => {
-            btn.style.transform = "scale(1)";
-        });
-        btn.addEventListener("mouseleave", () => {
-            btn.style.transform = "scale(1)";
-        });
+
+        const onlineBtn = document.getElementById("online-compiler-btn");
+        if (onlineBtn) {
+            onlineBtn.addEventListener("click", function () {
+                const newWin = window.open("/compiler", "_blank");
+                if (newWin) {
+                    try {
+                        newWin.opener = null;
+                    } catch (e) {}
+                }
+            });
+        }
+
+        const downloadBtn = document.getElementById("download-btn");
+        if (downloadBtn) {
+            downloadBtn.addEventListener("click", function () {
+                alert("다운로드 기능은 현재 지원되지 않습니다.");
+            });
+        }
+    } catch (err) {
+        console.error("Button event error:", err);
     }
 });
