@@ -29,8 +29,9 @@ body {
     width: 48px;
     height: 48px;
     border-radius: 10px;
-    background: #fff1;
+    background: none;
     box-shadow: 0 2px 8px #0002;
+    border: none !important;
 }
 .header-text h1 {
     font-size: 2.1rem;
