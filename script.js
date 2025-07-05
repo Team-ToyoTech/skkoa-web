@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 // 윈도우 전체 기준으로 비율 계산
                 const xRatio = e.clientX / window.innerWidth;
                 const yRatio = e.clientY / window.innerHeight;
-                // -90~90deg, -45~45deg 범위로 회전 (덜 회전)
+                // -90~90deg, -45~45deg 범위로 회전
                 const rotY = (xRatio - 0.5) * 180;
                 const rotX = (0.5 - yRatio) * 90;
                 cube.style.transform = `rotateX(${
