@@ -13,6 +13,23 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
+        // Online Compiler button
+        const onlineBtn = document.getElementById("online-compiler-btn");
+        if (onlineBtn) {
+            onlineBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                window.open("/compiler", "_blank");
+            });
+        }
+        // Download Compiler button
+        const downloadBtn = document.getElementById("download-btn");
+        if (downloadBtn) {
+            downloadBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                alert("다운로드 기능은 현재 지원되지 않습니다.");
+            });
+        }
+
         // 오른쪽 아래 3D 큐브 마우스 위치에 따라 회전
         const cube = document.querySelector(".cube3d-inner");
         if (cube) {
