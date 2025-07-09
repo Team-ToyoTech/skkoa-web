@@ -13,22 +13,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        const onlineBtn = document.getElementById("online-compiler-btn");
-        if (onlineBtn) {
-            onlineBtn.addEventListener("click", function (e) {
-                e.preventDefault();
-                window.open("/compiler", "_blank");
-            });
-        }
-
-        const downloadBtn = document.getElementById("download-btn");
-        if (downloadBtn) {
-            downloadBtn.addEventListener("click", function (e) {
-                e.preventDefault();
-                alert("다운로드 기능은 현재 지원되지 않습니다.");
-            });
-        }
-
         const cube = document.querySelector(".cube3d-inner");
         if (cube) {
             cube.style.animation = "none";
@@ -82,19 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
             cubeMenu.addEventListener("click", function (e) {
                 e.stopPropagation();
             });
-
-            const onlineMenu = document.getElementById("cube-menu-online");
-            if (onlineMenu) {
-                onlineMenu.addEventListener("click", function () {
-                    window.open("/compiler", "_blank");
-                });
-            }
-            const downloadMenu = document.getElementById("cube-menu-download");
-            if (downloadMenu) {
-                downloadMenu.addEventListener("click", function () {
-                    alert("다운로드 기능은 현재 지원되지 않습니다.");
-                });
-            }
         }
     } catch (err) {
         console.error("Button event error:", err);
