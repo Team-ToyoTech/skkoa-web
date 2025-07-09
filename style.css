@@ -20,11 +20,13 @@ body {
     box-shadow: 0 2px 8px #0002;
     gap: 24px;
 }
+
 .header-left {
     display: flex;
     align-items: center;
     gap: 18px;
 }
+
 .logo {
     width: 48px;
     height: 48px;
@@ -33,23 +35,27 @@ body {
     box-shadow: 0 2px 8px #0002;
     border: none !important;
 }
+
 .header-text h1 {
     font-size: 2.1rem;
     margin: 0 0 2px 0;
     color: #fff;
     letter-spacing: 1px;
 }
+
 .header-text p {
     font-size: 1rem;
     color: #bdbdf6;
     margin: 0;
     letter-spacing: 0.2px;
 }
+
 .header-nav {
     display: flex;
     align-items: center;
     gap: 18px;
 }
+
 .nav-link {
     color: #bdbdf6;
     text-decoration: none;
@@ -58,6 +64,7 @@ body {
     border-radius: 6px;
     transition: background 0.3s, color 0.3s;
 }
+
 .nav-link:hover {
     background: #2d1a3a;
     color: #fff;
@@ -69,11 +76,13 @@ body {
     text-align: center;
     box-shadow: 0 2px 8px #0003;
 }
+
 .download-section h2 {
     font-size: 2rem;
     margin-bottom: 16px;
     color: #fff;
 }
+
 .download-desc {
     color: #bdbdf6;
     margin-top: 18px;
@@ -86,6 +95,7 @@ body {
     gap: 16px;
     margin-top: 24px;
 }
+
 .button-row button {
     flex: 0 0 var(--button-width);
     width: var(--button-width);
@@ -109,6 +119,7 @@ button {
     font-family: Arial, "Segoe UI", "Malgun Gothic", sans-serif;
     padding: 6px 32px;
 }
+
 button:hover {
     background: linear-gradient(90deg, #a259ff 0%, #7c1fff 100%);
 }
@@ -122,15 +133,18 @@ button:hover {
     max-width: 700px;
     text-align: left;
 }
+
 .intro-section h2 {
     color: #fff;
     font-size: 1.5rem;
     margin-bottom: 12px;
 }
+
 .feature-list {
     margin: 18px 0 18px 0;
     color: #bdbdf6;
 }
+
 pre {
     background: #1a1a2f;
     color: #e0e0f0;
@@ -139,6 +153,19 @@ pre {
     overflow-x: auto;
     font-family: Consolas, "Courier New", monospace;
     font-size: 1rem;
+}
+
+.docs-section {
+    text-align: center;
+    margin: 40px auto;
+    max-width: 800px;
+    font-size: 23px;
+}
+
+.docs-section h1 {
+    font-size: 2.5rem;
+    color: #fff;
+    margin-bottom: 12px;
 }
 
 .main-footer {
@@ -166,6 +193,7 @@ pre {
     padding: 0;
     overflow: visible;
 }
+
 .cube3d {
     width: 48px;
     height: 48px;
@@ -174,6 +202,7 @@ pre {
     z-index: 1;
     cursor: pointer;
 }
+
 .cube3d-inner {
     width: 100%;
     height: 100%;
@@ -181,6 +210,7 @@ pre {
     transform-style: preserve-3d;
     animation: cube3d-rotate 3.5s infinite linear;
 }
+
 .cube3d-face {
     position: absolute;
     width: 48px;
@@ -197,30 +227,37 @@ pre {
     user-select: none;
     border-radius: 6px;
 }
+
 .cube3d-front {
     transform: rotateY(0deg) translateZ(24px);
     background: #a259ff;
 }
+
 .cube3d-back {
     transform: rotateY(180deg) translateZ(24px);
     background: #6c2dc7;
 }
+
 .cube3d-right {
     transform: rotateY(90deg) translateZ(24px);
     background: #8a48d3;
 }
+
 .cube3d-left {
     transform: rotateY(-90deg) translateZ(24px);
     background: #8224e3;
 }
+
 .cube3d-top {
     transform: rotateX(90deg) translateZ(24px);
     background: #a15cff;
 }
+
 .cube3d-bottom {
     transform: rotateX(-90deg) translateZ(24px);
     background: #5b2b8c;
 }
+
 .cube-label {
     width: 90px;
     text-align: center;
@@ -253,6 +290,7 @@ pre {
     gap: 2px;
     animation: cube-menu-fadein-up 0.18s;
 }
+
 @keyframes cube-menu-fadein-up {
     from {
         opacity: 0;
@@ -263,6 +301,7 @@ pre {
         transform: translateX(-50%) translateY(-8px);
     }
 }
+
 .cube-menu-item {
     color: #fff;
     text-decoration: none;
@@ -273,6 +312,7 @@ pre {
     text-align: center;
     cursor: pointer;
 }
+
 .cube-menu-item:hover {
     background: #7c1fff;
     color: #fff;

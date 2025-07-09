@@ -13,6 +13,14 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
+        const onlineBtn = document.getElementById("online-compiler-btn");
+        if (onlineBtn) {
+            onlineBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                window.open("/compiler", "_blank");
+            });
+        }
+
         const cube = document.querySelector(".cube3d-inner");
         if (cube) {
             cube.style.animation = "none";
