@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const onlineBtn = document.getElementById("online-compiler-btn");
         if (onlineBtn) {
             onlineBtn.addEventListener("click", function (e) {
-                e.preventDefault();
+                //e.preventDefault();
                 window.open("/compiler", "_blank");
             });
         }
