@@ -1,8 +1,8 @@
 # SKKOA web
 
-Info Web and Web Compiler for **SKKOA; LTW**
+Info Web, Docs and Web Compiler for **SKKOA; LTW**
 
-deployed **[skkoa.toyotech.dev](https://skkoa.toyotech.dev/)**
+**[skkoa.toyotech.dev](https://skkoa.toyotech.dev/)**
 
 
 ## References
