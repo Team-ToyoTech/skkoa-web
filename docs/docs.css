@@ -1,0 +1,35 @@
+.top-menu {
+    background-color: #222;
+    padding: 0.5em 1em;
+}
+
+.top-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 1em;
+    justify-content: center;
+}
+
+.top-menu a {
+    color: #fefdf0;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.top-menu a:hover {
+    text-decoration: underline;
+}
+
+main section {
+    display: none;
+}
+
+main section.active {
+    display: block;
+}
+
+.top-menu a.active {
+    text-decoration: underline;
+}
