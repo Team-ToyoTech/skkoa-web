@@ -1,5 +1,5 @@
 .top-menu {
-    background-color: #222;
+    background: linear-gradient(90deg, #23232a 70%, #2d1a3a 100%);
     padding: 0.5em 1em;
 }
 
@@ -10,6 +10,7 @@
     display: flex;
     gap: 1em;
     justify-content: center;
+    font-size: 1.14rem;
 }
 
 .top-menu a {

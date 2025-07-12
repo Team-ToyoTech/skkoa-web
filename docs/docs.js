@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (links.length && sections.length) {
         links[0].classList.add("active");
         sections[0].classList.add("active");
-        sections[1].classList.add("active");
     }
 
     links.forEach((link) => {
@@ -15,7 +14,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
             links.forEach((l) => l.classList.remove("active"));
             sections.forEach((s) => s.classList.remove("active"));
-            sections[0].classList.add("active");
 
             this.classList.add("active");
             const targetSection = document.getElementById(targetId);
