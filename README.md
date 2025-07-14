@@ -2,8 +2,7 @@
 
 Info Web, Docs and Web Compiler for **SKKOA; LTW**
 
-**[skkoa.toyotech.dev](https://skkoa.toyotech.dev/)**
-
+<strong><a href="https://skkoa.toyotech.dev/" target="_blank">SKKOA.TOYOTECH.DEV</a></strong>
 
 ## References
 [Link](https://codepen.io/RAREBEEF/pen/eYGKZKL)
