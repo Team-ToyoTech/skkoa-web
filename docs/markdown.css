@@ -57,3 +57,8 @@ strong {
 hlt {
     color: #a378ff;
 }
+
+a {
+    color: #cecef7;
+    text-decoration: underline;
+}
