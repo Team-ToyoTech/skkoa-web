@@ -79,3 +79,5 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Button event error:", err);
     }
 });
+
+document.getElementById("yearNow").textContent = new Date().getFullYear();
