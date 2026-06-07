@@ -1,5 +1,125 @@
+@import url("https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css");
+@import url("https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css");
+
+:host {
+    --docs-font: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
+    --code-font: "D2Coding", "D2Coding ligature", "Nanum Gothic Coding",
+        "IBM Plex Mono KR", "JetBrains Mono", "Fira Code", "Cascadia Code",
+        "Consolas", monospace;
+    --code-bg: rgba(9, 10, 17, 0.82);
+    --code-border: rgba(255, 255, 255, 0.14);
+    --code-inline-bg: rgba(162, 89, 255, 0.16);
+    --code-text: #f4f0ff;
+    --code-muted: #8f96ad;
+    --code-keyword: #d8b4fe;
+    --code-type: #93c5fd;
+    --code-string: #bbf7d0;
+    --code-number: #fde68a;
+    --code-comment: #8b93aa;
+    font-family: var(--docs-font);
+}
+
 * {
     color: rgb(254, 253, 240);
+    box-sizing: border-box;
+}
+
+p,
+li,
+td,
+th {
+    font-family: var(--docs-font);
+    line-height: 1.75;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+}
+
+th,
+td {
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    padding: 0.65rem;
+    text-align: left;
+}
+
+th {
+    background: rgba(162, 89, 255, 0.14);
+}
+
+code,
+pre,
+pre code {
+    font-family: var(--code-font);
+    font-variant-ligatures: none;
+}
+
+:not(pre) > code {
+    color: #f1e9ff;
+    background: var(--code-inline-bg);
+    padding: 0.15rem 0.35rem;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.94em;
+    word-break: break-word;
+}
+
+pre code {
+    display: block;
+    padding: 0;
+    background: transparent;
+    color: var(--code-text);
+    border: 0;
+    border-radius: 0;
+    font-size: inherit;
+    min-width: max-content;
+}
+
+pre {
+    margin: 1rem 0 1.25rem;
+    padding: 1rem 1.1rem;
+    border-radius: 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    line-height: 1.7;
+    tab-size: 4;
+    white-space: pre;
+    background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.035),
+            rgba(255, 255, 255, 0.015)
+        ),
+        var(--code-bg);
+    border: 1px solid var(--code-border);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 26px rgba(0, 0, 0, 0.22);
+    -webkit-overflow-scrolling: touch;
+}
+
+.skkoa-token.keyword {
+    color: var(--code-keyword);
+    font-weight: 700;
+}
+
+.skkoa-token.type {
+    color: var(--code-type);
+    font-weight: 700;
+}
+
+.skkoa-token.string {
+    color: var(--code-string);
+}
+
+.skkoa-token.number {
+    color: var(--code-number);
+}
+
+.skkoa-token.comment {
+    color: var(--code-comment);
+    font-style: italic;
 }
 
 h1 {
@@ -61,4 +181,18 @@ hlt {
 a {
     color: #cecef7;
     text-decoration: underline;
+}
+
+@media (max-width: 640px) {
+    pre {
+        margin-left: -0.15rem;
+        margin-right: -0.15rem;
+        padding: 0.9rem;
+        border-radius: 10px;
+        font-size: 0.92rem;
+    }
+
+    :not(pre) > code {
+        font-size: 0.9em;
+    }
 }

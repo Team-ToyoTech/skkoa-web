@@ -1,9 +1,78 @@
-# SKKOA web
+# SKKOA
 
-Info Web, Docs and Web Compiler for **SKKOA; LTW**
+SKKOA는 **Starter Kit with Korean Oriented Architecture**의 약자로, 한국어 기반 문법을 사용하는 교육용 프로그래밍 언어이다.
 
-<a href="https://skkoa.toyotech.dev/" target="_blank">SKKOA.TOYOTECH.DEV</a>
+이 저장소는 다음을 포함한다.
 
-## References
+- SKKOA 소개 웹사이트
+- Markdown 기반 문서 웹 페이지
+- 브라우저용 문법 미리보기 / 예제 실행 시뮬레이터
+- C++17로 작성된 Linux x86-64용 NASM 기반 CLI 컴파일러
 
-[Link](https://codepen.io/RAREBEEF/pen/eYGKZKL)
+## 컴파일러 빌드
+
+필요한 도구:
+
+- C++17 컴파일러
+- CMake
+- NASM
+- GCC 또는 Clang
+- Linux x86-64 환경
+
+웹사이트의 Download 버튼은 설치 스크립트 `skkoa-install.sh`를 내려받는다. Linux 터미널에서 다음처럼 설치하면 `skkoa` 명령을 사용할 수 있다.
+
+```bash
+curl -fsSL https://skkoa.toyotech.dev/compiler/download/skkoa-install.sh -o skkoa-install.sh
+bash skkoa-install.sh
+skkoa hello.koa
+```
+
+저장소를 직접 받은 경우에는 아래처럼 수동 빌드할 수 있다.
+
+```bash
+cd compiler
+cmake -S . -B build
+cmake --build build
+./build/skkoa examples/hello.koa -o hello
+./hello
+```
+
+## 중간 산출물
+
+```bash
+./build/skkoa examples/hello.koa --emit-asm -o hello.asm
+./build/skkoa examples/function.koa --emit-ast
+```
+
+## 현재 지원 기능
+
+- `.koa` 파일 읽기
+- 토큰화, 파싱, AST 생성, 의미 분석
+- 정수 변수와 상수
+- 실수, 문자, 문자열 변수
+- 정수 산술/비교 연산
+- 실수 산술/비교 연산
+- 문자열 결합
+- 논리 값과 논리 연산
+- 문자열 리터럴 출력
+- 정수/논리 입력
+- 조건문, `동안` 반복문
+- `반복 i: 0부터 10까지` 횟수 반복
+- 정수 반환 함수
+- 고정 크기 정수 배열
+- `주소(x)`, `값(p)` 기본 포인터 읽기
+- `할당(크기)`, `해제(p)` 기본 동적 메모리 호출
+- NASM 어셈블리 생성과 실행 파일 링크
+
+## 제한 사항
+
+구조체, 모듈 시스템, 문자열 입력, 포인터 쓰기(`값(p) = ...`)는 아직 예정 기능이다.
+
+## 테스트
+
+```bash
+cd compiler
+./tests/run_tests.sh
+```
+
+웹사이트: <https://skkoa.toyotech.dev/>

@@ -1,0 +1,6 @@
+시작
+    변수 first: 문자열 = "안녕"
+    변수 second: 문자열 = "SKKOA"
+    변수 message: 문자열 = first + ", " + second
+    출력 message
+끝

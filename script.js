@@ -1,5 +1,18 @@
 document.addEventListener("DOMContentLoaded", function () {
     try {
+        const compilerInstallerPath = "/compiler/download/skkoa-install.sh";
+
+        function downloadCompilerInstaller() {
+            const link = document.createElement("a");
+            link.href = compilerInstallerPath;
+            link.download = "skkoa-install.sh";
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 0);
+        }
+
         const buttons = document.querySelectorAll("button");
         buttons.forEach((btn) => {
             btn.addEventListener("mousedown", (e) => {
@@ -18,6 +31,14 @@ document.addEventListener("DOMContentLoaded", function () {
             onlineBtn.addEventListener("click", function (e) {
                 e.preventDefault();
                 window.open("/compiler", "_blank");
+            });
+        }
+
+        const downloadBtn = document.getElementById("download-compiler-btn");
+        if (downloadBtn) {
+            downloadBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                downloadCompilerInstaller();
             });
         }
 

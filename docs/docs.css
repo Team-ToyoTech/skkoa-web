@@ -1,32 +1,100 @@
-.top-menu {
-    background: linear-gradient(90deg, #23232a 70%, #2d1a3a 100%);
-    padding: 0.5em 1em;
+.docs-shell,
+body {
+    font-family: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI",
+        sans-serif;
 }
 
-.top-menu ul {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+.docs-shell {
+    display: grid;
+    grid-template-columns: minmax(190px, 260px) minmax(0, 900px);
+    gap: 20px;
+    align-items: start;
+    max-width: 1220px;
+    margin: 0 auto;
+    padding: 20px 16px 48px;
+}
+
+.docs-sidebar {
+    position: sticky;
+    top: 92px;
+    padding: 16px;
+    border: 1px solid var(--glass-stroke);
+    border-radius: 18px;
+    background: var(--glass);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+
+.docs-sidebar-title {
+    margin-bottom: 10px;
+    color: #fff;
+    font-weight: 700;
+}
+
+.docs-nav {
     display: flex;
-    gap: 1em;
-    justify-content: center;
-    font-size: 1.14rem;
+    flex-direction: column;
+    gap: 6px;
 }
 
-.top-menu a {
-    color: #fefdf0;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.top-menu a:hover {
-    text-decoration: underline;
-}
-
-main section {
+.docs-nav a {
     display: block;
+    padding: 9px 10px;
+    border-radius: 8px;
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.25;
 }
 
-.top-menu a.active {
-    text-decoration: underline;
+.docs-nav a:hover,
+.docs-nav a.active {
+    color: #fff;
+    background: rgba(162, 89, 255, 0.18);
+}
+
+.docs-reader {
+    width: 100%;
+    margin: 0;
+}
+
+.docs-reader-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.support-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.86rem;
+    border: 1px solid var(--glass-stroke);
+}
+
+.support-now {
+    color: #d7ffe8;
+    background: rgba(34, 197, 94, 0.16);
+}
+
+.support-planned {
+    color: #f6e8ff;
+    background: rgba(162, 89, 255, 0.16);
+}
+
+@media (max-width: 860px) {
+    .docs-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .docs-sidebar {
+        position: static;
+    }
+
+    .docs-nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    }
 }

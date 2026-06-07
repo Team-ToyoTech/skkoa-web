@@ -1,10 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>SKKOA Docs</title>
         <link rel="icon" href="/image/skkoa_logo_remove_background_large.png" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css"
+        />
         <link rel="stylesheet" href="/style.css" />
         <link rel="stylesheet" href="docs.css" />
         <script src="/script.js" defer></script>
@@ -27,42 +35,22 @@
                     <p>Starter Kit with Korean Oriented Architecture</p>
                 </div>
             </div>
-        </header>
-        <main>
-            <nav class="top-menu">
-                <ul>
-                    <li><a href="#introduction">소개</a></li>
-                    <li><a href="#grammar">문법</a></li>
-                    <li><a href="#functions">함수</a></li>
-                    <li><a href="#compiler">컴파일러</a></li>
-                </ul>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/compiler/" class="nav-link">Compiler</a>
             </nav>
-            <h1 style="text-align: center; font-size: 37px">
-                <br />SKKOA; LTW
-            </h1>
-            <section id="introduction" class="intro-section">
-                <zero-md src="text/introduction.md">
-                    <template data-append>
-                        <link rel="stylesheet" href="markdown.css" />
-                    </template>
-                </zero-md>
-            </section>
-            <section id="grammar" class="intro-section">
-                <zero-md src="text/grammar.md">
-                    <template data-append>
-                        <link rel="stylesheet" href="markdown.css" />
-                    </template>
-                </zero-md>
-            </section>
-            <section id="functions" class="intro-section">
-                <zero-md src="text/functions.md">
-                    <template data-append>
-                        <link rel="stylesheet" href="markdown.css" />
-                    </template>
-                </zero-md>
-            </section>
-            <section id="compiler" class="intro-section">
-                <zero-md src="text/compiler.md">
+        </header>
+        <main class="docs-shell">
+            <aside class="docs-sidebar" aria-label="문서 목차">
+                <div class="docs-sidebar-title">문서</div>
+                <nav id="docsNav" class="docs-nav"></nav>
+            </aside>
+            <section class="docs-reader intro-section">
+                <div class="docs-reader-header">
+                    <span class="support-tag support-now">현재 지원</span>
+                    <span class="support-tag support-planned">설계됨 / 예정</span>
+                </div>
+                <zero-md id="docReader" src="text/index.md">
                     <template data-append>
                         <link rel="stylesheet" href="markdown.css" />
                     </template>
@@ -80,20 +68,23 @@
                     </div>
                 </div>
                 <div class="cube-menu" id="cube-menu" style="display: none">
-                    <a href="../" class="cube-menu-item">Home</a>
+                    <a href="/" class="cube-menu-item">Home</a>
                     <a
                         href="https://github.com/team-toyotech/"
                         class="cube-menu-item"
                         target="_blank"
+                        rel="noopener noreferrer"
                         >GitHub</a
                     >
-                    <a href="/compiler/" target="_blank" class="cube-menu-item"
-                        >Online</a
+                    <a href="/compiler/" class="cube-menu-item">Online</a>
+                    <a
+                        href="/compiler/download/skkoa-install.sh"
+                        class="cube-menu-item"
+                        download="skkoa-install.sh"
+                        >Download</a
                     >
-                    <a href="#" class="cube-menu-item">Download</a>
                 </div>
             </div>
-            <div class="cube-label">MENU</div>
         </main>
         <footer class="main-footer">
             <p>

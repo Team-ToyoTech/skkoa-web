@@ -1,20 +1,33 @@
 # 소개
 
-### SKKOA; LTW 란?
+**SKKOA**는 **Starter Kit with Korean Oriented Architecture**의 약자이다. 한국어 기반 명령어를 사용해 초보자가 프로그램의 흐름을 자연어에 가깝게 읽을 수 있도록 설계했다.
 
-**<hlt>S</hlt>tarter <hlt>K</hlt>it with <hlt>K</hlt>orean <hlt>O</hlt>riented <hlt>A</hlt>rchitecture; <hlt>L</hlt>anguage <hlt>T</hlt>o <hlt>W</hlt>rite**
+SKKOA는 단순히 “한글로 출력하는 언어”가 아니라 컴퓨터 과학(computer science)의 기본 개념을 단계적으로 배우는 언어를 목표로 한다.
 
-<strong>SKKOA</strong>는 한글 중심 아키텍쳐를 갖춘 초보자용 프로그래밍 언어라는 의미입니다.
+## 설계 철학
 
-<strong>LTW</strong>는 쓰기 위한 언어라는 의미로 문자 프로그래밍을 처음 접하는 사람들이 코드를 '쓰는' 것에 도움을 주고자 만들어졌습니다.
+- 문법은 한국어 키워드를 중심으로 한다.
+- 한 줄의 의미가 초보자에게 바로 읽혀야 한다.
+- 변수(variable), 조건문(conditional statement), 반복문(loop), 함수(function), 배열(array)을 단계적으로 배울 수 있어야 한다.
+- 포인터(pointer)와 자료구조(data structure)는 어렵지만 컴퓨터 구조 이해를 위해 문서와 예제에서 다룬다.
+- 현재 컴파일러에서 실제로 동작하는 기능과 예정 기능을 명확히 구분한다.
 
-### 특징
+## 파일 확장자
 
-문자 프로그래밍을 처음 접하는 사람들을 위해 설계되었으며, 한글 프로그래밍 언어입니다. 초보자도 쉽게 배울 수 있는 문법을 가지고 있어 프로그래밍의 재미를 느낄 수 있도록 돕습니다.
+SKKOA 소스 파일은 `.koa` 확장자를 사용한다.
 
-<ul class="feature-list">
-    <li>한글 기반의 명령어와 문법</li>
-    <li>간결하고 읽기 쉬운 코드</li>
-    <li>웹 기반 컴파일러 지원</li>
-    <li>초보자와 교육용에 적합</li>
-</ul>
+```text
+hello.koa
+variables.koa
+loop.koa
+```
+
+## 기본 프로그램
+
+```koa
+시작
+    출력 "안녕하세요, SKKOA!"
+끝
+```
+
+`시작`은 프로그램 실행 지점(entry point)이고, `끝`은 블록(block)의 끝을 나타낸다.

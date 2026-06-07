@@ -1,0 +1,4 @@
+시작
+    변수 letter: 문자 = 'A'
+    출력 letter
+끝

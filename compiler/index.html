@@ -7,6 +7,14 @@
             href="https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;500&display=swap"
             rel="stylesheet"
         />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css"
+        />
         <link rel="stylesheet" href="compiler.css" />
         <link rel="icon" href="/image/skkoa_logo_remove_background_large.png" />
     </head>
@@ -30,6 +38,7 @@
                     <li id="runMenu">Run</li>
                     <li id="stopMenu">Stop</li>
                     <li id="saveMenu">Save</li>
+                    <li id="downloadMenu">Download</li>
                     <li id="openFileMenu">Open File</li>
                     <li id="newFileMenu">New File</li>
                     <li id="studyMenu">Study</li>
@@ -232,13 +241,46 @@
                 <main class="editor-main">
                     <div class="editor-linenum-wrap">
                         <div class="editor-linenum" id="editorLinenum"></div>
-                        <textarea
-                            class="code-input"
-                            spellcheck="false"
-                            placeholder="Write your code here"
-                        ></textarea>
+                        <div class="editor-code-pane">
+                            <pre
+                                class="code-highlight"
+                                id="codeHighlight"
+                                aria-hidden="true"
+                            ></pre>
+                            <textarea
+                                class="code-input"
+                                spellcheck="false"
+                                placeholder="Write your code here"
+                            ></textarea>
+                        </div>
                     </div>
                 </main>
+                <section class="simulator-panel" aria-label="문법 미리보기">
+                    <div class="simulator-notice">
+                        웹 컴파일러는 문법 미리보기 / 예제 실행 시뮬레이터입니다.
+                        실제 실행 파일 생성은 로컬 CLI 컴파일러에서 수행합니다.
+                    </div>
+                    <div class="console-shell">
+                        <div class="panel-title">Console</div>
+                        <pre id="runOutput" class="run-output"></pre>
+                        <div class="console-input-row">
+                            <input
+                                id="consoleInput"
+                                class="console-input"
+                                type="text"
+                                autocomplete="off"
+                                placeholder="입력 대기 중일 때 값을 입력하세요"
+                            />
+                            <button
+                                id="consoleSubmit"
+                                class="console-submit"
+                                type="button"
+                            >
+                                입력
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </div>
         </div>
         <div id="settingsModal" class="settings-modal" style="display: none">
