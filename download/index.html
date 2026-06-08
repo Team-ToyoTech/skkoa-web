@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SKKOA Download</title>
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css"
+        />
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="download.css" />
+        <link rel="icon" href="/image/skkoa_logo_remove_background_large.png" />
+        <script src="/script.js" defer></script>
+    </head>
+    <body>
+        <header class="main-header">
+            <div class="header-left">
+                <img
+                    src="/image/skkoa_logo_remove_background_large.png"
+                    alt="SKKOA Logo"
+                    class="logo"
+                />
+                <div class="header-text">
+                    <h1>SKKOA Download</h1>
+                    <p>Starter Kit with Korean Oriented Architecture</p>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/docs/" class="nav-link">Docs</a>
+                <a href="/compiler/" class="nav-link">Compiler</a>
+            </nav>
+        </header>
+        <main class="download-page">
+            <section class="download-hero">
+                <div>
+                    <p class="download-kicker">기본 다운로드</p>
+                    <h2>Windows용 SKKOA 컴파일러</h2>
+                    <p>
+                        Windows에서는 실행 가능한 설치 파일을 받아 SKKOA CLI를
+                        설치합니다. 설치 후 새 터미널에서
+                        <code>skkoa hello.koa</code>를 실행합니다.
+                    </p>
+                </div>
+                <a
+                    class="download-primary"
+                    href="/compiler/download/skkoa-windows.cmd"
+                    download="skkoa-windows.cmd"
+                    >Windows 다운로드</a
+                >
+            </section>
+
+            <section class="platform-grid" aria-label="운영체제별 다운로드">
+                <article class="platform-card platform-windows">
+                    <div class="platform-mark">WIN</div>
+                    <h3>Windows</h3>
+                    <p>실행 파일 형식: <code>.cmd</code></p>
+                    <a
+                        href="/compiler/download/skkoa-windows.cmd"
+                        download="skkoa-windows.cmd"
+                        >Windows 설치 파일 받기</a
+                    >
+                </article>
+                <article class="platform-card platform-macos">
+                    <div class="platform-mark">MAC</div>
+                    <h3>macOS</h3>
+                    <p>실행 파일 형식: <code>.command</code></p>
+                    <a
+                        href="/compiler/download/skkoa-macos.command"
+                        download="skkoa-macos.command"
+                        >macOS 설치 파일 받기</a
+                    >
+                </article>
+                <article class="platform-card platform-linux">
+                    <div class="platform-mark">LIN</div>
+                    <h3>Linux</h3>
+                    <p>실행 파일 형식: <code>.sh</code></p>
+                    <a
+                        href="/compiler/download/skkoa-install.sh"
+                        download="skkoa-linux.sh"
+                        >Linux 설치 파일 받기</a
+                    >
+                </article>
+            </section>
+
+            <section class="download-notes">
+                <h2>설치 후 사용</h2>
+                <pre><code>skkoa hello.koa
+skkoa hello.koa -o hello
+skkoa hello.koa --emit-asm</code></pre>
+                <p>
+                    실행 파일 링크 단계에는 NASM과 GCC가 필요합니다. 설치 파일은
+                    C++17 컴파일러로 SKKOA CLI를 빌드하고, PATH에서 사용할 수
+                    있는 위치에 <code>skkoa</code> 명령을 설치합니다.
+                </p>
+            </section>
+
+            <div class="fixed-box">
+                <div class="cube3d" id="cube-toggle-btn">
+                    <div class="cube3d-inner">
+                        <div class="cube3d-face cube3d-front"></div>
+                        <div class="cube3d-face cube3d-back"></div>
+                        <div class="cube3d-face cube3d-right"></div>
+                        <div class="cube3d-face cube3d-left"></div>
+                        <div class="cube3d-face cube3d-top"></div>
+                        <div class="cube3d-face cube3d-bottom"></div>
+                    </div>
+                </div>
+                <div class="cube-menu" id="cube-menu" style="display: none">
+                    <a href="/" class="cube-menu-item">Home</a>
+                    <a href="/docs/" class="cube-menu-item">Docs</a>
+                    <a href="/compiler/" class="cube-menu-item">Online</a>
+                    <a
+                        href="https://github.com/team-toyotech/"
+                        class="cube-menu-item"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        >GitHub</a
+                    >
+                </div>
+            </div>
+        </main>
+        <footer class="main-footer">
+            <p>
+                &copy; <span id="yearNow"></span> Team ToyoTech. All rights
+                reserved.
+            </p>
+        </footer>
+    </body>
+</html>

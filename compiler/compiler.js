@@ -37,7 +37,7 @@ const DEFAULT_CODE = `시작
     출력 "안녕하세요, SKKOA!"
 끝`;
 
-const COMPILER_INSTALLER_PATH = "/compiler/download/skkoa-install.sh";
+const COMPILER_DOWNLOAD_PAGE = "/download/";
 
 function escapeHtml(value) {
     return value
@@ -579,15 +579,8 @@ function applyEditorFontSize(size) {
     updateLineNumbers();
 }
 
-function downloadCompilerInstaller() {
-    const link = document.createElement("a");
-    link.href = COMPILER_INSTALLER_PATH;
-    link.download = "skkoa-install.sh";
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => {
-        document.body.removeChild(link);
-    }, 0);
+function openCompilerDownloadPage() {
+    window.open(COMPILER_DOWNLOAD_PAGE, "_blank");
 }
 
 const codeInput = document.querySelector(".code-input");
@@ -832,7 +825,7 @@ document.getElementById("saveMenu").addEventListener("click", function () {
     document.getElementById("saveButton").click();
 });
 document.getElementById("downloadMenu").addEventListener("click", function () {
-    downloadCompilerInstaller();
+    openCompilerDownloadPage();
 });
 document.getElementById("studyMenu").addEventListener("click", function () {
     window.open("/docs/", "_blank");

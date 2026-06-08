@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     try {
-        const compilerInstallerPath = "/compiler/download/skkoa-install.sh";
+        const defaultCompilerDownloadPath = "/compiler/download/skkoa-windows.cmd";
 
-        function downloadCompilerInstaller() {
+        function downloadDefaultCompiler() {
             const link = document.createElement("a");
-            link.href = compilerInstallerPath;
-            link.download = "skkoa-install.sh";
+            link.href = defaultCompilerDownloadPath;
+            link.download = "skkoa-windows.cmd";
             document.body.appendChild(link);
             link.click();
             setTimeout(() => {
@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (downloadBtn) {
             downloadBtn.addEventListener("click", function (e) {
                 e.preventDefault();
-                downloadCompilerInstaller();
+                downloadDefaultCompiler();
             });
         }
 

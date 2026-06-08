@@ -27,7 +27,13 @@ NASM을 선택한 이유는 Intel 문법이 초보자에게 비교적 읽기 쉽
 
 ## 빌드
 
-웹사이트에서 설치 스크립트를 내려받아 `skkoa` 명령으로 설치할 수 있다.
+웹사이트의 `/download/` 페이지에서 운영체제별 설치 파일을 선택할 수 있다.
+
+- Windows: `skkoa-windows.cmd`
+- macOS: `skkoa-macos.command`
+- Linux: `skkoa-linux.sh`
+
+Windows에서는 메인 화면 Download 버튼이 `skkoa-windows.cmd`를 기본으로 내려받는다. Linux에서는 아래처럼 설치 스크립트를 받을 수 있다.
 
 ```bash
 curl -fsSL https://skkoa.toyotech.dev/compiler/download/skkoa-install.sh -o skkoa-install.sh
@@ -36,7 +42,7 @@ skkoa examples/hello.koa -o hello
 ./hello
 ```
 
-브라우저에서 Download를 눌러 `skkoa-install.sh`를 받은 경우에도 같은 방식으로 실행한다.
+브라우저에서 Linux 설치 파일을 받은 경우에도 같은 방식으로 실행한다.
 
 ```bash
 bash skkoa-install.sh

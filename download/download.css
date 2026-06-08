@@ -1,0 +1,155 @@
+body {
+    background: #14151e;
+}
+
+.download-page {
+    width: min(1120px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 44px 0 72px;
+}
+
+.download-hero,
+.download-notes {
+    background: #181926;
+    border: 1px solid #2a2d44;
+    border-radius: 8px;
+    color: #f5f5fa;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.22);
+}
+
+.download-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 28px;
+    align-items: center;
+    padding: 34px;
+}
+
+.download-kicker {
+    margin: 0 0 8px;
+    color: #8ea3ff;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.download-hero h2,
+.download-notes h2 {
+    margin: 0 0 12px;
+    color: #ffffff;
+}
+
+.download-hero p,
+.download-notes p {
+    margin: 0;
+    color: #d6d8ef;
+    line-height: 1.75;
+}
+
+.download-primary,
+.platform-card a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: 8px;
+    background: #4e73fa;
+    color: #ffffff;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 6px 18px rgba(78, 115, 250, 0.28);
+}
+
+.download-primary {
+    padding: 0 22px;
+    white-space: nowrap;
+}
+
+.platform-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 22px 0;
+}
+
+.platform-card {
+    background: #181926;
+    border: 1px solid #2a2d44;
+    border-radius: 8px;
+    padding: 22px;
+    color: #f5f5fa;
+}
+
+.platform-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    min-width: 52px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: #23263a;
+    color: #fbbf24;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+.platform-card h3 {
+    margin: 18px 0 8px;
+    color: #ffffff;
+    font-size: 1.35rem;
+}
+
+.platform-card p {
+    margin: 0 0 18px;
+    color: #d6d8ef;
+}
+
+.platform-card a {
+    width: 100%;
+}
+
+.download-notes {
+    padding: 28px 34px;
+}
+
+.download-notes pre {
+    margin: 14px 0;
+    padding: 18px;
+    overflow-x: auto;
+    border-radius: 8px;
+    background: #10111a;
+    border: 1px solid #2a2d44;
+}
+
+.download-page code,
+.download-page pre {
+    font-family: "D2Coding", "D2Coding ligature", "Nanum Gothic Coding",
+        "IBM Plex Mono KR", "JetBrains Mono", "Fira Code", "Cascadia Code",
+        "Consolas", monospace;
+}
+
+.download-page :not(pre) > code {
+    padding: 0.12rem 0.32rem;
+    border-radius: 5px;
+    background: #23263a;
+    color: #f5f5fa;
+}
+
+@media (max-width: 820px) {
+    .download-hero {
+        grid-template-columns: 1fr;
+        padding: 26px;
+    }
+
+    .download-primary {
+        width: 100%;
+    }
+
+    .platform-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .download-notes {
+        padding: 24px;
+    }
+}
