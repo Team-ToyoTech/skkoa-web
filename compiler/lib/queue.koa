@@ -1,0 +1,65 @@
+구조체 정수큐
+    앞: 정수
+    뒤: 정수
+    개수: 정수
+    크기: 정수
+끝
+
+함수 큐초기화(queue: 정수큐, capacity: 정수): 없음
+    queue.앞 = 0
+    queue.뒤 = 0
+    queue.개수 = 0
+    queue.크기 = capacity
+끝
+
+함수 큐비었나(queue: 정수큐): 논리
+    반환 queue.개수 == 0
+끝
+
+함수 큐가득찼나(queue: 정수큐): 논리
+    반환 queue.개수 >= queue.크기
+끝
+
+함수 큐크기(queue: 정수큐): 정수
+    반환 queue.개수
+끝
+
+함수 큐넣기(queue: 정수큐, data: 정수[], value: 정수): 논리
+    만약 queue.개수 >= queue.크기 이면
+        반환 거짓
+    끝
+
+    data[queue.뒤] = value
+    queue.뒤 = queue.뒤 + 1
+
+    만약 queue.뒤 >= queue.크기 이면
+        queue.뒤 = 0
+    끝
+
+    queue.개수 = queue.개수 + 1
+    반환 참
+끝
+
+함수 큐빼기(queue: 정수큐, data: 정수[]): 정수
+    만약 queue.개수 <= 0 이면
+        반환 0
+    끝
+
+    변수 value: 정수 = data[queue.앞]
+    queue.앞 = queue.앞 + 1
+
+    만약 queue.앞 >= queue.크기 이면
+        queue.앞 = 0
+    끝
+
+    queue.개수 = queue.개수 - 1
+    반환 value
+끝
+
+함수 큐보기(queue: 정수큐, data: 정수[]): 정수
+    만약 queue.개수 <= 0 이면
+        반환 0
+    끝
+
+    반환 data[queue.앞]
+끝

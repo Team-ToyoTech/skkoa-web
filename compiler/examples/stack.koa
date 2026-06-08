@@ -1,0 +1,14 @@
+가져오기 "stack.koa"
+
+시작
+    변수 stack: 정수스택
+    변수 data: 정수[5]
+
+    스택초기화(stack, 5)
+    스택넣기(stack, data, 10)
+    스택넣기(stack, data, 20)
+
+    출력 스택보기(stack, data)
+    출력 스택빼기(stack, data)
+    출력 스택빼기(stack, data)
+끝

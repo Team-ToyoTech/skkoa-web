@@ -6,6 +6,7 @@ INSTALL_ROOT="${SKKOA_INSTALL_ROOT:-$HOME/.skkoa}"
 BIN_DIR="${SKKOA_BIN_DIR:-$HOME/.local/bin}"
 SOURCE_DIR="$INSTALL_ROOT/source"
 BUILD_DIR="$INSTALL_ROOT/build"
+LIB_DIR="$INSTALL_ROOT/lib"
 
 FILES=(
     "CMakeLists.txt"
@@ -22,6 +23,9 @@ FILES=(
     "src/SemanticAnalyzer.cpp"
     "src/SemanticAnalyzer.hpp"
     "src/Token.hpp"
+    "lib/stack.koa"
+    "lib/queue.koa"
+    "lib/structures.koa"
 )
 
 info() {
@@ -156,6 +160,14 @@ build_compiler() {
     fi
 }
 
+install_libraries() {
+    rm -rf "$LIB_DIR"
+    mkdir -p "$LIB_DIR"
+    if [[ -d "$SOURCE_DIR/lib" ]]; then
+        cp -R "$SOURCE_DIR/lib/." "$LIB_DIR/"
+    fi
+}
+
 install_command() {
     local built_bin="$BUILD_DIR/skkoa"
     if [[ ! -x "$built_bin" ]]; then
@@ -185,6 +197,7 @@ main() {
     info "Installing SKKOA compiler"
     install_toolchain
     copy_or_download_sources
+    install_libraries
     build_compiler
     install_command
     warn_runtime_tools

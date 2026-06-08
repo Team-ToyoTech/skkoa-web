@@ -1,0 +1,11 @@
+가져오기 "structures.koa"
+가져오기 "stack.koa"
+
+시작
+    변수 stack: 정수스택
+    변수 data: 정수[2]
+
+    스택초기화(stack, 2)
+    스택넣기(stack, data, 7)
+    출력 스택빼기(stack, data)
+끝

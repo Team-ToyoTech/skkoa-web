@@ -4,6 +4,7 @@ $BaseUrl = if ($env:SKKOA_BASE_URL) { $env:SKKOA_BASE_URL } else { "https://skko
 $InstallRoot = if ($env:SKKOA_INSTALL_ROOT) { $env:SKKOA_INSTALL_ROOT } else { Join-Path $env:LOCALAPPDATA "SKKOA" }
 $SourceDir = Join-Path $InstallRoot "source"
 $BuildDir = Join-Path $InstallRoot "build"
+$LibDir = Join-Path $InstallRoot "lib"
 $BinDir = if ($env:SKKOA_BIN_DIR) { $env:SKKOA_BIN_DIR } else { Join-Path $env:LOCALAPPDATA "Programs\SKKOA\bin" }
 $ToolchainRoot = if ($env:SKKOA_TOOLCHAIN_ROOT) { $env:SKKOA_TOOLCHAIN_ROOT } else { Join-Path $InstallRoot "toolchain" }
 $MsysRoot = Join-Path $ToolchainRoot "msys64"
@@ -24,7 +25,10 @@ $Files = @(
     "src/Parser.hpp",
     "src/SemanticAnalyzer.cpp",
     "src/SemanticAnalyzer.hpp",
-    "src/Token.hpp"
+    "src/Token.hpp",
+    "lib/stack.koa",
+    "lib/queue.koa",
+    "lib/structures.koa"
 )
 
 function Write-Skkoa($Message) {
@@ -145,6 +149,17 @@ function Build-Compiler {
     }
 }
 
+function Install-Libraries {
+    if (Test-Path $LibDir) {
+        Remove-Item -LiteralPath $LibDir -Recurse -Force
+    }
+    New-Item -ItemType Directory -Force -Path $LibDir | Out-Null
+    $sourceLib = Join-Path $SourceDir "lib"
+    if (Test-Path $sourceLib) {
+        Copy-Item -Path (Join-Path $sourceLib "*") -Destination $LibDir -Recurse -Force
+    }
+}
+
 function Install-Command {
     New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
     Copy-Item -LiteralPath (Join-Path $BuildDir "skkoa.exe") -Destination (Join-Path $BinDir "skkoa.exe") -Force
@@ -192,6 +207,7 @@ function Warn-Tools {
 Write-Skkoa "Installing SKKOA compiler for Windows"
 Install-Toolchain
 Download-Source
+Install-Libraries
 Build-Compiler
 Install-Command
 Warn-Tools

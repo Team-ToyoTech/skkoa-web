@@ -97,7 +97,9 @@ skkoa hello.koa --emit-asm</code></pre>
                     설치 파일은 SKKOA 컴파일러와 어셈블리 변환/링크에 필요한
                     도구를 함께 준비합니다. 별도로 C++ 컴파일러, NASM, GCC를
                     미리 설치하지 않아도 됩니다. 단, 도구 다운로드를 위한 인터넷
-                    연결과 OS별 설치 권한은 필요합니다.
+                    연결과 OS별 설치 권한은 필요합니다. 스택과 큐 표준 모듈도
+                    함께 설치되므로 코드에서 <code>가져오기 "stack.koa"</code>,
+                    <code>가져오기 "queue.koa"</code>를 바로 사용할 수 있습니다.
                 </p>
             </section>
 

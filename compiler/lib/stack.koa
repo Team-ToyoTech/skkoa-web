@@ -1,0 +1,48 @@
+구조체 정수스택
+    위치: 정수
+    크기: 정수
+끝
+
+함수 스택초기화(stack: 정수스택, capacity: 정수): 없음
+    stack.위치 = 0
+    stack.크기 = capacity
+끝
+
+함수 스택비었나(stack: 정수스택): 논리
+    반환 stack.위치 == 0
+끝
+
+함수 스택가득찼나(stack: 정수스택): 논리
+    반환 stack.위치 >= stack.크기
+끝
+
+함수 스택크기(stack: 정수스택): 정수
+    반환 stack.위치
+끝
+
+함수 스택넣기(stack: 정수스택, data: 정수[], value: 정수): 논리
+    만약 stack.위치 >= stack.크기 이면
+        반환 거짓
+    끝
+
+    data[stack.위치] = value
+    stack.위치 = stack.위치 + 1
+    반환 참
+끝
+
+함수 스택빼기(stack: 정수스택, data: 정수[]): 정수
+    만약 stack.위치 <= 0 이면
+        반환 0
+    끝
+
+    stack.위치 = stack.위치 - 1
+    반환 data[stack.위치]
+끝
+
+함수 스택보기(stack: 정수스택, data: 정수[]): 정수
+    만약 stack.위치 <= 0 이면
+        반환 0
+    끝
+
+    반환 data[stack.위치 - 1]
+끝

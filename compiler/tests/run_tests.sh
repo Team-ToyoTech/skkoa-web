@@ -6,6 +6,8 @@ BUILD_DIR="$ROOT_DIR/build"
 BIN="$BUILD_DIR/skkoa"
 TMP_DIR="$ROOT_DIR/tests/tmp"
 
+export SKKOA_LIB_PATH="$ROOT_DIR/lib${SKKOA_LIB_PATH:+:$SKKOA_LIB_PATH}"
+
 require_tool() {
     if ! command -v "$1" >/dev/null 2>&1; then
         echo "필수 도구를 찾을 수 없습니다: $1" >&2
@@ -73,6 +75,9 @@ run_case "array_literal" $'10\n15'
 run_case "function_params" $'SKKOA\n3.500000\n9\n6'
 run_case "struct" $'SKKOA\n5\n5'
 run_case "module" "21"
+run_case "stack" $'20\n20\n10'
+run_case "queue" $'10\n10\n20'
+run_case "structures_usage" "7"
 run_case "string_input" "Daniel" $'Daniel\n'
 run_case "stdlib_strings" $'5\n0\nSK'
 

@@ -170,6 +170,24 @@ body {
     margin-left: 8px;
 }
 
+.example-select {
+    width: 148px;
+    height: 32px;
+    border: 1px solid #343956;
+    border-radius: 6px;
+    background: #1e2130;
+    color: #f3f4f6;
+    font-size: 13px;
+    font-family: inherit;
+    padding: 0 30px 0 10px;
+    outline: none;
+}
+
+.example-select:focus {
+    border-color: #4e73fa;
+    box-shadow: 0 0 0 2px rgba(78, 115, 250, 0.22);
+}
+
 .filename-input {
     display: none !important;
 }
@@ -820,6 +838,14 @@ body.bg-purple .editor-linenum {
 @media (max-width: 760px) {
     .editor-toolbar {
         padding: 0 12px;
+    }
+
+    .toolbar-left {
+        gap: 6px;
+    }
+
+    .example-select {
+        width: 112px;
     }
 
     .simulator-panel {

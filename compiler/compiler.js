@@ -36,6 +36,20 @@ const SKKOA_KEYWORDS = [
     "길이",
     "비교",
     "부분문자열",
+    "스택초기화",
+    "스택넣기",
+    "스택빼기",
+    "스택보기",
+    "스택비었나",
+    "스택가득찼나",
+    "스택크기",
+    "큐초기화",
+    "큐넣기",
+    "큐빼기",
+    "큐보기",
+    "큐비었나",
+    "큐가득찼나",
+    "큐크기",
 ];
 
 const DEFAULT_CODE = `시작
@@ -43,6 +57,32 @@ const DEFAULT_CODE = `시작
 끝`;
 
 const COMPILER_DOWNLOAD_PAGE = "/download/";
+
+const EXAMPLE_FILES = [
+    ["hello.koa", "Hello"],
+    ["variables.koa", "Variables"],
+    ["condition.koa", "Condition"],
+    ["loop.koa", "Loop"],
+    ["repeat.koa", "Repeat"],
+    ["function.koa", "Function"],
+    ["function_params.koa", "Function Params"],
+    ["array.koa", "Array"],
+    ["array_literal.koa", "Array Literal"],
+    ["strings.koa", "Strings"],
+    ["string_input.koa", "String Input"],
+    ["stdlib_strings.koa", "String Library"],
+    ["float.koa", "Float"],
+    ["char.koa", "Char"],
+    ["input.koa", "Input"],
+    ["pointer.koa", "Pointer"],
+    ["pointer_write.koa", "Pointer Write"],
+    ["memory.koa", "Memory"],
+    ["struct.koa", "Struct"],
+    ["module.koa", "Module"],
+    ["stack.koa", "Stack"],
+    ["queue.koa", "Queue"],
+    ["structures_usage.koa", "Structures"],
+];
 
 function escapeHtml(value) {
     return value
@@ -588,6 +628,45 @@ function openCompilerDownloadPage() {
     window.open(COMPILER_DOWNLOAD_PAGE, "_blank");
 }
 
+function populateExampleSelect() {
+    const select = document.getElementById("exampleSelect");
+    if (!select) return;
+
+    EXAMPLE_FILES.forEach(([filename, label]) => {
+        const option = document.createElement("option");
+        option.value = filename;
+        option.textContent = label;
+        select.appendChild(option);
+    });
+}
+
+async function loadExample(filename) {
+    if (!filename) return;
+
+    const output = document.getElementById("runOutput");
+    try {
+        const response = await fetch(`examples/${encodeURIComponent(filename)}`);
+        if (!response.ok) {
+            throw new Error(`${filename} 파일을 불러올 수 없습니다.`);
+        }
+        const content = await response.text();
+        createTab(filename, content);
+        if (output) output.textContent = `예제를 불러왔습니다: ${filename}`;
+    } catch (error) {
+        if (output) output.textContent = `예제 불러오기 오류: ${error.message}`;
+    }
+}
+
+function openExamplePicker() {
+    const select = document.getElementById("exampleSelect");
+    if (!select) return;
+
+    select.focus();
+    if (typeof select.showPicker === "function") {
+        select.showPicker();
+    }
+}
+
 const codeInput = document.querySelector(".code-input");
 codeInput.addEventListener("input", () => {
     const tab = tabs.find((t) => t.id === activeTabId);
@@ -837,6 +916,7 @@ fontsizeInput.addEventListener("keydown", function (e) {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
+    populateExampleSelect();
     updateLineNumbers();
     if (tabs.length === 0) createTab("untitled1");
 });
@@ -938,6 +1018,12 @@ document.getElementById("saveMenu").addEventListener("click", function () {
 });
 document.getElementById("downloadMenu").addEventListener("click", function () {
     openCompilerDownloadPage();
+});
+document.getElementById("examplesMenu").addEventListener("click", openExamplePicker);
+document.getElementById("exampleSelect").addEventListener("change", function () {
+    const filename = this.value;
+    this.value = "";
+    loadExample(filename);
 });
 document.getElementById("studyMenu").addEventListener("click", function () {
     window.open("/docs/", "_blank");

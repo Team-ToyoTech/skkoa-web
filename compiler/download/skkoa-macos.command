@@ -5,6 +5,7 @@ BASE_URL="${SKKOA_BASE_URL:-https://skkoa.toyotech.dev/compiler}"
 INSTALL_ROOT="${SKKOA_INSTALL_ROOT:-$HOME/.skkoa}"
 SOURCE_DIR="$INSTALL_ROOT/source"
 BUILD_DIR="$INSTALL_ROOT/build"
+LIB_DIR="$INSTALL_ROOT/lib"
 BIN_DIR="${SKKOA_BIN_DIR:-$HOME/.local/bin}"
 if [[ -d /usr/local/bin && -w /usr/local/bin ]]; then
     BIN_DIR="${SKKOA_BIN_DIR:-/usr/local/bin}"
@@ -25,6 +26,9 @@ FILES=(
     "src/SemanticAnalyzer.cpp"
     "src/SemanticAnalyzer.hpp"
     "src/Token.hpp"
+    "lib/stack.koa"
+    "lib/queue.koa"
+    "lib/structures.koa"
 )
 
 info() {
@@ -124,6 +128,14 @@ build_compiler() {
     fi
 }
 
+install_libraries() {
+    rm -rf "$LIB_DIR"
+    mkdir -p "$LIB_DIR"
+    if [[ -d "$SOURCE_DIR/lib" ]]; then
+        cp -R "$SOURCE_DIR/lib/." "$LIB_DIR/"
+    fi
+}
+
 install_command() {
     local built_bin="$BUILD_DIR/skkoa"
     if [[ ! -x "$built_bin" ]]; then
@@ -151,6 +163,7 @@ warn_runtime_tools() {
 info "Installing SKKOA compiler for macOS"
 install_toolchain
 download_sources
+install_libraries
 build_compiler
 install_command
 warn_runtime_tools

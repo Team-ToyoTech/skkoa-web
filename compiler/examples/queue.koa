@@ -1,0 +1,14 @@
+가져오기 "queue.koa"
+
+시작
+    변수 queue: 정수큐
+    변수 data: 정수[5]
+
+    큐초기화(queue, 5)
+    큐넣기(queue, data, 10)
+    큐넣기(queue, data, 20)
+
+    출력 큐보기(queue, data)
+    출력 큐빼기(queue, data)
+    출력 큐빼기(queue, data)
+끝

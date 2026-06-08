@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <system_error>
 #include <unordered_set>
 #include <vector>
 
@@ -31,7 +32,14 @@ static string readFile(const string &path) {
     }
     ostringstream buffer;
     buffer << file.rdbuf();
-    return buffer.str();
+    string content = buffer.str();
+    if (content.size() >= 3 &&
+        static_cast<unsigned char>(content[0]) == 0xEF &&
+        static_cast<unsigned char>(content[1]) == 0xBB &&
+        static_cast<unsigned char>(content[2]) == 0xBF) {
+        content.erase(0, 3);
+    }
+    return content;
 }
 
 static string trim(const string &value) {
@@ -57,15 +65,138 @@ static bool parseImportLine(const string &line, string &importPath) {
     return true;
 }
 
-static string expandImports(const fs::path &path, unordered_set<string> &active) {
+static bool fileExists(const fs::path &path) {
+    error_code ec;
+    return fs::is_regular_file(path, ec);
+}
+
+static void addSearchDir(vector<fs::path> &dirs, const fs::path &dir) {
+    if (dir.empty()) {
+        return;
+    }
+    fs::path normalized = fs::absolute(dir).lexically_normal();
+    string key = normalized.string();
+    for (const auto &existing : dirs) {
+        if (existing.string() == key) {
+            return;
+        }
+    }
+    dirs.push_back(normalized);
+}
+
+static void addPathList(vector<fs::path> &dirs, const char *value) {
+    if (!value) {
+        return;
+    }
+#if defined(_WIN32)
+    const char delimiter = ';';
+#else
+    const char delimiter = ':';
+#endif
+    string list(value);
+    size_t start = 0;
+    while (start <= list.size()) {
+        size_t end = list.find(delimiter, start);
+        string item = list.substr(start, end == string::npos ? string::npos
+                                                            : end - start);
+        if (!trim(item).empty()) {
+            addSearchDir(dirs, item);
+        }
+        if (end == string::npos) {
+            break;
+        }
+        start = end + 1;
+    }
+}
+
+static vector<fs::path> standardLibraryDirs() {
+    vector<fs::path> dirs;
+    addPathList(dirs, getenv("SKKOA_LIB_PATH"));
+
+    if (const char *home = getenv("SKKOA_HOME")) {
+        addSearchDir(dirs, fs::path(home) / "lib");
+    }
+    if (const char *installRoot = getenv("SKKOA_INSTALL_ROOT")) {
+        addSearchDir(dirs, fs::path(installRoot) / "lib");
+    }
+
+#if defined(_WIN32)
+    if (const char *localAppData = getenv("LOCALAPPDATA")) {
+        addSearchDir(dirs, fs::path(localAppData) / "SKKOA" / "lib");
+    }
+#else
+    if (const char *home = getenv("HOME")) {
+        addSearchDir(dirs, fs::path(home) / ".skkoa" / "lib");
+    }
+#endif
+
+    addSearchDir(dirs, fs::current_path() / "lib");
+    addSearchDir(dirs, fs::current_path() / "compiler" / "lib");
+    return dirs;
+}
+
+static vector<fs::path> importNameVariants(const fs::path &path) {
+    vector<fs::path> variants = {path};
+    if (!path.has_extension()) {
+        variants.push_back(path.string() + ".koa");
+    }
+    return variants;
+}
+
+static fs::path resolveImport(const string &importPath, const fs::path &baseDir,
+                              const fs::path &currentFile) {
+    fs::path requested(importPath);
+    vector<fs::path> candidates;
+
+    for (const auto &variant : importNameVariants(requested)) {
+        if (variant.is_absolute()) {
+            candidates.push_back(variant);
+        } else {
+            candidates.push_back(baseDir / variant);
+        }
+    }
+
+    if (requested.is_relative()) {
+        for (const auto &dir : standardLibraryDirs()) {
+            for (const auto &variant : importNameVariants(requested)) {
+                candidates.push_back(dir / variant);
+            }
+        }
+    }
+
+    for (const auto &candidate : candidates) {
+        fs::path normalized = fs::absolute(candidate).lexically_normal();
+        if (normalized.string() == currentFile.string()) {
+            continue;
+        }
+        if (fileExists(normalized)) {
+            return normalized;
+        }
+    }
+
+    ostringstream message;
+    message << "가져올 파일을 찾을 수 없습니다: " << importPath
+            << "\n확인한 위치:";
+    for (const auto &candidate : candidates) {
+        message << "\n- " << fs::absolute(candidate).lexically_normal().string();
+    }
+    throw runtime_error(message.str());
+}
+
+static string expandImports(const fs::path &path, unordered_set<string> &active,
+                            unordered_set<string> &included) {
     fs::path absolute = fs::absolute(path).lexically_normal();
     string key = absolute.string();
     if (active.count(key) > 0) {
         throw runtime_error("순환 가져오기를 발견했습니다: " + key);
     }
+    if (included.count(key) > 0) {
+        return "";
+    }
     active.insert(key);
 
     string source = readFile(key);
+    included.insert(key);
     istringstream input(source);
     ostringstream output;
     string line;
@@ -74,11 +205,8 @@ static string expandImports(const fs::path &path, unordered_set<string> &active)
     while (getline(input, line)) {
         string importPath;
         if (parseImportLine(line, importPath)) {
-            fs::path child = fs::path(importPath);
-            if (child.is_relative()) {
-                child = baseDir / child;
-            }
-            output << expandImports(child, active);
+            fs::path child = resolveImport(importPath, baseDir, absolute);
+            output << expandImports(child, active, included);
             if (!output.str().empty() && output.str().back() != '\n') {
                 output << '\n';
             }
@@ -221,7 +349,9 @@ int main(int argc, char **argv) {
 
         ErrorReporter errors;
         unordered_set<string> activeImports;
-        string source = expandImports(options.inputPath, activeImports);
+        unordered_set<string> includedImports;
+        string source = expandImports(options.inputPath, activeImports,
+                                      includedImports);
         Lexer lexer(source, errors);
         vector<Token> tokens = lexer.tokenize();
         if (errors.hasErrors()) {
