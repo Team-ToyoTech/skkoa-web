@@ -5,6 +5,10 @@ $InstallRoot = if ($env:SKKOA_INSTALL_ROOT) { $env:SKKOA_INSTALL_ROOT } else { J
 $SourceDir = Join-Path $InstallRoot "source"
 $BuildDir = Join-Path $InstallRoot "build"
 $BinDir = if ($env:SKKOA_BIN_DIR) { $env:SKKOA_BIN_DIR } else { Join-Path $env:LOCALAPPDATA "Programs\SKKOA\bin" }
+$ToolchainRoot = if ($env:SKKOA_TOOLCHAIN_ROOT) { $env:SKKOA_TOOLCHAIN_ROOT } else { Join-Path $InstallRoot "toolchain" }
+$MsysRoot = Join-Path $ToolchainRoot "msys64"
+$MingwBin = Join-Path $MsysRoot "mingw64\bin"
+$UsrBin = Join-Path $MsysRoot "usr\bin"
 
 $Files = @(
     "CMakeLists.txt",
@@ -27,7 +31,61 @@ function Write-Skkoa($Message) {
     Write-Host "[skkoa] $Message"
 }
 
+function Add-ToolchainPath {
+    $paths = @($MingwBin, $UsrBin) + ($env:Path -split ";")
+    $env:Path = ($paths | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique) -join ";"
+}
+
+function Install-Toolchain {
+    if ($env:SKKOA_SKIP_TOOLCHAIN_INSTALL) {
+        Add-ToolchainPath
+        return
+    }
+
+    $gcc = Join-Path $MingwBin "g++.exe"
+    $nasm = Join-Path $MingwBin "nasm.exe"
+    if ((Test-Path $gcc) -and (Test-Path $nasm)) {
+        Add-ToolchainPath
+        return
+    }
+
+    Write-Skkoa "Installing bundled MSYS2 toolchain"
+    New-Item -ItemType Directory -Force -Path $ToolchainRoot | Out-Null
+    $bash = Join-Path $UsrBin "bash.exe"
+    if (!(Test-Path $bash)) {
+        $headers = @{ "User-Agent" = "SKKOA installer" }
+        $release = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/msys2/msys2-installer/releases/latest"
+        $asset = $release.assets |
+            Where-Object { $_.name -match "^msys2-base-x86_64-.*\.sfx\.exe$" } |
+            Select-Object -First 1
+        if (!$asset) {
+            throw "Could not find an MSYS2 self-extracting installer asset."
+        }
+        $installer = Join-Path $env:TEMP $asset.name
+        Invoke-WebRequest -UseBasicParsing $asset.browser_download_url -OutFile $installer
+        & $installer -y "-o$ToolchainRoot"
+        if ($LASTEXITCODE -ne 0) {
+            throw "MSYS2 extraction failed."
+        }
+        Remove-Item -LiteralPath $installer -Force -ErrorAction SilentlyContinue
+    }
+
+    Add-ToolchainPath
+    $bash = Join-Path $UsrBin "bash.exe"
+    if (!(Test-Path $bash)) {
+        throw "MSYS2 bash was not found after extraction."
+    }
+
+    & $bash -lc "pacman --noconfirm -Syu || true"
+    & $bash -lc "pacman --noconfirm --needed -S mingw-w64-x86_64-gcc mingw-w64-x86_64-nasm"
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSYS2 package installation failed."
+    }
+    Add-ToolchainPath
+}
+
 function Get-CxxCompiler {
+    Install-Toolchain
     if ($env:CXX) {
         $candidate = Get-Command $env:CXX -ErrorAction SilentlyContinue
         if ($candidate) { return $candidate.Source }
@@ -94,6 +152,7 @@ function Install-Command {
     $launcher = Join-Path $BinDir "skkoa.cmd"
     @"
 @echo off
+set "PATH=$MingwBin;$UsrBin;%PATH%"
 "$BinDir\skkoa.exe" %*
 "@ | Set-Content -Path $launcher -Encoding ASCII
 
@@ -102,6 +161,7 @@ function Install-Command {
         $windowsAppsLauncher = Join-Path $windowsApps "skkoa.cmd"
         @"
 @echo off
+set "PATH=$MingwBin;$UsrBin;%PATH%"
 "$BinDir\skkoa.exe" %*
 "@ | Set-Content -Path $windowsAppsLauncher -Encoding ASCII
     }
@@ -118,6 +178,7 @@ function Install-Command {
 
 function Warn-Tools {
     $missing = @()
+    Add-ToolchainPath
     foreach ($tool in @("nasm", "gcc")) {
         if (!(Get-Command $tool -ErrorAction SilentlyContinue)) {
             $missing += $tool
@@ -129,6 +190,7 @@ function Warn-Tools {
 }
 
 Write-Skkoa "Installing SKKOA compiler for Windows"
+Install-Toolchain
 Download-Source
 Build-Compiler
 Install-Command

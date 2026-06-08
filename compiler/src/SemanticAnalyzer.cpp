@@ -4,6 +4,22 @@
 
 using namespace std;
 
+static size_t maxFunctionParams() {
+#if defined(_WIN32)
+    return 4;
+#else
+    return 6;
+#endif
+}
+
+static string functionParamLimitHint() {
+#if defined(_WIN32)
+    return "Windows x64 ABI의 기본 정수 인자 레지스터 범위만 사용합니다.";
+#else
+    return "x86-64 System V ABI의 기본 정수 인자 레지스터 범위만 사용합니다.";
+#endif
+}
+
 SemanticAnalyzer::SemanticAnalyzer(ErrorReporter &errors) : errors_(errors) {}
 
 void SemanticAnalyzer::analyze(Program &program) {
@@ -41,10 +57,12 @@ void SemanticAnalyzer::analyzeFunction(FunctionDecl &function) {
     insideFunction_ = true;
     currentReturnType_ = function.returnType;
 
-    if (function.params.size() > 6) {
+    size_t maxParams = maxFunctionParams();
+    if (function.params.size() > maxParams) {
         errors_.error(function.location,
-                      "현재 컴파일러는 함수 매개변수를 최대 6개까지 지원합니다.",
-                      "Linux x86-64 System V ABI의 기본 정수 인자 레지스터 범위만 사용합니다.");
+                      "현재 컴파일러는 함수 매개변수를 최대 " +
+                          to_string(maxParams) + "개까지 지원합니다.",
+                      functionParamLimitHint());
     }
 
     for (const auto &param : function.params) {

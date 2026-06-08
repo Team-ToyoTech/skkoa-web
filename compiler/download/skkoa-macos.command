@@ -36,6 +36,40 @@ fail() {
     exit 1
 }
 
+load_homebrew() {
+    if [[ -x /opt/homebrew/bin/brew ]]; then
+        eval "$(/opt/homebrew/bin/brew shellenv)"
+    elif [[ -x /usr/local/bin/brew ]]; then
+        eval "$(/usr/local/bin/brew shellenv)"
+    fi
+}
+
+install_toolchain() {
+    if [[ -n "${SKKOA_SKIP_TOOLCHAIN_INSTALL:-}" ]]; then
+        return
+    fi
+
+    if ! xcode-select -p >/dev/null 2>&1; then
+        info "Installing Xcode Command Line Tools"
+        xcode-select --install || true
+        echo "Finish the Apple installer window, then press Enter here."
+        read -r _
+        xcode-select -p >/dev/null 2>&1 || fail "Xcode Command Line Tools are required."
+    fi
+
+    load_homebrew
+    if ! command -v brew >/dev/null 2>&1; then
+        info "Installing Homebrew"
+        NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+        load_homebrew
+    fi
+
+    if ! command -v nasm >/dev/null 2>&1; then
+        info "Installing NASM"
+        brew install nasm
+    fi
+}
+
 find_cxx() {
     if [[ -n "${CXX:-}" ]] && command -v "$CXX" >/dev/null 2>&1; then
         printf '%s\n' "$CXX"
@@ -115,6 +149,7 @@ warn_runtime_tools() {
 }
 
 info "Installing SKKOA compiler for macOS"
+install_toolchain
 download_sources
 build_compiler
 install_command

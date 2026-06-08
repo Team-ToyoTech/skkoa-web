@@ -33,6 +33,50 @@ fail() {
     exit 1
 }
 
+run_sudo() {
+    if [ "$(id -u)" -eq 0 ]; then
+        "$@"
+    elif command -v sudo >/dev/null 2>&1; then
+        sudo "$@"
+    else
+        fail "sudo is required to install missing toolchain packages."
+    fi
+}
+
+install_toolchain() {
+    if [[ -n "${SKKOA_SKIP_TOOLCHAIN_INSTALL:-}" ]]; then
+        return
+    fi
+
+    local missing=()
+    for tool in g++ gcc nasm; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            missing+=("$tool")
+        fi
+    done
+    if (( ${#missing[@]} == 0 )); then
+        return
+    fi
+
+    info "Installing compiler, assembler, and linker tools"
+    if command -v apt-get >/dev/null 2>&1; then
+        run_sudo apt-get update
+        run_sudo apt-get install -y build-essential g++ gcc nasm curl ca-certificates
+    elif command -v dnf >/dev/null 2>&1; then
+        run_sudo dnf install -y gcc gcc-c++ nasm make curl ca-certificates
+    elif command -v yum >/dev/null 2>&1; then
+        run_sudo yum install -y gcc gcc-c++ nasm make curl ca-certificates
+    elif command -v pacman >/dev/null 2>&1; then
+        run_sudo pacman -Sy --needed --noconfirm base-devel gcc nasm curl ca-certificates
+    elif command -v zypper >/dev/null 2>&1; then
+        run_sudo zypper --non-interactive install -y gcc gcc-c++ nasm make curl ca-certificates
+    elif command -v apk >/dev/null 2>&1; then
+        run_sudo apk add build-base g++ gcc nasm curl ca-certificates
+    else
+        fail "Unsupported Linux package manager. Install g++, gcc, and nasm manually, then rerun."
+    fi
+}
+
 find_cxx() {
     if [[ -n "${CXX:-}" ]] && command -v "$CXX" >/dev/null 2>&1; then
         printf '%s\n' "$CXX"
@@ -139,6 +183,7 @@ warn_runtime_tools() {
 
 main() {
     info "Installing SKKOA compiler"
+    install_toolchain
     copy_or_download_sources
     build_compiler
     install_command

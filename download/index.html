@@ -42,8 +42,8 @@
                     <p class="download-kicker">기본 다운로드</p>
                     <h2>Windows용 SKKOA 컴파일러</h2>
                     <p>
-                        Windows에서는 실행 가능한 설치 파일을 받아 SKKOA CLI를
-                        설치합니다. 설치 후 새 터미널에서
+                        Windows에서는 통합 설치 파일 하나가 SKKOA CLI와
+                        어셈블/링크 도구를 함께 설치합니다. 설치 후 새 터미널에서
                         <code>skkoa hello.koa</code>를 실행합니다.
                     </p>
                 </div>
@@ -59,7 +59,7 @@
                 <article class="platform-card platform-windows">
                     <div class="platform-mark">WIN</div>
                     <h3>Windows</h3>
-                    <p>실행 파일 형식: <code>.cmd</code></p>
+                    <p>SKKOA CLI, MSYS2 GCC, NASM을 함께 설치합니다.</p>
                     <a
                         href="/compiler/download/skkoa-windows.cmd"
                         download="skkoa-windows.cmd"
@@ -69,7 +69,7 @@
                 <article class="platform-card platform-macos">
                     <div class="platform-mark">MAC</div>
                     <h3>macOS</h3>
-                    <p>실행 파일 형식: <code>.command</code></p>
+                    <p>Xcode 도구, Homebrew, NASM을 확인하고 설치합니다.</p>
                     <a
                         href="/compiler/download/skkoa-macos.command"
                         download="skkoa-macos.command"
@@ -79,7 +79,7 @@
                 <article class="platform-card platform-linux">
                     <div class="platform-mark">LIN</div>
                     <h3>Linux</h3>
-                    <p>실행 파일 형식: <code>.sh</code></p>
+                    <p>배포판 패키지 관리자로 GCC와 NASM을 설치합니다.</p>
                     <a
                         href="/compiler/download/skkoa-install.sh"
                         download="skkoa-linux.sh"
@@ -94,9 +94,10 @@
 skkoa hello.koa -o hello
 skkoa hello.koa --emit-asm</code></pre>
                 <p>
-                    실행 파일 링크 단계에는 NASM과 GCC가 필요합니다. 설치 파일은
-                    C++17 컴파일러로 SKKOA CLI를 빌드하고, PATH에서 사용할 수
-                    있는 위치에 <code>skkoa</code> 명령을 설치합니다.
+                    설치 파일은 SKKOA 컴파일러와 어셈블리 변환/링크에 필요한
+                    도구를 함께 준비합니다. 별도로 C++ 컴파일러, NASM, GCC를
+                    미리 설치하지 않아도 됩니다. 단, 도구 다운로드를 위한 인터넷
+                    연결과 OS별 설치 권한은 필요합니다.
                 </p>
             </section>
 

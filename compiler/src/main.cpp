@@ -42,6 +42,18 @@ static void writeFile(const string &path, const string &content) {
 }
 
 static string shellQuote(const string &value) {
+#if defined(_WIN32)
+    string quoted = "\"";
+    for (char ch : value) {
+        if (ch == '"') {
+            quoted += "\\\"";
+        } else {
+            quoted += ch;
+        }
+    }
+    quoted += "\"";
+    return quoted;
+#else
     string quoted = "'";
     for (char ch : value) {
         if (ch == '\'') {
@@ -52,6 +64,30 @@ static string shellQuote(const string &value) {
     }
     quoted += "'";
     return quoted;
+#endif
+}
+
+static string nasmFormat() {
+#if defined(_WIN32)
+    return "win64";
+#elif defined(__APPLE__)
+    return "macho64";
+#else
+    return "elf64";
+#endif
+}
+
+static string linkCommand(const fs::path &objectPath, const string &outputPath) {
+#if defined(_WIN32)
+    return "gcc " + shellQuote(objectPath.string()) + " -o " +
+           shellQuote(outputPath);
+#elif defined(__APPLE__)
+    return "cc " + shellQuote(objectPath.string()) + " -o " +
+           shellQuote(outputPath);
+#else
+    return "gcc -no-pie " + shellQuote(objectPath.string()) + " -o " +
+           shellQuote(outputPath);
+#endif
 }
 
 static void printHelp() {
@@ -99,7 +135,11 @@ static string defaultOutputPath(const CliOptions &options) {
     if (options.emitAsm) {
         return input.replace_extension(".asm").string();
     }
+#if defined(_WIN32)
+    return input.replace_extension(".exe").string();
+#else
     return input.replace_extension("").string();
+#endif
 }
 
 int main(int argc, char **argv) {
@@ -165,7 +205,8 @@ int main(int argc, char **argv) {
         }
 
         fs::path objectPath = fs::path(outputPath).replace_extension(".o");
-        string nasmCommand = "nasm -f elf64 " + shellQuote(asmPath.string()) +
+        string nasmCommand = "nasm -f " + nasmFormat() + " " +
+                             shellQuote(asmPath.string()) +
                              " -o " + shellQuote(objectPath.string());
         int nasmResult = system(nasmCommand.c_str());
         if (nasmResult != 0) {
@@ -174,12 +215,11 @@ int main(int argc, char **argv) {
             return 1;
         }
 
-        string gccCommand = "gcc -no-pie " + shellQuote(objectPath.string()) +
-                            " -o " + shellQuote(outputPath);
-        int gccResult = system(gccCommand.c_str());
-        if (gccResult != 0) {
-            cerr << "오류: GCC 링크 단계에 실패했습니다.\n";
-            cerr << "명령: " << gccCommand << '\n';
+        string linkerCommand = linkCommand(objectPath, outputPath);
+        int linkResult = system(linkerCommand.c_str());
+        if (linkResult != 0) {
+            cerr << "오류: 링크 단계에 실패했습니다.\n";
+            cerr << "명령: " << linkerCommand << '\n';
             return 1;
         }
 

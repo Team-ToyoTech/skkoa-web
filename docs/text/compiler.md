@@ -22,10 +22,24 @@ SKKOA는 1차 구현에서 **NASM**을 사용한다.
 선택 이유:
 
 - Intel 문법이 비교적 읽기 쉽다.
-- Linux x86-64 ELF 오브젝트를 `nasm -f elf64`로 만들 수 있다.
+- Linux, Windows, macOS에서 x86-64 오브젝트를 같은 NASM 문법으로 만들 수 있다.
 - 교육용으로 레지스터(register), 스택(stack), 호출 규약(calling convention)을 설명하기 좋다.
 
-## 빌드와 실행
+## 통합 설치
+
+`/download/` 페이지의 설치 파일은 SKKOA 컴파일러와 어셈블리 변환/링크 도구를 함께 설치한다.
+
+- Windows: SKKOA CLI, MSYS2 GCC, NASM
+- macOS: Xcode Command Line Tools, Homebrew, NASM
+- Linux: 배포판 패키지 관리자의 GCC, NASM
+
+설치 후에는 새 터미널에서 다음처럼 실행한다.
+
+```bash
+skkoa hello.koa
+```
+
+## 수동 빌드와 실행
 
 ```bash
 cd compiler
@@ -44,8 +58,17 @@ cmake --build build
 생성된 어셈블리는 `printf`, `scanf`를 위해 C 표준 라이브러리와 링크한다.
 
 ```bash
+# Linux
 nasm -f elf64 hello.asm -o hello.o
 gcc -no-pie hello.o -o hello
+
+# Windows
+nasm -f win64 hello.asm -o hello.o
+gcc hello.o -o hello.exe
+
+# macOS x86-64
+nasm -f macho64 hello.asm -o hello.o
+cc hello.o -o hello
 ```
 
 ## 오류 메시지 설계

@@ -13,6 +13,15 @@ using namespace std;
 
 class CodeGenerator {
   public:
+    enum class AssemblyTarget {
+        LinuxX64,
+        WindowsX64,
+        MacOSX64,
+    };
+
+    explicit CodeGenerator(AssemblyTarget target = defaultTarget());
+    static AssemblyTarget defaultTarget();
+
     string generateAssembly(Program &program, const string &sourceName);
     string generateAstDump(const Program &program);
 
@@ -44,6 +53,7 @@ class CodeGenerator {
     vector<FloatData> floats_;
     unordered_map<string, string> functionLabels_;
     FunctionContext *current_ = nullptr;
+    AssemblyTarget target_;
     int labelCounter_ = 0;
     int stringCounter_ = 0;
 
@@ -56,6 +66,12 @@ class CodeGenerator {
     void collectLocalFromStmt(const Stmt &statement, FunctionContext &context,
                               int &offset);
     int alignTo16(int value) const;
+    bool isWindowsTarget() const;
+    bool isMacOSTarget() const;
+    string externalSymbol(const string &name) const;
+    string mainSymbol() const;
+    const vector<string> &argumentRegisters() const;
+    void emitCall(const string &symbol, bool external);
 
     void emitFunction(FunctionDecl &function);
     void emitMain(Program &program);

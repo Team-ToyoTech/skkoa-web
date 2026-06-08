@@ -2,16 +2,28 @@
 
 ## 설치
 
-현재 네이티브 컴파일러는 Linux x86-64 환경을 최소 대상으로 한다.
+SKKOA는 `/download/` 페이지에서 운영체제별 통합 설치 파일을 제공한다.
 
-필요한 도구:
+- Windows: `skkoa-windows.cmd`
+- macOS: `skkoa-macos.command`
+- Linux: `skkoa-linux.sh`
+
+설치 파일은 SKKOA 컴파일러와 어셈블리 변환/링크에 필요한 도구를 함께 설치한다. 따라서 C++17 컴파일러, NASM, GCC를 미리 준비하지 않아도 된다. 단, 도구 다운로드를 위한 인터넷 연결과 OS별 설치 권한은 필요하다.
+
+설치 후 새 터미널에서 다음 명령을 사용할 수 있다.
+
+```bash
+skkoa hello.koa
+```
+
+## 수동 빌드
+
+저장소에서 직접 빌드하려면 다음 도구가 필요하다.
 
 - C++17 컴파일러
 - CMake
 - NASM
 - GCC 또는 Clang
-
-## 빌드
 
 ```bash
 cd compiler
