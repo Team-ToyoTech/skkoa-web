@@ -127,3 +127,71 @@
     출력 값(p)
 끝
 ```
+
+## pointer_write.koa
+
+```koa
+시작
+    변수 x: 정수 = 10
+    변수 p: 포인터<정수> = 주소(x)
+    값(p) = 25
+    출력 x
+끝
+```
+
+## array_literal.koa
+
+```koa
+시작
+    변수 numbers: 정수[] = [1, 2, 3, 4]
+    출력 numbers[0] + numbers[1] + numbers[2] + numbers[3]
+
+    numbers = [1, 2, 3, 9]
+    출력 numbers[0] + numbers[1] + numbers[2] + numbers[3]
+끝
+```
+
+## struct.koa
+
+```koa
+구조체 사람
+    name: 문자열
+    age: 정수
+끝
+
+함수 나이더하기(user: 사람, amount: 정수): 정수
+    user.age = user.age + amount
+    반환 user.age
+끝
+
+시작
+    변수 user: 사람
+    user.name = "SKKOA"
+    user.age = 3
+
+    출력 user.name
+    출력 나이더하기(user, 2)
+    출력 user.age
+끝
+```
+
+## module.koa
+
+```koa
+가져오기 "math_module.koa"
+
+시작
+    출력 세배(7)
+끝
+```
+
+## stdlib_strings.koa
+
+```koa
+시작
+    변수 name: 문자열 = "SKKOA"
+    출력 길이(name)
+    출력 비교(name, "SKKOA")
+    출력 부분문자열(name, 0, 2)
+끝
+```

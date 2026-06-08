@@ -23,6 +23,36 @@ static string functionParamLimitHint() {
 SemanticAnalyzer::SemanticAnalyzer(ErrorReporter &errors) : errors_(errors) {}
 
 void SemanticAnalyzer::analyze(Program &program) {
+    structs_.clear();
+    for (auto &structure : program.structs) {
+        if (structs_.count(structure->name) > 0) {
+            errors_.error(structure->location,
+                          "중복된 구조체 이름 '" + structure->name + "'입니다.");
+            continue;
+        }
+        StructInfo info;
+        info.location = structure->location;
+        info.fields = structure->fields;
+        unordered_map<string, bool> fieldNames;
+        for (const auto &field : structure->fields) {
+            if (fieldNames.count(field.name) > 0) {
+                errors_.error(field.location,
+                              "중복된 구조체 필드 이름 '" + field.name + "'입니다.");
+            }
+            fieldNames[field.name] = true;
+            if (field.type.base == ValueType::Void) {
+                errors_.error(field.location,
+                              "구조체 필드에는 '없음' 타입을 사용할 수 없습니다.");
+            }
+            if (field.type.isArray || field.type.base == ValueType::Struct) {
+                errors_.error(field.location,
+                              "구조체 필드는 현재 스칼라 값이나 포인터만 지원합니다.",
+                              "배열이나 다른 구조체 값은 포인터로 연결하세요.");
+            }
+        }
+        structs_[structure->name] = info;
+    }
+
     functions_.clear();
     for (auto &function : program.functions) {
         if (functions_.count(function->name) > 0) {
@@ -57,6 +87,12 @@ void SemanticAnalyzer::analyzeFunction(FunctionDecl &function) {
     insideFunction_ = true;
     currentReturnType_ = function.returnType;
 
+    if (function.returnType.base == ValueType::Struct) {
+        errors_.error(function.returnType.location,
+                      "구조체 값 반환은 현재 지원하지 않습니다.",
+                      "구조체는 매개변수로 참조 전달한 뒤 필드를 수정하세요.");
+    }
+
     size_t maxParams = maxFunctionParams();
     if (function.params.size() > maxParams) {
         errors_.error(function.location,
@@ -71,14 +107,18 @@ void SemanticAnalyzer::analyzeFunction(FunctionDecl &function) {
                           "중복된 매개변수 이름 '" + param.name + "'입니다.");
             continue;
         }
-        if (param.type.isArray) {
-            errors_.error(param.location,
-                          "배열 매개변수는 현재 컴파일러에서 아직 지원하지 않습니다.");
+        if (param.type.base == ValueType::Struct) {
+            if (structs_.count(param.type.structName) == 0) {
+                errors_.error(param.location,
+                              "선언되지 않은 구조체 타입 '" +
+                                  param.type.structName + "'입니다.");
+            }
         }
-        if (param.type.base != ValueType::Int && param.type.base != ValueType::Bool) {
+        if (param.type.isArray &&
+            (param.type.base == ValueType::Void ||
+             param.type.base == ValueType::Struct)) {
             errors_.error(param.location,
-                          "현재 함수 매개변수는 정수와 논리만 지원합니다.",
-                          "문자열, 실수, 문자, 포인터 매개변수는 예정 기능입니다.");
+                          "배열 매개변수에는 이 타입을 사용할 수 없습니다.");
         }
         symbols_[param.name] = {param.type, false};
     }
@@ -98,6 +138,12 @@ void SemanticAnalyzer::analyzeStatement(Stmt &statement) {
         analyzeVarDecl(*varDecl);
     } else if (auto *assignment = dynamic_cast<AssignmentStmt *>(&statement)) {
         analyzeAssignment(*assignment);
+    } else if (auto *fieldAssignment =
+                   dynamic_cast<FieldAssignmentStmt *>(&statement)) {
+        analyzeFieldAssignment(*fieldAssignment);
+    } else if (auto *pointerAssignment =
+                   dynamic_cast<PointerAssignmentStmt *>(&statement)) {
+        analyzePointerAssignment(*pointerAssignment);
     } else if (auto *expression = dynamic_cast<ExpressionStmt *>(&statement)) {
         analyzeExpressionStatement(*expression);
     } else if (auto *print = dynamic_cast<PrintStmt *>(&statement)) {
@@ -123,25 +169,61 @@ void SemanticAnalyzer::analyzeVarDecl(VarDeclStmt &statement) {
         return;
     }
 
-    if (statement.type.base == ValueType::String && statement.type.isArray) {
+    if (statement.type.base == ValueType::Struct &&
+        structs_.count(statement.type.structName) == 0) {
         errors_.error(statement.type.location,
-                      "문자열 배열은 현재 미지원입니다.");
+                      "선언되지 않은 구조체 타입 '" + statement.type.structName +
+                          "'입니다.");
+    }
+    if (statement.type.base == ValueType::Struct && statement.initializer) {
+        errors_.error(statement.location,
+                      "구조체 변수는 현재 선언과 동시에 값으로 초기화할 수 없습니다.",
+                      "구조체를 선언한 뒤 필드별로 값을 대입하세요.");
     }
 
     if (statement.type.isArray) {
-        if (statement.type.base != ValueType::Int) {
+        if (statement.type.base == ValueType::Void ||
+            statement.type.base == ValueType::Struct) {
             errors_.error(statement.type.location,
-                          "현재 배열은 정수 배열만 지원합니다.");
+                          "배열 원소에는 이 타입을 사용할 수 없습니다.");
         }
         if (statement.type.arraySize <= 0) {
-            errors_.error(statement.type.location,
-                          "배열 크기는 1 이상의 정수여야 합니다.",
-                          "예: 변수 numbers: 정수[3]");
+            if (statement.initializer &&
+                dynamic_cast<ArrayLiteralExpr *>(statement.initializer.get())) {
+            } else {
+                errors_.error(statement.type.location,
+                              "배열 크기는 1 이상의 정수여야 합니다.",
+                              "예: 변수 numbers: 정수[3]");
+            }
         }
         if (statement.initializer) {
-            errors_.error(statement.location,
-                          "배열 리터럴 초기화는 현재 미지원입니다.",
-                          "배열 선언 뒤에 각 원소를 따로 대입하세요.");
+            auto *arrayLiteral =
+                dynamic_cast<ArrayLiteralExpr *>(statement.initializer.get());
+            if (!arrayLiteral) {
+                errors_.error(statement.location,
+                              "배열 초기값은 배열 리터럴이어야 합니다.",
+                              "예: 변수 numbers: 정수[] = [1, 2, 3]");
+            } else {
+                if (statement.type.arraySize == 0) {
+                    statement.type.arraySize =
+                        static_cast<int>(arrayLiteral->elements.size());
+                }
+                if (statement.type.arraySize !=
+                    static_cast<int>(arrayLiteral->elements.size())) {
+                    errors_.error(statement.location,
+                                  "배열 크기와 초기값 개수가 다릅니다.");
+                }
+                for (auto &element : arrayLiteral->elements) {
+                    ValueType elementType = analyzeExpr(*element);
+                    if (!sameType(statement.type.base, elementType)) {
+                        errors_.error(element->location,
+                                      "배열 원소 타입이 배열 타입과 다릅니다.",
+                                      "배열 타입은 " +
+                                          valueTypeName(statement.type.base) +
+                                          "입니다.");
+                    }
+                }
+            }
         }
     }
 
@@ -151,7 +233,7 @@ void SemanticAnalyzer::analyzeVarDecl(VarDeclStmt &statement) {
                       "예: 상수 limit: 정수 = 100");
     }
 
-    if (statement.initializer) {
+    if (statement.initializer && !statement.type.isArray) {
         ValueType initializerType = analyzeExpr(*statement.initializer);
         if (!statement.type.isArray && !sameType(statement.type.base, initializerType)) {
             errors_.error(statement.initializer->location,
@@ -200,10 +282,22 @@ void SemanticAnalyzer::analyzeAssignment(AssignmentStmt &statement) {
                                     "이고 접근 인덱스는 " + to_string(literal->value) + "입니다.");
             }
         }
-    } else if (symbol->second.type.isArray) {
+    } else if (symbol->second.type.base == ValueType::Struct) {
         errors_.error(statement.location,
-                      "배열 전체에 한 번에 대입하는 기능은 현재 미지원입니다.",
-                      "예: numbers[0] = 10");
+                      "구조체 전체 대입은 현재 지원하지 않습니다.",
+                      "구조체 필드에 각각 대입하세요. 예: user.age = 20");
+    } else if (symbol->second.type.isArray) {
+        auto *arrayLiteral =
+            dynamic_cast<ArrayLiteralExpr *>(statement.value.get());
+        if (!arrayLiteral) {
+            errors_.error(statement.location,
+                          "배열 전체 대입에는 배열 리터럴이 필요합니다.",
+                          "예: numbers = [1, 2, 3]");
+        } else if (symbol->second.type.arraySize !=
+                   static_cast<int>(arrayLiteral->elements.size())) {
+            errors_.error(statement.location,
+                          "배열 크기와 대입할 원소 개수가 다릅니다.");
+        }
     }
 
     if (statement.value) {
@@ -217,6 +311,59 @@ void SemanticAnalyzer::analyzeAssignment(AssignmentStmt &statement) {
                           "대상 타입은 " + valueTypeName(targetType) +
                               "이고 값 타입은 " + valueTypeName(valueType) + "입니다.");
         }
+    }
+}
+
+void SemanticAnalyzer::analyzeFieldAssignment(FieldAssignmentStmt &statement) {
+    auto symbol = symbols_.find(statement.object);
+    if (symbol == symbols_.end()) {
+        errors_.error(statement.location,
+                      "선언되지 않은 변수 '" + statement.object + "'의 필드에 대입할 수 없습니다.");
+        if (statement.value) {
+            analyzeExpr(*statement.value);
+        }
+        return;
+    }
+    if (symbol->second.isConst) {
+        errors_.error(statement.location,
+                      "상수 구조체 '" + statement.object + "'의 필드는 수정할 수 없습니다.");
+    }
+    if (symbol->second.type.base != ValueType::Struct) {
+        errors_.error(statement.location,
+                      "'" + statement.object + "'는 구조체 변수가 아닙니다.");
+        if (statement.value) {
+            analyzeExpr(*statement.value);
+        }
+        return;
+    }
+    const StructField *field =
+        findStructField(symbol->second.type.structName, statement.field);
+    if (!field) {
+        errors_.error(statement.location,
+                      "구조체 '" + symbol->second.type.structName +
+                          "'에 필드 '" + statement.field + "'가 없습니다.");
+        if (statement.value) {
+            analyzeExpr(*statement.value);
+        }
+        return;
+    }
+    ValueType valueType = analyzeExpr(*statement.value);
+    if (!sameType(field->type.base, valueType)) {
+        errors_.error(statement.value->location,
+                      "구조체 필드 대입 타입이 다릅니다.",
+                      "필드 타입은 " + field->type.display() + "입니다.");
+    }
+}
+
+void SemanticAnalyzer::analyzePointerAssignment(PointerAssignmentStmt &statement) {
+    ValueType pointerType = analyzeExpr(*statement.pointer);
+    if (pointerType != ValueType::Pointer && pointerType != ValueType::Unknown) {
+        errors_.error(statement.pointer->location,
+                      "포인터 쓰기 대상은 포인터여야 합니다.",
+                      "예: 값(p) = 20");
+    }
+    if (statement.value) {
+        analyzeExpr(*statement.value);
     }
 }
 
@@ -283,10 +430,10 @@ void SemanticAnalyzer::analyzeInput(InputStmt &statement) {
 
     ValueType targetType = symbol->second.type.base;
     if (targetType != ValueType::Int && targetType != ValueType::Bool &&
-        targetType != ValueType::Float && targetType != ValueType::Char) {
+        targetType != ValueType::Float && targetType != ValueType::Char &&
+        targetType != ValueType::String && targetType != ValueType::Pointer) {
         errors_.error(statement.location,
-                      "현재 입력은 정수, 논리, 실수, 문자 변수만 지원합니다.",
-                      "문자열과 포인터 입력은 아직 지원하지 않습니다.");
+                      "현재 입력은 스칼라 변수만 지원합니다.");
     }
 }
 
@@ -437,6 +584,47 @@ ValueType SemanticAnalyzer::analyzeExpr(Expr &expression) {
         arrayAccess->inferredType = symbol->second.type.base;
         return arrayAccess->inferredType;
     }
+    if (auto *fieldAccess = dynamic_cast<FieldAccessExpr *>(&expression)) {
+        auto symbol = symbols_.find(fieldAccess->object);
+        if (symbol == symbols_.end()) {
+            errors_.error(fieldAccess->location,
+                          "선언되지 않은 변수 '" + fieldAccess->object +
+                              "'의 필드를 읽을 수 없습니다.");
+            fieldAccess->inferredType = ValueType::Unknown;
+            return fieldAccess->inferredType;
+        }
+        if (symbol->second.type.base != ValueType::Struct) {
+            errors_.error(fieldAccess->location,
+                          "'" + fieldAccess->object + "'는 구조체 변수가 아닙니다.");
+            fieldAccess->inferredType = ValueType::Unknown;
+            return fieldAccess->inferredType;
+        }
+        const StructField *field =
+            findStructField(symbol->second.type.structName, fieldAccess->field);
+        if (!field) {
+            errors_.error(fieldAccess->location,
+                          "구조체 '" + symbol->second.type.structName +
+                              "'에 필드 '" + fieldAccess->field + "'가 없습니다.");
+            fieldAccess->inferredType = ValueType::Unknown;
+            return fieldAccess->inferredType;
+        }
+        fieldAccess->inferredType = field->type.base;
+        return fieldAccess->inferredType;
+    }
+    if (auto *arrayLiteral = dynamic_cast<ArrayLiteralExpr *>(&expression)) {
+        ValueType elementType = ValueType::Unknown;
+        for (auto &element : arrayLiteral->elements) {
+            ValueType currentType = analyzeExpr(*element);
+            if (elementType == ValueType::Unknown) {
+                elementType = currentType;
+            } else if (!sameType(elementType, currentType)) {
+                errors_.error(element->location,
+                              "배열 리터럴 원소 타입이 서로 다릅니다.");
+            }
+        }
+        arrayLiteral->inferredType = elementType;
+        return arrayLiteral->inferredType;
+    }
     if (auto *address = dynamic_cast<AddressExpr *>(&expression)) {
         auto symbol = symbols_.find(address->name);
         if (symbol == symbols_.end()) {
@@ -584,6 +772,59 @@ ValueType SemanticAnalyzer::analyzeExpr(Expr &expression) {
             call->inferredType = ValueType::Void;
             return call->inferredType;
         }
+        if (call->name == "길이") {
+            if (call->arguments.size() != 1) {
+                errors_.error(call->location,
+                              "'길이'는 문자열 인자 1개가 필요합니다.",
+                              "예: 길이(name)");
+            } else {
+                ValueType argType = analyzeExpr(*call->arguments[0]);
+                if (argType != ValueType::String && argType != ValueType::Unknown) {
+                    errors_.error(call->arguments[0]->location,
+                                  "길이 인자는 문자열이어야 합니다.");
+                }
+            }
+            call->inferredType = ValueType::Int;
+            return call->inferredType;
+        }
+        if (call->name == "비교") {
+            if (call->arguments.size() != 2) {
+                errors_.error(call->location,
+                              "'비교'는 문자열 인자 2개가 필요합니다.",
+                              "예: 비교(a, b)");
+            } else {
+                for (auto &argument : call->arguments) {
+                    ValueType argType = analyzeExpr(*argument);
+                    if (argType != ValueType::String && argType != ValueType::Unknown) {
+                        errors_.error(argument->location,
+                                      "비교 인자는 문자열이어야 합니다.");
+                    }
+                }
+            }
+            call->inferredType = ValueType::Int;
+            return call->inferredType;
+        }
+        if (call->name == "부분문자열") {
+            if (call->arguments.size() != 3) {
+                errors_.error(call->location,
+                              "'부분문자열'은 문자열, 시작 위치, 길이 인자가 필요합니다.",
+                              "예: 부분문자열(name, 0, 2)");
+            } else {
+                ValueType textType = analyzeExpr(*call->arguments[0]);
+                ValueType startType = analyzeExpr(*call->arguments[1]);
+                ValueType lengthType = analyzeExpr(*call->arguments[2]);
+                if (textType != ValueType::String && textType != ValueType::Unknown) {
+                    errors_.error(call->arguments[0]->location,
+                                  "부분문자열 첫 번째 인자는 문자열이어야 합니다.");
+                }
+                if (startType != ValueType::Int || lengthType != ValueType::Int) {
+                    errors_.error(call->location,
+                                  "부분문자열의 시작 위치와 길이는 정수여야 합니다.");
+                }
+            }
+            call->inferredType = ValueType::String;
+            return call->inferredType;
+        }
         auto function = functions_.find(call->name);
         if (function == functions_.end()) {
             errors_.error(call->location,
@@ -601,8 +842,52 @@ ValueType SemanticAnalyzer::analyzeExpr(Expr &expression) {
         }
         size_t count = min(call->arguments.size(), function->second.params.size());
         for (size_t i = 0; i < count; i++) {
+            const TypeName &paramTypeName = function->second.params[i];
+            if (paramTypeName.isArray) {
+                auto *variable = dynamic_cast<VariableExpr *>(call->arguments[i].get());
+                if (!variable) {
+                    errors_.error(call->arguments[i]->location,
+                                  "배열 매개변수에는 배열 변수 이름을 전달해야 합니다.");
+                    continue;
+                }
+                auto symbol = symbols_.find(variable->name);
+                if (symbol == symbols_.end() || !symbol->second.type.isArray) {
+                    errors_.error(call->arguments[i]->location,
+                                  "'" + variable->name + "'는 배열 변수가 아닙니다.");
+                    continue;
+                }
+                if (symbol->second.type.base != paramTypeName.base) {
+                    errors_.error(call->arguments[i]->location,
+                                  "배열 매개변수 원소 타입이 일치하지 않습니다.");
+                }
+                call->arguments[i]->inferredType = ValueType::Pointer;
+                continue;
+            }
+            if (paramTypeName.base == ValueType::Struct) {
+                auto *variable = dynamic_cast<VariableExpr *>(call->arguments[i].get());
+                if (!variable) {
+                    errors_.error(call->arguments[i]->location,
+                                  "구조체 매개변수에는 구조체 변수 이름을 전달해야 합니다.");
+                    continue;
+                }
+                auto symbol = symbols_.find(variable->name);
+                if (symbol == symbols_.end() ||
+                    symbol->second.type.base != ValueType::Struct) {
+                    errors_.error(call->arguments[i]->location,
+                                  "'" + variable->name + "'는 구조체 변수가 아닙니다.");
+                    continue;
+                }
+                if (!sameTypeName(paramTypeName, symbol->second.type)) {
+                    errors_.error(call->arguments[i]->location,
+                                  "구조체 매개변수 타입이 일치하지 않습니다.",
+                                  to_string(i + 1) + "번째 인자는 " +
+                                      paramTypeName.display() + "여야 합니다.");
+                }
+                call->arguments[i]->inferredType = ValueType::Pointer;
+                continue;
+            }
             ValueType argType = analyzeExpr(*call->arguments[i]);
-            ValueType paramType = function->second.params[i].base;
+            ValueType paramType = paramTypeName.base;
             if (!sameType(paramType, argType)) {
                 errors_.error(call->arguments[i]->location,
                               "함수 인자 타입이 일치하지 않습니다.",
@@ -621,6 +906,36 @@ ValueType SemanticAnalyzer::analyzeExpr(Expr &expression) {
 bool SemanticAnalyzer::sameType(ValueType expected, ValueType actual) const {
     return expected == actual || expected == ValueType::Unknown ||
            actual == ValueType::Unknown;
+}
+
+bool SemanticAnalyzer::sameTypeName(const TypeName &expected,
+                                    const TypeName &actual) const {
+    if (expected.base != actual.base || expected.isArray != actual.isArray) {
+        return false;
+    }
+    if (expected.base == ValueType::Struct) {
+        return expected.structName == actual.structName;
+    }
+    if (expected.base == ValueType::Pointer &&
+        expected.pointerTarget != ValueType::Unknown &&
+        actual.pointerTarget != ValueType::Unknown) {
+        return expected.pointerTarget == actual.pointerTarget;
+    }
+    return true;
+}
+
+const StructField *SemanticAnalyzer::findStructField(
+    const string &structName, const string &fieldName) const {
+    auto structure = structs_.find(structName);
+    if (structure == structs_.end()) {
+        return nullptr;
+    }
+    for (const auto &field : structure->second.fields) {
+        if (field.name == fieldName) {
+            return &field;
+        }
+    }
+    return nullptr;
 }
 
 bool SemanticAnalyzer::isIntegerLike(ValueType type) const {

@@ -29,6 +29,7 @@ class CodeGenerator {
     struct LocalSlot {
         TypeName type;
         int offset = 0;
+        bool isReference = false;
     };
 
     struct FunctionContext {
@@ -48,9 +49,16 @@ class CodeGenerator {
         double value = 0.0;
     };
 
+    struct StructLayout {
+        vector<StructField> fields;
+        unordered_map<string, int> fieldOffsets;
+        int size = 0;
+    };
+
     ostringstream text_;
     vector<StringData> strings_;
     vector<FloatData> floats_;
+    unordered_map<string, StructLayout> structLayouts_;
     unordered_map<string, string> functionLabels_;
     FunctionContext *current_ = nullptr;
     AssemblyTarget target_;
@@ -58,6 +66,7 @@ class CodeGenerator {
     int stringCounter_ = 0;
 
     void prepareFunctionLabels(Program &program);
+    void prepareStructLayouts(Program &program);
     FunctionContext buildContext(const string &label,
                                  const vector<Param> &params,
                                  const vector<unique_ptr<Stmt>> &body);
@@ -81,6 +90,8 @@ class CodeGenerator {
     void emitStatement(const Stmt &statement);
     void emitVarDecl(const VarDeclStmt &statement);
     void emitAssignment(const AssignmentStmt &statement);
+    void emitFieldAssignment(const FieldAssignmentStmt &statement);
+    void emitPointerAssignment(const PointerAssignmentStmt &statement);
     void emitPrint(const PrintStmt &statement);
     void emitInput(const InputStmt &statement);
     void emitIf(const IfStmt &statement);
@@ -91,6 +102,7 @@ class CodeGenerator {
     void emitFloatExpr(const Expr &expression);
     void emitAddress(const AddressExpr &expression);
     void emitArrayAddress(const string &name, const Expr &index);
+    void emitFieldAddress(const string &object, const string &field);
     void emitStringConcat();
 
     string newLabel(const string &prefix);

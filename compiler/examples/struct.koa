@@ -1,0 +1,19 @@
+구조체 사람
+    name: 문자열
+    age: 정수
+끝
+
+함수 나이더하기(user: 사람, amount: 정수): 정수
+    user.age = user.age + amount
+    반환 user.age
+끝
+
+시작
+    변수 user: 사람
+    user.name = "SKKOA"
+    user.age = 3
+
+    출력 user.name
+    출력 나이더하기(user, 2)
+    출력 user.age
+끝

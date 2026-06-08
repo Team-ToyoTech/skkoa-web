@@ -18,6 +18,7 @@ enum class ValueType {
     Float,
     Char,
     Pointer,
+    Struct,
     Unknown
 };
 
@@ -37,6 +38,8 @@ inline string valueTypeName(ValueType type) {
         return "문자";
     case ValueType::Pointer:
         return "포인터";
+    case ValueType::Struct:
+        return "구조체";
     case ValueType::Unknown:
         return "알 수 없음";
     }
@@ -46,11 +49,19 @@ inline string valueTypeName(ValueType type) {
 struct TypeName {
     ValueType base = ValueType::Unknown;
     ValueType pointerTarget = ValueType::Unknown;
+    string structName;
     bool isArray = false;
     int arraySize = 0;
     SourceLocation location;
 
     string display() const {
+        if (base == ValueType::Struct) {
+            string name = structName;
+            if (isArray) {
+                name += "[" + (arraySize > 0 ? to_string(arraySize) : "") + "]";
+            }
+            return name;
+        }
         string name = valueTypeName(base);
         if (isArray) {
             name += "[" + (arraySize > 0 ? to_string(arraySize) : "") + "]";
@@ -127,6 +138,18 @@ struct ArrayAccessExpr : Expr {
     unique_ptr<Expr> index;
 };
 
+struct FieldAccessExpr : Expr {
+    FieldAccessExpr(SourceLocation loc, string objectName, string fieldName)
+        : Expr(loc), object(move(objectName)), field(move(fieldName)) {}
+    string object;
+    string field;
+};
+
+struct ArrayLiteralExpr : Expr {
+    explicit ArrayLiteralExpr(SourceLocation loc) : Expr(loc) {}
+    vector<unique_ptr<Expr>> elements;
+};
+
 struct BinaryExpr : Expr {
     BinaryExpr(SourceLocation loc, BinaryOp binaryOp, unique_ptr<Expr> leftExpr,
                unique_ptr<Expr> rightExpr)
@@ -185,6 +208,20 @@ struct AssignmentStmt : Stmt {
         : Stmt(loc), name(move(targetName)) {}
     string name;
     unique_ptr<Expr> index;
+    unique_ptr<Expr> value;
+};
+
+struct FieldAssignmentStmt : Stmt {
+    FieldAssignmentStmt(SourceLocation loc, string objectName, string fieldName)
+        : Stmt(loc), object(move(objectName)), field(move(fieldName)) {}
+    string object;
+    string field;
+    unique_ptr<Expr> value;
+};
+
+struct PointerAssignmentStmt : Stmt {
+    explicit PointerAssignmentStmt(SourceLocation loc) : Stmt(loc) {}
+    unique_ptr<Expr> pointer;
     unique_ptr<Expr> value;
 };
 
@@ -250,7 +287,20 @@ struct FunctionDecl {
     vector<unique_ptr<Stmt>> body;
 };
 
+struct StructField {
+    string name;
+    TypeName type;
+    SourceLocation location;
+};
+
+struct StructDecl {
+    SourceLocation location;
+    string name;
+    vector<StructField> fields;
+};
+
 struct Program {
+    vector<unique_ptr<StructDecl>> structs;
     vector<unique_ptr<FunctionDecl>> functions;
     vector<unique_ptr<Stmt>> mainStatements;
 };

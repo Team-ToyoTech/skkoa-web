@@ -27,7 +27,13 @@ class SemanticAnalyzer {
         SourceLocation location;
     };
 
+    struct StructInfo {
+        vector<StructField> fields;
+        SourceLocation location;
+    };
+
     ErrorReporter &errors_;
+    unordered_map<string, StructInfo> structs_;
     unordered_map<string, FunctionInfo> functions_;
     unordered_map<string, Symbol> symbols_;
     TypeName currentReturnType_;
@@ -38,6 +44,8 @@ class SemanticAnalyzer {
     void analyzeStatement(Stmt &statement);
     void analyzeVarDecl(VarDeclStmt &statement);
     void analyzeAssignment(AssignmentStmt &statement);
+    void analyzeFieldAssignment(FieldAssignmentStmt &statement);
+    void analyzePointerAssignment(PointerAssignmentStmt &statement);
     void analyzeExpressionStatement(ExpressionStmt &statement);
     void analyzePrint(PrintStmt &statement);
     void analyzeInput(InputStmt &statement);
@@ -48,6 +56,9 @@ class SemanticAnalyzer {
     ValueType analyzeExpr(Expr &expression);
 
     bool sameType(ValueType expected, ValueType actual) const;
+    bool sameTypeName(const TypeName &expected, const TypeName &actual) const;
+    const StructField *findStructField(const string &structName,
+                                       const string &fieldName) const;
     bool isIntegerLike(ValueType type) const;
     bool isNumeric(ValueType type) const;
     bool isConditionType(ValueType type) const;

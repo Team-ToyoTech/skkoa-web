@@ -68,6 +68,13 @@ run_case "strings" "안녕, SKKOA"
 run_case "float" "3.750000"
 run_case "char" "A"
 run_case "pointer" "42"
+run_case "pointer_write" "25"
+run_case "array_literal" $'10\n15'
+run_case "function_params" $'SKKOA\n3.500000\n9\n6'
+run_case "struct" $'SKKOA\n5\n5'
+run_case "module" "21"
+run_case "string_input" "Daniel" $'Daniel\n'
+run_case "stdlib_strings" $'5\n0\nSK'
 
 if "$BIN" "$ROOT_DIR/tests/invalid_syntax.koa" --emit-asm >/dev/null 2>&1; then
     echo "실패: invalid_syntax.koa가 실패해야 합니다." >&2

@@ -13,6 +13,8 @@ const SKKOA_KEYWORDS = [
     "반복",
     "함수",
     "반환",
+    "구조체",
+    "가져오기",
     "정수",
     "실수",
     "논리",
@@ -31,6 +33,9 @@ const SKKOA_KEYWORDS = [
     "까지",
     "할당",
     "해제",
+    "길이",
+    "비교",
+    "부분문자열",
 ];
 
 const DEFAULT_CODE = `시작
@@ -705,6 +710,70 @@ const fontsizeInput = document.getElementById("fontsizeInput");
 const fontsizeToggleBtn = document.getElementById("fontsizeToggleBtn");
 let tabSize = 4;
 
+function indentUnit() {
+    return " ".repeat(tabSize);
+}
+
+function getLineBounds(value, position) {
+    const lineStart = value.lastIndexOf("\n", Math.max(0, position - 1)) + 1;
+    const nextNewline = value.indexOf("\n", position);
+    return {
+        start: lineStart,
+        end: nextNewline === -1 ? value.length : nextNewline,
+    };
+}
+
+function getLeadingWhitespace(line) {
+    return line.match(/^[ \t]*/)?.[0] ?? "";
+}
+
+function removeOneIndentLevel(indent) {
+    if (!indent) return "";
+    if (indent.endsWith("\t")) return indent.slice(0, -1);
+
+    const unit = indentUnit();
+    if (indent.endsWith(unit)) return indent.slice(0, -unit.length);
+
+    const removeCount = Math.min(tabSize, indent.length);
+    return indent.slice(0, indent.length - removeCount);
+}
+
+function getIndentRelevantText(line) {
+    return stripLineComment(line).trim();
+}
+
+function isBlockOpeningLine(trimmedLine) {
+    return (
+        trimmedLine === "시작" ||
+        /^구조체\s+[A-Za-z_가-힣][A-Za-z0-9_가-힣]*$/.test(trimmedLine) ||
+        /^함수\s+.+\)\s*:\s*\S+$/.test(trimmedLine) ||
+        /^만약\s+.+\s+이면$/.test(trimmedLine) ||
+        /^아니면만약\s+.+\s+이면$/.test(trimmedLine) ||
+        trimmedLine === "아니면" ||
+        /^동안\s+.+\s+반복$/.test(trimmedLine) ||
+        /^반복\s+.+:\s*.+부터\s*.+까지$/.test(trimmedLine)
+    );
+}
+
+function isBlockContinuationLine(trimmedLine) {
+    return (
+        trimmedLine === "아니면" ||
+        /^아니면만약\s+.+\s+이면$/.test(trimmedLine)
+    );
+}
+
+function isBlockClosingLine(trimmedLine) {
+    return trimmedLine === "끝" || isBlockContinuationLine(trimmedLine);
+}
+
+function syncEditorAfterProgrammaticEdit(textarea) {
+    const tab = tabs.find((t) => t.id === activeTabId);
+    if (tab) tab.content = textarea.value;
+    updateLineNumbers();
+    updateSyntaxPreview();
+    isDirty = true;
+}
+
 const tabsizeInput = document.getElementById("tabsizeInput");
 const tabsizeToggleBtn = document.getElementById("tabsizeToggleBtn");
 if (tabsizeInput) {
@@ -784,12 +853,55 @@ codeInput.addEventListener("keydown", function (e) {
         const start = this.selectionStart;
         const end = this.selectionEnd;
         const value = this.value;
-        const spaces = " ".repeat(tabSize);
+        const spaces = indentUnit();
         this.value = value.substring(0, start) + spaces + value.substring(end);
         this.selectionStart = this.selectionEnd = start + tabSize;
-        updateLineNumbers();
-        updateSyntaxPreview();
-        isDirty = true;
+        syncEditorAfterProgrammaticEdit(this);
+        return;
+    }
+
+    if (e.key === "Enter" && !e.isComposing) {
+        e.preventDefault();
+
+        let start = this.selectionStart;
+        let end = this.selectionEnd;
+        let value = this.value;
+        const bounds = getLineBounds(value, start);
+        const currentLine = value.slice(bounds.start, bounds.end);
+        const beforeCursor = value.slice(bounds.start, start);
+        const afterCursor = value.slice(end, bounds.end);
+        let currentIndent = getLeadingWhitespace(currentLine);
+        const trimmedBeforeCursor = getIndentRelevantText(beforeCursor);
+        const trimmedFullLine = getIndentRelevantText(currentLine);
+        const cursorAtLogicalLineEnd = afterCursor.trim().length === 0;
+
+        if (
+            cursorAtLogicalLineEnd &&
+            trimmedBeforeCursor === trimmedFullLine &&
+            isBlockClosingLine(trimmedBeforeCursor)
+        ) {
+            const reducedIndent = removeOneIndentLevel(currentIndent);
+            if (reducedIndent !== currentIndent) {
+                value =
+                    value.slice(0, bounds.start) +
+                    reducedIndent +
+                    value.slice(bounds.start + currentIndent.length);
+                const delta = reducedIndent.length - currentIndent.length;
+                start += delta;
+                end += delta;
+                currentIndent = reducedIndent;
+            }
+        }
+
+        let nextIndent = currentIndent;
+        if (isBlockOpeningLine(trimmedBeforeCursor)) {
+            nextIndent += indentUnit();
+        }
+
+        const insertion = "\n" + nextIndent;
+        this.value = value.slice(0, start) + insertion + value.slice(end);
+        this.selectionStart = this.selectionEnd = start + insertion.length;
+        syncEditorAfterProgrammaticEdit(this);
     }
 });
 

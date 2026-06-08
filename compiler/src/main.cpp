@@ -10,6 +10,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 using namespace std;
@@ -31,6 +32,63 @@ static string readFile(const string &path) {
     ostringstream buffer;
     buffer << file.rdbuf();
     return buffer.str();
+}
+
+static string trim(const string &value) {
+    size_t start = value.find_first_not_of(" \t\r");
+    if (start == string::npos) {
+        return "";
+    }
+    size_t end = value.find_last_not_of(" \t\r");
+    return value.substr(start, end - start + 1);
+}
+
+static bool parseImportLine(const string &line, string &importPath) {
+    string trimmed = trim(line);
+    const string keyword = "가져오기";
+    if (trimmed.rfind(keyword, 0) != 0) {
+        return false;
+    }
+    string rest = trim(trimmed.substr(keyword.size()));
+    if (rest.size() < 2 || rest.front() != '"' || rest.back() != '"') {
+        throw runtime_error("가져오기 문법은 '가져오기 \"파일.koa\"' 형식이어야 합니다.");
+    }
+    importPath = rest.substr(1, rest.size() - 2);
+    return true;
+}
+
+static string expandImports(const fs::path &path, unordered_set<string> &active) {
+    fs::path absolute = fs::absolute(path).lexically_normal();
+    string key = absolute.string();
+    if (active.count(key) > 0) {
+        throw runtime_error("순환 가져오기를 발견했습니다: " + key);
+    }
+    active.insert(key);
+
+    string source = readFile(key);
+    istringstream input(source);
+    ostringstream output;
+    string line;
+    fs::path baseDir = absolute.parent_path();
+
+    while (getline(input, line)) {
+        string importPath;
+        if (parseImportLine(line, importPath)) {
+            fs::path child = fs::path(importPath);
+            if (child.is_relative()) {
+                child = baseDir / child;
+            }
+            output << expandImports(child, active);
+            if (!output.str().empty() && output.str().back() != '\n') {
+                output << '\n';
+            }
+        } else {
+            output << line << '\n';
+        }
+    }
+
+    active.erase(key);
+    return output.str();
 }
 
 static void writeFile(const string &path, const string &content) {
@@ -162,7 +220,8 @@ int main(int argc, char **argv) {
         }
 
         ErrorReporter errors;
-        string source = readFile(options.inputPath);
+        unordered_set<string> activeImports;
+        string source = expandImports(options.inputPath, activeImports);
         Lexer lexer(source, errors);
         vector<Token> tokens = lexer.tokenize();
         if (errors.hasErrors()) {

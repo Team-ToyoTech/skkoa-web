@@ -1,0 +1,6 @@
+시작
+    변수 text: 문자열 = "SKKOA"
+    출력 길이(text)
+    출력 비교(text, "SKKOA")
+    출력 부분문자열(text, 0, 2)
+끝

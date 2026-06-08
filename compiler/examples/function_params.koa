@@ -1,0 +1,22 @@
+함수 소개(name: 문자열, score: 실수, flag: 논리, p: 포인터<정수>): 정수
+    출력 name
+    출력 score
+    만약 flag 이면
+        반환 값(p)
+    아니면
+        반환 0
+    끝
+끝
+
+함수 합계(values: 정수[3]): 정수
+    반환 values[0] + values[1] + values[2]
+끝
+
+시작
+    변수 base: 정수 = 9
+    변수 p: 포인터<정수> = 주소(base)
+    변수 values: 정수[] = [1, 2, 3]
+
+    출력 소개("SKKOA", 3.5, 참, p)
+    출력 합계(values)
+끝

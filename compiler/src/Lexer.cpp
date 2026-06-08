@@ -14,6 +14,7 @@ Lexer::Lexer(string source, ErrorReporter &errors)
         {"아니면", TokenType::Else},      {"아니면만약", TokenType::ElseIf},
         {"동안", TokenType::While},       {"반복", TokenType::Repeat},
         {"함수", TokenType::Function},    {"반환", TokenType::Return},
+        {"구조체", TokenType::Struct},
         {"정수", TokenType::TypeInt},     {"실수", TokenType::TypeFloat},
         {"논리", TokenType::TypeBool},    {"문자", TokenType::TypeChar},
         {"문자열", TokenType::TypeString},
@@ -83,6 +84,9 @@ vector<Token> Lexer::tokenize() {
             break;
         case ',':
             tokens.push_back(makeToken(TokenType::Comma, ",", location));
+            break;
+        case '.':
+            tokens.push_back(makeToken(TokenType::Dot, ".", location));
             break;
         case '+':
             tokens.push_back(makeToken(TokenType::Plus, "+", location));
@@ -369,6 +373,7 @@ bool Lexer::isIdentifierBoundary(char byte) const {
     case ']':
     case ':':
     case ',':
+    case '.':
     case '+':
     case '-':
     case '*':

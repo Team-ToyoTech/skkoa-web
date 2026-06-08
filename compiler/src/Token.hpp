@@ -32,6 +32,7 @@ enum class TokenType {
     Repeat,
     Function,
     Return,
+    Struct,
 
     TypeInt,
     TypeFloat,
@@ -56,6 +57,7 @@ enum class TokenType {
     RightBracket,
     Colon,
     Comma,
+    Dot,
     Assign,
     Plus,
     Minus,
@@ -118,6 +120,8 @@ inline string tokenTypeName(TokenType type) {
         return "함수";
     case TokenType::Return:
         return "반환";
+    case TokenType::Struct:
+        return "구조체";
     case TokenType::TypeInt:
         return "정수";
     case TokenType::TypeFloat:
@@ -162,6 +166,8 @@ inline string tokenTypeName(TokenType type) {
         return ":";
     case TokenType::Comma:
         return ",";
+    case TokenType::Dot:
+        return ".";
     case TokenType::Assign:
         return "=";
     case TokenType::Plus:

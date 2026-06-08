@@ -32,12 +32,15 @@ class Parser {
     void synchronize();
     void skipNewLines();
 
+    unique_ptr<StructDecl> parseStruct();
     unique_ptr<FunctionDecl> parseFunction();
     vector<unique_ptr<Stmt>> parseBlock(initializer_list<TokenType> terminators,
                                         const string &blockName);
     unique_ptr<Stmt> parseStatement();
     unique_ptr<Stmt> parseVarDecl(bool isConst);
     unique_ptr<Stmt> parseAssignment();
+    unique_ptr<Stmt> parseFieldAssignment();
+    unique_ptr<Stmt> parsePointerAssignment();
     unique_ptr<Stmt> parseExpressionStatement();
     unique_ptr<Stmt> parsePrint();
     unique_ptr<Stmt> parseInput();

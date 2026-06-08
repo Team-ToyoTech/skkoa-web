@@ -1,0 +1,7 @@
+시작
+    변수 numbers: 정수[] = [1, 2, 3, 4]
+    출력 numbers[0] + numbers[1] + numbers[2] + numbers[3]
+
+    numbers = [1, 2, 3, 9]
+    출력 numbers[0] + numbers[1] + numbers[2] + numbers[3]
+끝
