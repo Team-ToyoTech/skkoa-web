@@ -108,6 +108,23 @@ body {
     width: 100%;
 }
 
+.platform-extra {
+    margin-top: 12px !important;
+    font-size: 0.9rem;
+}
+
+.platform-extra a {
+    display: inline;
+    width: auto;
+    min-height: auto;
+    padding: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    color: #9fb0ff;
+    text-decoration: underline;
+}
+
 .download-notes {
     padding: 28px 34px;
 }

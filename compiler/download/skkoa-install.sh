@@ -194,7 +194,7 @@ warn_runtime_tools() {
 }
 
 main() {
-    info "Installing SKKOA compiler"
+    info "Installing SKKOA; LTW compiler"
     install_toolchain
     copy_or_download_sources
     install_libraries

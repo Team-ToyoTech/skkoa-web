@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SKKOA; LTW Syntax</title>
+        <link rel="icon" href="/image/skkoa_logo_remove_background_large.png" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css"
+        />
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/docs/docs.css" />
+        <script src="/script.js" defer></script>
+    </head>
+    <body>
+        <header class="main-header">
+            <div class="header-left">
+                <img
+                    src="/image/skkoa_logo_remove_background_large.png"
+                    alt="SKKOA; LTW Logo"
+                    class="logo"
+                />
+                <div class="header-text">
+                    <h1>SKKOA; LTW Syntax</h1>
+                    <p>Language to Write</p>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/compiler/" class="nav-link">Compiler</a>
+                <a href="/download/" class="nav-link">Download</a>
+            </nav>
+        </header>
+        <main class="docs-shell">
+            <aside class="docs-sidebar" aria-label="문법 목차">
+                <div class="docs-sidebar-title">문법</div>
+                <nav class="docs-nav">
+                    <a href="/docs/">문서 개요</a>
+                    <a class="active" href="/docs/syntax/">문법 문서</a>
+                    <a href="#basic">기본 구조</a>
+                    <a href="#types">자료형</a>
+                    <a href="#variables">변수와 상수</a>
+                    <a href="#control-flow">제어 흐름</a>
+                    <a href="#functions">함수</a>
+                    <a href="#arrays">배열</a>
+                    <a href="#strings">문자열</a>
+                    <a href="#pointers">포인터</a>
+                    <a href="#summary">문법 요약</a>
+                    <a href="/docs/features/">기능 문서</a>
+                </nav>
+            </aside>
+            <article class="docs-reader docs-article intro-section">
+                <section id="basic" class="doc-section">
+                    <h1>문법 문서</h1>
+                    <p>
+                        SKKOA; LTW 코드는 한국어 키워드와 간단한 블록 구조로
+                        작성합니다. 프로그램은 보통 <code>시작</code>과
+                        <code>끝</code> 사이에 실행할 코드를 둡니다.
+                    </p>
+                    <pre><code>시작
+    출력 "Hello"
+끝</code></pre>
+
+                    <h2>줄마다 하나씩 쓰기</h2>
+                    <p>한 줄에 하나의 일을 쓰면 읽기 쉽습니다.</p>
+                    <pre><code>변수 age: 정수 = 20
+출력 age</code></pre>
+
+                    <h2>주석</h2>
+                    <p>주석은 컴퓨터가 실행하지 않는 설명입니다.</p>
+                    <pre><code># 이름을 출력합니다
+출력 "SKKOA; LTW"</code></pre>
+
+                    <h2>다른 파일 가져오기</h2>
+                    <pre><code>가져오기 "stack.koa"
+가져오기 "queue.koa"</code></pre>
+                    <p>가져온 뒤에는 그 파일 안에 있는 구조체와 함수를 바로 사용할 수 있습니다.</p>
+                </section>
+
+                <section id="types" class="doc-section">
+                    <h2>자료형</h2>
+                    <p>자료형은 값의 종류입니다.</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>자료형</th>
+                                <th>담는 값</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>정수</code></td><td>1, 2, 100 같은 숫자</td></tr>
+                            <tr><td><code>실수</code></td><td>1.5, 3.14 같은 소수</td></tr>
+                            <tr><td><code>논리</code></td><td><code>참</code> 또는 <code>거짓</code></td></tr>
+                            <tr><td><code>문자</code></td><td><code>'A'</code> 같은 한 글자</td></tr>
+                            <tr><td><code>문자열</code></td><td><code>"안녕하세요"</code> 같은 글</td></tr>
+                            <tr><td><code>없음</code></td><td>함수가 돌려주는 값이 없을 때</td></tr>
+                            <tr><td><code>포인터&lt;정수&gt;</code></td><td>주소를 다룰 때 사용하는 값</td></tr>
+                        </tbody>
+                    </table>
+                    <pre><code>시작
+    변수 age: 정수 = 20
+    변수 height: 실수 = 170.5
+    변수 passed: 논리 = 참
+    변수 name: 문자열 = "SKKOA; LTW"
+
+    출력 age
+    출력 height
+    출력 passed
+    출력 name
+끝</code></pre>
+                </section>
+
+                <section id="variables" class="doc-section">
+                    <h2>변수와 상수</h2>
+                    <p>변수는 값을 담는 이름입니다.</p>
+                    <pre><code>변수 x: 정수 = 10</code></pre>
+                    <h3>값 바꾸기</h3>
+                    <pre><code>시작
+    변수 score: 정수 = 70
+    score = score + 10
+    출력 score
+끝</code></pre>
+                    <h3>입력으로 값 넣기</h3>
+                    <pre><code>시작
+    변수 age: 정수
+    입력 age
+    출력 age
+끝</code></pre>
+                    <h3>상수</h3>
+                    <pre><code>상수 maxScore: 정수 = 100</code></pre>
+                </section>
+
+                <section id="control-flow" class="doc-section">
+                    <h2>제어 흐름</h2>
+                    <p>제어 흐름은 코드가 실행되는 순서입니다.</p>
+                    <h3>조건문</h3>
+                    <pre><code>시작
+    변수 score: 정수 = 85
+
+    만약 score >= 80 이면
+        출력 "통과"
+    아니면
+        출력 "실패"
+    끝
+끝</code></pre>
+                    <h3>여러 조건</h3>
+                    <pre><code>만약 score >= 90 이면
+    출력 "A"
+아니면만약 score >= 80 이면
+    출력 "B"
+아니면
+    출력 "C"
+끝</code></pre>
+                    <h3>동안 반복</h3>
+                    <pre><code>시작
+    변수 i: 정수 = 0
+
+    동안 i &lt; 5 반복
+        출력 i
+        i = i + 1
+    끝
+끝</code></pre>
+                    <h3>범위 반복</h3>
+                    <pre><code>시작
+    반복 i: 1부터 3까지
+        출력 i
+    끝
+끝</code></pre>
+                    <h3>반복 제어</h3>
+                    <pre><code>시작
+    반복 i: 1부터 6까지
+        만약 i == 2 이면
+            계속
+        끝
+
+        만약 i == 5 이면
+            중단
+        끝
+
+        출력 i
+    끝
+끝</code></pre>
+                </section>
+
+                <section id="functions" class="doc-section">
+                    <h2>함수</h2>
+                    <p>함수는 자주 쓰는 코드를 이름으로 묶은 것입니다.</p>
+                    <h3>값을 돌려주는 함수</h3>
+                    <pre><code>함수 더하기(a: 정수, b: 정수): 정수
+    반환 a + b
+끝
+
+시작
+    출력 더하기(3, 4)
+끝</code></pre>
+                    <h3>값을 돌려주지 않는 함수</h3>
+                    <pre><code>함수 인사(): 없음
+    출력 "안녕하세요"
+끝
+
+시작
+    인사()
+끝</code></pre>
+                    <h3>구조체</h3>
+                    <pre><code>구조체 사람
+    name: 문자열
+    age: 정수
+끝</code></pre>
+                    <h3>구조체를 바꾸는 함수</h3>
+                    <pre><code>구조체 사람
+    age: 정수
+끝
+
+함수 한살더하기(user: 사람): 없음
+    user.age = user.age + 1
+끝
+
+시작
+    변수 user: 사람
+    user.age = 10
+    한살더하기(user)
+    출력 user.age
+끝</code></pre>
+                    <h3>구조체 복사</h3>
+                    <pre><code>구조체 사람
+    name: 문자열
+    age: 정수
+끝
+
+시작
+    변수 original: 사람
+    original.name = "SKKOA; LTW"
+    original.age = 7
+
+    변수 copy: 사람 = original
+    copy = original
+끝</code></pre>
+                </section>
+
+                <section id="arrays" class="doc-section">
+                    <h2>배열</h2>
+                    <p>배열은 같은 종류의 값을 여러 개 담는 상자입니다.</p>
+                    <pre><code>변수 numbers: 정수[3]</code></pre>
+                    <h3>값 넣기와 꺼내기</h3>
+                    <pre><code>시작
+    변수 numbers: 정수[3]
+
+    numbers[0] = 10
+    numbers[1] = 20
+    numbers[2] = 30
+
+    출력 numbers[0] + numbers[1] + numbers[2]
+끝</code></pre>
+                    <h3>배열 리터럴</h3>
+                    <pre><code>시작
+    변수 numbers: 정수[] = [1, 2, 3, 4]
+    출력 numbers[0]
+끝</code></pre>
+                    <h3>배열 길이</h3>
+                    <pre><code>시작
+    변수 numbers: 정수[] = [1, 2, 3, 4]
+    출력 배열길이(numbers)
+끝</code></pre>
+                </section>
+
+                <section id="strings" class="doc-section">
+                    <h2>문자열</h2>
+                    <p>문자열은 글자 여러 개를 담는 값입니다.</p>
+                    <pre><code>시작
+    변수 name: 문자열 = "SKKOA; LTW"
+    출력 "Hello, " + name
+끝</code></pre>
+                    <h3>문자열 함수</h3>
+                    <pre><code>시작
+    변수 name: 문자열 = "SKKOA; LTW"
+
+    출력 길이(name)
+    출력 비교(name, "SKKOA; LTW")
+    출력 부분문자열(name, 0, 2)
+끝</code></pre>
+                </section>
+
+                <section id="pointers" class="doc-section">
+                    <h2>포인터</h2>
+                    <p>
+                        포인터는 어떤 값이 있는 위치를 담습니다. 변수, 조건문,
+                        반복문, 함수, 배열을 먼저 익힌 뒤 읽어도 됩니다.
+                    </p>
+                    <pre><code>시작
+    변수 x: 정수 = 10
+    변수 p: 포인터&lt;정수&gt; = 주소(x)
+
+    출력 값(p)
+끝</code></pre>
+                    <h3>값 바꾸기</h3>
+                    <pre><code>시작
+    변수 x: 정수 = 10
+    변수 p: 포인터&lt;정수&gt; = 주소(x)
+
+    값(p) = 25
+    출력 x
+끝</code></pre>
+                </section>
+
+                <section id="summary" class="doc-section">
+                    <h2>문법 요약</h2>
+                    <h3>기본</h3>
+                    <pre><code>시작
+    출력 "안녕하세요"
+끝</code></pre>
+                    <h3>변수</h3>
+                    <pre><code>변수 이름: 자료형 = 값
+상수 이름: 자료형 = 값</code></pre>
+                    <h3>조건</h3>
+                    <pre><code>만약 조건 이면
+    실행할 코드
+아니면
+    다른 코드
+끝</code></pre>
+                    <h3>반복</h3>
+                    <pre><code>동안 조건 반복
+    실행할 코드
+끝</code></pre>
+                    <pre><code>반복 i: 1부터 3까지
+    출력 i
+끝</code></pre>
+                    <pre><code>중단
+계속</code></pre>
+                    <h3>모듈</h3>
+                    <pre><code>가져오기 "stack.koa"
+가져오기 "queue.koa"</code></pre>
+                    <p class="back-to-top"><a href="#basic">문법 맨 위로</a></p>
+                </section>
+            </article>
+            <div class="fixed-box">
+                <div class="cube3d" id="cube-toggle-btn">
+                    <div class="cube3d-inner">
+                        <div class="cube3d-face cube3d-front"></div>
+                        <div class="cube3d-face cube3d-back"></div>
+                        <div class="cube3d-face cube3d-right"></div>
+                        <div class="cube3d-face cube3d-left"></div>
+                        <div class="cube3d-face cube3d-top"></div>
+                        <div class="cube3d-face cube3d-bottom"></div>
+                    </div>
+                </div>
+                <div class="cube-menu" id="cube-menu" style="display: none">
+                    <a href="/" class="cube-menu-item">Home</a>
+                    <a href="/docs/" class="cube-menu-item">Docs</a>
+                    <a href="/compiler/" class="cube-menu-item">Online</a>
+                    <a href="/download/" class="cube-menu-item">Download</a>
+                </div>
+            </div>
+        </main>
+        <footer class="main-footer">
+            <p>
+                &copy; <span id="yearNow"></span> Team ToyoTech. All rights
+                reserved.
+            </p>
+        </footer>
+    </body>
+</html>

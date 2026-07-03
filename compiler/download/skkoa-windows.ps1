@@ -57,7 +57,7 @@ function Install-Toolchain {
     New-Item -ItemType Directory -Force -Path $ToolchainRoot | Out-Null
     $bash = Join-Path $UsrBin "bash.exe"
     if (!(Test-Path $bash)) {
-        $headers = @{ "User-Agent" = "SKKOA installer" }
+        $headers = @{ "User-Agent" = "SKKOA; LTW installer" }
         $release = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/msys2/msys2-installer/releases/latest"
         $asset = $release.assets |
             Where-Object { $_.name -match "^msys2-base-x86_64-.*\.sfx\.exe$" } |
@@ -200,11 +200,11 @@ function Warn-Tools {
         }
     }
     if ($missing.Count -gt 0) {
-        Write-Warning "Missing runtime tool(s): $($missing -join ', '). SKKOA uses NASM and GCC when it links a .koa file into an executable."
+        Write-Warning "Missing runtime tool(s): $($missing -join ', '). SKKOA; LTW uses NASM and GCC when it links a .koa file into an executable."
     }
 }
 
-Write-Skkoa "Installing SKKOA compiler for Windows"
+Write-Skkoa "Installing SKKOA; LTW compiler for Windows"
 Install-Toolchain
 Download-Source
 Install-Libraries

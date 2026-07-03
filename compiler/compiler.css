@@ -432,7 +432,7 @@ body {
     font-size: 14px;
     font-weight: 600;
     color: #fff;
-    letter-spacing: 2px;
+    letter-spacing: 0;
     padding: 3px 12px;
     background: #1e2130;
     border-radius: 8px;
@@ -442,6 +442,7 @@ body {
     height: 26px;
     display: flex;
     align-items: center;
+    white-space: nowrap;
 }
 
 .editor-actions {

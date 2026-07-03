@@ -1,5 +1,4 @@
 가져오기 "structures.koa"
-가져오기 "stack.koa"
 
 시작
     변수 stack: 정수스택

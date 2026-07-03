@@ -530,8 +530,27 @@ main .inline-links a:hover {
 @media (max-width: 560px) {
     .main-header {
         padding: 12px 14px;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    .header-left {
+        min-width: 0;
     }
     .header-text h1 {
         font-size: 1.3rem;
+    }
+    .header-nav {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        width: 100%;
+        gap: 6px;
+    }
+    .nav-link {
+        width: 100%;
+        min-width: 0;
+        justify-content: center;
+        padding: 7px 4px;
+        font-size: 0.86rem;
     }
 }

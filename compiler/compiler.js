@@ -11,6 +11,8 @@ const SKKOA_KEYWORDS = [
     "아니면",
     "동안",
     "반복",
+    "중단",
+    "계속",
     "함수",
     "반환",
     "구조체",
@@ -36,6 +38,7 @@ const SKKOA_KEYWORDS = [
     "길이",
     "비교",
     "부분문자열",
+    "배열길이",
     "스택초기화",
     "스택넣기",
     "스택빼기",
@@ -53,7 +56,7 @@ const SKKOA_KEYWORDS = [
 ];
 
 const DEFAULT_CODE = `시작
-    출력 "안녕하세요, SKKOA!"
+    출력 "안녕하세요, SKKOA; LTW!"
 끝`;
 
 const COMPILER_DOWNLOAD_PAGE = "/download/";
@@ -64,10 +67,13 @@ const EXAMPLE_FILES = [
     ["condition.koa", "Condition"],
     ["loop.koa", "Loop"],
     ["repeat.koa", "Repeat"],
+    ["break_continue.koa", "Break / Continue"],
     ["function.koa", "Function"],
     ["function_params.koa", "Function Params"],
+    ["many_params.koa", "Many Params"],
     ["array.koa", "Array"],
     ["array_literal.koa", "Array Literal"],
+    ["array_length.koa", "Array Length"],
     ["strings.koa", "Strings"],
     ["string_input.koa", "String Input"],
     ["stdlib_strings.koa", "String Library"],
@@ -78,6 +84,7 @@ const EXAMPLE_FILES = [
     ["pointer_write.koa", "Pointer Write"],
     ["memory.koa", "Memory"],
     ["struct.koa", "Struct"],
+    ["struct_copy.koa", "Struct Copy"],
     ["module.koa", "Module"],
     ["stack.koa", "Stack"],
     ["queue.koa", "Queue"],
@@ -151,6 +158,52 @@ function normalizeLines(code) {
         .filter(Boolean);
 }
 
+function encodeImportPath(path) {
+    return path
+        .split("/")
+        .map((part) => encodeURIComponent(part))
+        .join("/");
+}
+
+async function fetchImportSource(path) {
+    const normalized = path.endsWith(".koa") ? path : `${path}.koa`;
+    const encoded = encodeImportPath(normalized);
+    const candidates = [`lib/${encoded}`, `examples/${encoded}`];
+
+    for (const candidate of candidates) {
+        const response = await fetch(candidate);
+        if (response.ok) return response.text();
+    }
+
+    throw new Error(`가져오기 파일을 찾을 수 없습니다: ${normalized}`);
+}
+
+async function expandImports(code, seen = new Set()) {
+    const lines = code.split(/\r?\n/);
+    const expanded = [];
+
+    for (const line of lines) {
+        const match = stripLineComment(line)
+            .trim()
+            .match(/^가져오기\s+"([^"]+)"$/);
+        if (!match) {
+            expanded.push(line);
+            continue;
+        }
+
+        const importPath = match[1].endsWith(".koa")
+            ? match[1]
+            : `${match[1]}.koa`;
+        if (seen.has(importPath)) continue;
+
+        seen.add(importPath);
+        const source = await fetchImportSource(importPath);
+        expanded.push(await expandImports(source, seen));
+    }
+
+    return expanded.join("\n");
+}
+
 function startsBlock(line) {
     return (
         /^만약\s+.+\s+이면$/.test(line) ||
@@ -183,7 +236,8 @@ function evalExpression(expr, env) {
         .replace(/주소\(\s*([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\s*\)/g, '__addr("$1")')
         .replace(/값\(([^)]+)\)/g, "__value($1)")
         .replace(/할당\(([^)]+)\)/g, "__alloc($1)")
-        .replace(/해제\(([^)]+)\)/g, "__free($1)");
+        .replace(/해제\(([^)]+)\)/g, "__free($1)")
+        .replace(/배열길이\(\s*([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\s*\)/g, '__arrayLength("$1")');
     return Function("env", `with (env) { return (${jsExpr}); }`)(env);
 }
 
@@ -193,26 +247,177 @@ function parseFunctions(lines, env) {
         if (!match) continue;
 
         const end = findMatchingEnd(lines, i);
+        if (end < 0) continue;
         const params = match[2]
             .split(",")
             .map((part) => part.trim())
             .filter(Boolean)
             .map((part) => part.split(":")[0].trim());
-        const returnLine = lines
-            .slice(i + 1, end)
-            .find((line) => line.startsWith("반환 "));
-        if (returnLine) {
-            const returnExpr = returnLine.replace(/^반환\s+/, "");
-            env[match[1]] = (...args) => {
-                const localEnv = Object.create(env);
-                params.forEach((name, index) => {
-                    localEnv[name] = args[index];
-                });
-                return evalExpression(returnExpr, localEnv);
-            };
-        }
+        env[match[1]] = (...args) => {
+            const localEnv = Object.create(env);
+            params.forEach((name, index) => {
+                localEnv[name] = args[index];
+            });
+            const result = executeFunctionLines(lines, i + 1, end, localEnv);
+            return result.returned ? result.value : 0;
+        };
         i = end;
     }
+}
+
+function defaultValueForType(type) {
+    if (type === "문자열") return "";
+    if (type === "문자") return "\0";
+    if (type === "논리") return false;
+    return 0;
+}
+
+function cloneSimValue(value) {
+    if (Array.isArray(value)) return value.slice();
+    if (value && typeof value === "object") {
+        if (value.kind === "var" || value.kind === "heap") return { ...value };
+        return { ...value };
+    }
+    return value;
+}
+
+function formatSimValue(value) {
+    if (value && typeof value === "object") {
+        if (value.kind === "var") return `주소(${value.name})`;
+        if (value.kind === "heap") return `할당(${value.size})`;
+    }
+    return String(value);
+}
+
+function emitSimOutput(env, value) {
+    const formatted = formatSimValue(value);
+    if (Array.isArray(env.__output)) env.__output.push(formatted);
+    appendConsole(`${formatted}\n`);
+}
+
+function setPointerValue(pointer, value, env) {
+    if (!pointer) return;
+    if (pointer.kind === "var") {
+        env[pointer.name] = value;
+    } else if (pointer.kind === "heap" && Array.isArray(env.__heap)) {
+        env.__heap[pointer.index] = value;
+    }
+}
+
+function assignSimTarget(target, value, env) {
+    let match = target.match(/^([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\[(.+)\]$/);
+    if (match) {
+        env[match[1]][evalExpression(match[2], env)] = value;
+        return true;
+    }
+
+    match = target.match(/^([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\.([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)$/);
+    if (match) {
+        if (!env[match[1]] || typeof env[match[1]] !== "object") {
+            env[match[1]] = {};
+        }
+        env[match[1]][match[2]] = value;
+        return true;
+    }
+
+    env[target] = cloneSimValue(value);
+    return true;
+}
+
+function handleDeclaration(line, env) {
+    const match = line.match(/^(변수|상수)\s+([A-Za-z_가-힣][A-Za-z0-9_가-힣]*):\s*([^\s=]+)(?:\s*=\s*(.+))?$/);
+    if (!match) return false;
+
+    const name = match[2];
+    const type = match[3];
+    const initializer = match[4];
+    const arrayType = type.match(/^(.+)\[(\d*)\]$/);
+    if (arrayType) {
+        if (initializer) {
+            const value = evalExpression(initializer, env);
+            env[name] = Array.isArray(value) ? value.slice() : [];
+        } else {
+            const size = Number(arrayType[2] || 0);
+            env[name] = new Array(size).fill(defaultValueForType(arrayType[1]));
+        }
+        return true;
+    }
+
+    if (initializer) {
+        env[name] = cloneSimValue(evalExpression(initializer, env));
+    } else if (["정수", "논리", "실수", "문자", "문자열"].includes(type)) {
+        env[name] = defaultValueForType(type);
+    } else if (type.startsWith("포인터<")) {
+        env[name] = null;
+    } else {
+        env[name] = {};
+    }
+    return true;
+}
+
+function handleAssignment(line, env) {
+    let match = line.match(/^값\(([^)]+)\)\s*=\s*(.+)$/);
+    if (match) {
+        setPointerValue(evalExpression(match[1], env), evalExpression(match[2], env), env);
+        return true;
+    }
+
+    match = line.match(/^([^\s=]+)\s*=\s*(.+)$/);
+    if (!match) return false;
+    assignSimTarget(match[1], evalExpression(match[2], env), env);
+    return true;
+}
+
+function executeSimpleLine(line, env) {
+    if (handleDeclaration(line, env)) return true;
+
+    let match = line.match(/^출력\s+(.+)$/);
+    if (match) {
+        const expr = match[1];
+        const stringMatch = expr.match(/^"(.*)"$/);
+        const value = stringMatch ? stringMatch[1] : evalExpression(expr, env);
+        emitSimOutput(env, value);
+        return true;
+    }
+
+    if (handleAssignment(line, env)) return true;
+
+    evalExpression(line, env);
+    return true;
+}
+
+function executeFunctionLines(lines, start, end, env) {
+    for (let i = start; i < end; i++) {
+        const line = lines[i];
+        if (line === "끝" || line === "아니면" || line.startsWith("아니면만약 ")) {
+            continue;
+        }
+
+        if (/^만약\s+.+\s+이면$/.test(line)) {
+            const blockEnd = findMatchingEnd(lines, i);
+            const segments = splitIfSegments(lines, i, blockEnd);
+            for (const segment of segments) {
+                if (segment.condition === null || evalExpression(segment.condition, env)) {
+                    const result = executeFunctionLines(lines, segment.start, segment.end, env);
+                    if (result.returned) return result;
+                    break;
+                }
+            }
+            i = blockEnd;
+            continue;
+        }
+
+        if (line.startsWith("반환 ")) {
+            return {
+                returned: true,
+                value: evalExpression(line.replace(/^반환\s+/, ""), env),
+            };
+        }
+
+        executeSimpleLine(line, env);
+    }
+
+    return { returned: false, value: 0 };
 }
 
 function splitIfSegments(lines, start, end) {
@@ -271,32 +476,23 @@ async function executeBlock(lines, start, end, env, output) {
             continue;
         }
 
-        let match = line.match(/^변수\s+([^\s:[\]]+):\s*정수\[(\d+)\]$/);
-        if (match) {
-            env[match[1]] = new Array(Number(match[2])).fill(0);
+        if (line === "중단") {
+            throw { kind: "break" };
+        }
+
+        if (line === "계속") {
+            throw { kind: "continue" };
+        }
+
+        if (handleDeclaration(line, env)) {
             continue;
         }
 
-        match = line.match(/^변수\s+([^\s:]+):\s*(정수|논리|실수|문자|문자열|포인터<[^>]+>)(?:\s*=\s*(.+))?$/);
-        if (match) {
-            if (match[2] === "문자열") {
-                env[match[1]] = match[3] ? evalExpression(match[3], env) : "";
-            } else if (match[2] === "문자") {
-                const value = match[3] ? evalExpression(match[3], env) : "\0";
-                env[match[1]] = typeof value === "string" ? value[0] ?? "" : value;
-            } else {
-                env[match[1]] = match[3] ? evalExpression(match[3], env) : 0;
-            }
+        if (handleAssignment(line, env)) {
             continue;
         }
 
-        match = line.match(/^([^\s[\]]+)\[(.+)\]\s*=\s*(.+)$/);
-        if (match) {
-            env[match[1]][evalExpression(match[2], env)] = evalExpression(match[3], env);
-            continue;
-        }
-
-        match = line.match(/^입력\s+([^\s[\]]+)\[(.+)\]$/);
+        let match = line.match(/^입력\s+([^\s[\]]+)\[(.+)\]$/);
         if (match) {
             const rawValue = await readConsoleInput(
                 `입력 ${match[1]}[${evalExpression(match[2], env)}]`
@@ -312,19 +508,12 @@ async function executeBlock(lines, start, end, env, output) {
             continue;
         }
 
-        match = line.match(/^([^\s=]+)\s*=\s*(.+)$/);
-        if (match) {
-            env[match[1]] = evalExpression(match[2], env);
-            continue;
-        }
-
         match = line.match(/^출력\s+(.+)$/);
         if (match) {
             const expr = match[1];
             const stringMatch = expr.match(/^"(.*)"$/);
             const value = stringMatch ? stringMatch[1] : evalExpression(expr, env);
-            output.push(String(value));
-            appendConsole(`${String(value)}\n`);
+            emitSimOutput(env, value);
             continue;
         }
 
@@ -346,7 +535,12 @@ async function executeBlock(lines, start, end, env, output) {
             const blockEnd = findMatchingEnd(lines, i);
             let guard = 0;
             while (evalExpression(condition, env)) {
-                await executeBlock(lines, i + 1, blockEnd, env, output);
+                try {
+                    await executeBlock(lines, i + 1, blockEnd, env, output);
+                } catch (signal) {
+                    if (signal?.kind === "break") break;
+                    if (signal?.kind !== "continue") throw signal;
+                }
                 guard++;
                 if (guard > 1000) {
                     throw new Error("반복이 1000회를 넘어 중단했습니다.");
@@ -364,7 +558,12 @@ async function executeBlock(lines, start, end, env, output) {
             const blockEnd = findMatchingEnd(lines, i);
             for (let value = from; value <= to; value++) {
                 env[iterator] = value;
-                await executeBlock(lines, i + 1, blockEnd, env, output);
+                try {
+                    await executeBlock(lines, i + 1, blockEnd, env, output);
+                } catch (signal) {
+                    if (signal?.kind === "break") break;
+                    if (signal?.kind !== "continue") throw signal;
+                }
             }
             i = blockEnd;
             continue;
@@ -379,9 +578,12 @@ async function runSimulation() {
     const code = document.querySelector(".code-input").value;
     try {
         outputEl.textContent = "";
-        const lines = normalizeLines(code);
+        const lines = normalizeLines(await expandImports(code));
         const heap = [];
+        const output = [];
         const env = {
+            __heap: heap,
+            __output: output,
             __addr(name) {
                 return { kind: "var", name };
             },
@@ -400,17 +602,37 @@ async function runSimulation() {
                 if (pointer?.kind === "heap") heap[pointer.index] = undefined;
                 return 0;
             },
+            __arrayLength(name) {
+                return Array.isArray(env[name]) ? env[name].length : 0;
+            },
+            길이(value) {
+                return String(value).length;
+            },
+            비교(a, b) {
+                const left = String(a);
+                const right = String(b);
+                if (left === right) return 0;
+                return left < right ? -1 : 1;
+            },
+            부분문자열(value, start, length) {
+                return String(value).substring(Number(start), Number(start) + Number(length));
+            },
         };
         parseFunctions(lines, env);
         const start = lines.findIndex((line) => line === "시작");
         if (start < 0) throw new Error("'시작' 블록을 찾을 수 없습니다.");
         const end = findMatchingEnd(lines, start);
         if (end < 0) throw new Error("'시작' 블록을 닫는 '끝'이 필요합니다.");
-        const output = [];
         await executeBlock(lines, start + 1, end, env, output);
         if (!output.length) appendConsole("출력 없음\n");
     } catch (error) {
-        outputEl.textContent = `시뮬레이터 오류: ${error.message}`;
+        if (error?.kind === "break") {
+            outputEl.textContent = "시뮬레이터 오류: '중단'은 반복문 안에서만 사용할 수 있습니다.";
+        } else if (error?.kind === "continue") {
+            outputEl.textContent = "시뮬레이터 오류: '계속'은 반복문 안에서만 사용할 수 있습니다.";
+        } else {
+            outputEl.textContent = `시뮬레이터 오류: ${error.message}`;
+        }
     }
     updateSyntaxPreview();
 }
@@ -443,7 +665,7 @@ document.getElementById("stopButton").addEventListener("click", function () {
 });
 
 document.getElementById("githubButton").addEventListener("click", function () {
-    window.open("https://github.com/meozigoon/skkoa-web-compiler", "_blank");
+    window.open("https://github.com/team-toyotech/", "_blank");
 });
 
 let tabs = [];

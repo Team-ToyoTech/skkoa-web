@@ -58,7 +58,7 @@ run_case() {
     echo "통과: $name"
 }
 
-run_case "hello" "안녕하세요, SKKOA!"
+run_case "hello" "안녕하세요, SKKOA; LTW!"
 run_case "variables" "30"
 run_case "condition" "통과"
 run_case "loop" $'0\n1\n2\n3\n4'
@@ -66,20 +66,24 @@ run_case "function" "7"
 run_case "array" "60"
 run_case "input" "성인" $'21\n'
 run_case "repeat" $'1\n2\n3'
-run_case "strings" "안녕, SKKOA"
+run_case "strings" "안녕, SKKOA; LTW"
 run_case "float" "3.750000"
 run_case "char" "A"
 run_case "pointer" "42"
 run_case "pointer_write" "25"
 run_case "array_literal" $'10\n15'
-run_case "function_params" $'SKKOA\n3.500000\n9\n6'
-run_case "struct" $'SKKOA\n5\n5'
+run_case "function_params" $'SKKOA; LTW\n3.500000\n9\n6'
+run_case "many_params" "36"
+run_case "struct" $'SKKOA; LTW\n5\n5'
+run_case "struct_copy" $'SKKOA; LTW\n7\n9'
 run_case "module" "21"
 run_case "stack" $'20\n20\n10'
 run_case "queue" $'10\n10\n20'
 run_case "structures_usage" "7"
 run_case "string_input" "Daniel" $'Daniel\n'
-run_case "stdlib_strings" $'5\n0\nSK'
+run_case "stdlib_strings" $'10\n0\nSK'
+run_case "break_continue" $'1\n3\n4'
+run_case "array_length" "4"
 
 if "$BIN" "$ROOT_DIR/tests/invalid_syntax.koa" --emit-asm >/dev/null 2>&1; then
     echo "실패: invalid_syntax.koa가 실패해야 합니다." >&2
@@ -92,5 +96,11 @@ if "$BIN" "$ROOT_DIR/tests/undefined_variable.koa" --emit-asm >/dev/null 2>&1; t
     exit 1
 fi
 echo "통과: undefined_variable"
+
+if "$BIN" "$ROOT_DIR/tests/invalid_break.koa" --emit-asm >/dev/null 2>&1; then
+    echo "실패: invalid_break.koa가 실패해야 합니다." >&2
+    exit 1
+fi
+echo "통과: invalid_break"
 
 echo "모든 테스트 통과"

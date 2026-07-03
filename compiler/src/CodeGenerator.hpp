@@ -60,6 +60,8 @@ class CodeGenerator {
     vector<FloatData> floats_;
     unordered_map<string, StructLayout> structLayouts_;
     unordered_map<string, string> functionLabels_;
+    vector<string> breakLabels_;
+    vector<string> continueLabels_;
     FunctionContext *current_ = nullptr;
     AssemblyTarget target_;
     int labelCounter_ = 0;
@@ -97,6 +99,8 @@ class CodeGenerator {
     void emitIf(const IfStmt &statement);
     void emitWhile(const WhileStmt &statement);
     void emitRepeat(const RepeatStmt &statement);
+    void emitBreak(const BreakStmt &statement);
+    void emitContinue(const ContinueStmt &statement);
     void emitReturn(const ReturnStmt &statement);
     void emitExpr(const Expr &expression);
     void emitFloatExpr(const Expr &expression);

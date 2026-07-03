@@ -48,3 +48,24 @@
     출력 user.age
 끝
 ```
+
+## 구조체 복사
+
+같은 구조체 타입끼리는 전체 값을 복사할 수 있습니다.
+
+```koa
+구조체 사람
+    name: 문자열
+    age: 정수
+끝
+
+시작
+    변수 original: 사람
+    original.name = "SKKOA; LTW"
+    original.age = 7
+
+    변수 copy: 사람 = original
+    출력 copy.name
+    출력 copy.age
+끝
+```

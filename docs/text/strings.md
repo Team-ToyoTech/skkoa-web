@@ -12,7 +12,7 @@
 
 ```koa
 시작
-    변수 name: 문자열 = "SKKOA"
+    변수 name: 문자열 = "SKKOA; LTW"
     출력 name
 끝
 ```
@@ -21,7 +21,7 @@
 
 ```koa
 시작
-    변수 name: 문자열 = "SKKOA"
+    변수 name: 문자열 = "SKKOA; LTW"
     출력 "Hello, " + name
 끝
 ```
@@ -30,10 +30,10 @@
 
 ```koa
 시작
-    변수 name: 문자열 = "SKKOA"
+    변수 name: 문자열 = "SKKOA; LTW"
 
     출력 길이(name)
-    출력 비교(name, "SKKOA")
+    출력 비교(name, "SKKOA; LTW")
     출력 부분문자열(name, 0, 2)
 끝
 ```

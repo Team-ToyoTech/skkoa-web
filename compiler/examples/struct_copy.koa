@@ -1,0 +1,19 @@
+구조체 사람
+    name: 문자열
+    age: 정수
+끝
+
+시작
+    변수 original: 사람
+    original.name = "SKKOA; LTW"
+    original.age = 7
+
+    변수 copy: 사람 = original
+    original.age = 9
+
+    출력 copy.name
+    출력 copy.age
+
+    copy = original
+    출력 copy.age
+끝

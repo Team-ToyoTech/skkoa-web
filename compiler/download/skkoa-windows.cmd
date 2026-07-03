@@ -10,7 +10,7 @@ set "PS1_FILE=%TEMP%\skkoa-windows-installer-%RANDOM%.ps1"
 if exist "%LOCAL_PS1%" (
     set "PS1_FILE=%LOCAL_PS1%"
 ) else (
-    echo [skkoa] Downloading Windows installer...
+    echo [skkoa] Downloading SKKOA; LTW Windows installer...
     powershell -NoProfile -ExecutionPolicy Bypass -Command "Invoke-WebRequest -UseBasicParsing '%BASE_URL%/download/skkoa-windows.ps1' -OutFile '%PS1_FILE%'"
     if errorlevel 1 (
         echo [skkoa] Failed to download installer script.
@@ -18,7 +18,7 @@ if exist "%LOCAL_PS1%" (
     )
 )
 
-echo [skkoa] Running installer...
+echo [skkoa] Running SKKOA; LTW installer...
 powershell -NoProfile -ExecutionPolicy Bypass -File "%PS1_FILE%"
 set "RESULT=%ERRORLEVEL%"
 if not "%PS1_FILE%"=="%LOCAL_PS1%" del "%PS1_FILE%" >nul 2>nul

@@ -1,6 +1,6 @@
 # 컴파일러
 
-SKKOA 코드는 `skkoa` 명령으로 실행 파일을 만들 수 있습니다.
+SKKOA; LTW 코드는 `skkoa` 명령으로 실행 파일을 만들 수 있습니다.
 
 ```bash
 skkoa hello.koa

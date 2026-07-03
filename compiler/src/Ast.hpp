@@ -268,6 +268,14 @@ struct RepeatStmt : Stmt {
     vector<unique_ptr<Stmt>> body;
 };
 
+struct BreakStmt : Stmt {
+    explicit BreakStmt(SourceLocation loc) : Stmt(loc) {}
+};
+
+struct ContinueStmt : Stmt {
+    explicit ContinueStmt(SourceLocation loc) : Stmt(loc) {}
+};
+
 struct ReturnStmt : Stmt {
     explicit ReturnStmt(SourceLocation loc) : Stmt(loc) {}
     unique_ptr<Expr> value;

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>SKKOA Docs</title>
+        <title>SKKOA; LTW Docs</title>
         <link rel="icon" href="/image/skkoa_logo_remove_background_large.png" />
         <link
             rel="stylesheet"
@@ -14,25 +14,20 @@
             href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css"
         />
         <link rel="stylesheet" href="/style.css" />
-        <link rel="stylesheet" href="docs.css" />
+        <link rel="stylesheet" href="/docs/docs.css" />
         <script src="/script.js" defer></script>
-        <script src="docs.js" defer></script>
-        <script
-            type="module"
-            src="https://cdn.jsdelivr.net/gh/zerodevx/zero-md@2/dist/zero-md.min.js"
-        ></script>
     </head>
     <body>
         <header class="main-header">
             <div class="header-left">
                 <img
                     src="/image/skkoa_logo_remove_background_large.png"
-                    alt="SKKOA Logo"
+                    alt="SKKOA; LTW Logo"
                     class="logo"
                 />
                 <div class="header-text">
-                    <h1>SKKOA Docs</h1>
-                    <p>Starter Kit with Korean Oriented Architecture</p>
+                    <h1>SKKOA; LTW Docs</h1>
+                    <p>Language to Write</p>
                 </div>
             </div>
             <nav class="header-nav">
@@ -44,19 +39,76 @@
         <main class="docs-shell">
             <aside class="docs-sidebar" aria-label="문서 목차">
                 <div class="docs-sidebar-title">문서</div>
-                <nav id="docsNav" class="docs-nav"></nav>
+                <nav class="docs-nav">
+                    <a class="active" href="/docs/">개요</a>
+                    <a href="#introduction">소개</a>
+                    <a href="#getting-started">시작하기</a>
+                    <a href="/docs/syntax/">문법 문서</a>
+                    <a href="/docs/features/">기능 문서</a>
+                </nav>
             </aside>
-            <section class="docs-reader intro-section">
-                <div class="docs-reader-header">
-                    <span class="support-tag support-now">현재 지원</span>
-                    <span class="support-tag support-planned">설계됨 / 예정</span>
-                </div>
-                <zero-md id="docReader" src="text/index.md">
-                    <template data-append>
-                        <link rel="stylesheet" href="markdown.css" />
-                    </template>
-                </zero-md>
-            </section>
+            <article class="docs-reader docs-article intro-section">
+                <section id="overview" class="doc-section">
+                    <h1>SKKOA; LTW 문서</h1>
+                    <p>
+                        <strong>LTW</strong>는
+                        <strong>Language to Write</strong>의 약자입니다.
+                        SKKOA; LTW는 한국어 친화적 문법과 직관적인 구조를
+                        갖춘 교육용 프로그래밍 언어입니다.
+                    </p>
+                    <p>
+                        문법과 기능 설명은 각각 독립 문서로 분리되어 있습니다.
+                        필요한 문서를 바로 열어 읽을 수 있습니다.
+                    </p>
+                    <div class="doc-card-grid" aria-label="주요 문서">
+                        <a class="doc-card-link" href="/docs/syntax/">
+                            <span class="doc-card-title">문법 문서</span>
+                            <span class="doc-card-desc">
+                                기본 구조, 자료형, 변수, 조건문, 반복문, 함수,
+                                배열, 문자열, 포인터 문법을 정리합니다.
+                            </span>
+                        </a>
+                        <a class="doc-card-link" href="/docs/features/">
+                            <span class="doc-card-title">기능 문서</span>
+                            <span class="doc-card-desc">
+                                현재 지원 기능, 표준 라이브러리, 자료구조,
+                                컴파일러 명령과 제한 사항을 정리합니다.
+                            </span>
+                        </a>
+                    </div>
+                </section>
+
+                <section id="introduction" class="doc-section">
+                    <h2>소개</h2>
+                    <p>
+                        SKKOA; LTW는 한국어 키워드로 코드를 읽고 쓰는
+                        언어입니다. 영어 문법을 먼저 외우기보다, 프로그램이
+                        어떤 순서로 움직이는지 익히는 데 초점을 둡니다.
+                    </p>
+                    <pre><code>시작
+    출력 "처음 만드는 프로그램"
+끝</code></pre>
+                    <p>위 코드는 화면에 문장을 보여 줍니다.</p>
+                </section>
+
+                <section id="getting-started" class="doc-section">
+                    <h2>시작하기</h2>
+                    <p>처음에는 아래 모양만 기억하면 됩니다.</p>
+                    <pre><code>시작
+    출력 "안녕하세요, SKKOA; LTW!"
+끝</code></pre>
+                    <p>
+                        SKKOA; LTW 코드는 <code>.koa</code> 파일에 저장합니다.
+                        설치가 끝나면 터미널에서 아래처럼 실행할 수 있습니다.
+                    </p>
+                    <pre><code>skkoa hello.koa</code></pre>
+                    <p>
+                        운영체제별 설치 파일은
+                        <a href="/download/">다운로드 페이지</a>에서 받을 수
+                        있습니다.
+                    </p>
+                </section>
+            </article>
             <div class="fixed-box">
                 <div class="cube3d" id="cube-toggle-btn">
                     <div class="cube3d-inner">

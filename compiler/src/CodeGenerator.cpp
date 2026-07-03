@@ -40,11 +40,11 @@ const vector<string> &CodeGenerator::argumentRegisters() const {
 }
 
 void CodeGenerator::emitCall(const string &symbol, bool external) {
-    if (isWindowsTarget()) {
+    if (isWindowsTarget() && external) {
         text_ << "    sub rsp, 32\n";
     }
     text_ << "    call " << (external ? externalSymbol(symbol) : symbol) << "\n";
-    if (isWindowsTarget()) {
+    if (isWindowsTarget() && external) {
         text_ << "    add rsp, 32\n";
     }
 }
@@ -55,6 +55,8 @@ string CodeGenerator::generateAssembly(Program &program,
     text_.clear();
     strings_.clear();
     floats_.clear();
+    breakLabels_.clear();
+    continueLabels_.clear();
     labelCounter_ = 0;
     stringCounter_ = 0;
     prepareStructLayouts(program);
@@ -276,10 +278,16 @@ void CodeGenerator::emitPrologue(const vector<Param> &params, bool isMain) {
     }
 
     if (!isMain) {
-        for (size_t i = 0; i < params.size() && i < registers.size(); i++) {
+        for (size_t i = 0; i < params.size(); i++) {
             const auto &slot = current_->locals[params[i].name];
-            text_ << "    mov [rbp - " << slot.offset << "], " << registers[i]
-                  << "\n";
+            if (i < registers.size()) {
+                text_ << "    mov [rbp - " << slot.offset << "], "
+                      << registers[i] << "\n";
+            } else {
+                text_ << "    mov rax, [rbp + " << (16 + (i - registers.size()) * 8)
+                      << "]\n";
+                text_ << "    mov [rbp - " << slot.offset << "], rax\n";
+            }
         }
     }
 }
@@ -320,6 +328,10 @@ void CodeGenerator::emitStatement(const Stmt &statement) {
         emitWhile(*whileStmt);
     } else if (auto *repeatStmt = dynamic_cast<const RepeatStmt *>(&statement)) {
         emitRepeat(*repeatStmt);
+    } else if (auto *breakStmt = dynamic_cast<const BreakStmt *>(&statement)) {
+        emitBreak(*breakStmt);
+    } else if (auto *continueStmt = dynamic_cast<const ContinueStmt *>(&statement)) {
+        emitContinue(*continueStmt);
     } else if (auto *returnStmt = dynamic_cast<const ReturnStmt *>(&statement)) {
         emitReturn(*returnStmt);
     }
@@ -353,6 +365,15 @@ void CodeGenerator::emitVarDecl(const VarDeclStmt &statement) {
         for (int offset = 0; offset < layout.size; offset += 8) {
             text_ << "    mov qword [rbp - " << (slot.offset + offset)
                   << "], 0\n";
+        }
+        if (statement.initializer) {
+            emitExpr(*statement.initializer);
+            text_ << "    mov rbx, rax\n";
+            for (int offset = 0; offset < layout.size; offset += 8) {
+                text_ << "    mov rax, [rbx - " << offset << "]\n";
+                text_ << "    mov [rbp - " << (slot.offset + offset)
+                      << "], rax\n";
+            }
         }
         return;
     }
@@ -388,6 +409,16 @@ void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
     }
 
     auto slot = current_->locals.at(statement.name);
+    if (slot.type.base == ValueType::Struct) {
+        const auto &layout = structLayouts_.at(slot.type.structName);
+        emitExpr(*statement.value);
+        text_ << "    mov rbx, rax\n";
+        for (int offset = 0; offset < layout.size; offset += 8) {
+            text_ << "    mov rax, [rbx - " << offset << "]\n";
+            text_ << "    mov [rbp - " << (slot.offset + offset) << "], rax\n";
+        }
+        return;
+    }
     if (slot.type.isArray) {
         auto *arrayLiteral =
             dynamic_cast<ArrayLiteralExpr *>(statement.value.get());
@@ -582,7 +613,11 @@ void CodeGenerator::emitWhile(const WhileStmt &statement) {
     emitExpr(*statement.condition);
     text_ << "    cmp rax, 0\n";
     text_ << "    je " << endLabel << "\n";
+    breakLabels_.push_back(endLabel);
+    continueLabels_.push_back(startLabel);
     emitStatements(statement.body);
+    continueLabels_.pop_back();
+    breakLabels_.pop_back();
     text_ << "    jmp " << startLabel << "\n";
     text_ << endLabel << ":\n";
 }
@@ -590,6 +625,7 @@ void CodeGenerator::emitWhile(const WhileStmt &statement) {
 void CodeGenerator::emitRepeat(const RepeatStmt &statement) {
     auto slot = current_->locals.at(statement.iterator);
     string startLabel = newLabel("repeat_start");
+    string continueLabel = newLabel("repeat_continue");
     string endLabel = newLabel("repeat_end");
 
     emitExpr(*statement.start);
@@ -604,10 +640,27 @@ void CodeGenerator::emitRepeat(const RepeatStmt &statement) {
     text_ << "    add rsp, 16\n";
     text_ << "    cmp rax, rbx\n";
     text_ << "    jg " << endLabel << "\n";
+    breakLabels_.push_back(endLabel);
+    continueLabels_.push_back(continueLabel);
     emitStatements(statement.body);
+    continueLabels_.pop_back();
+    breakLabels_.pop_back();
+    text_ << continueLabel << ":\n";
     text_ << "    add qword [rbp - " << slot.offset << "], 1\n";
     text_ << "    jmp " << startLabel << "\n";
     text_ << endLabel << ":\n";
+}
+
+void CodeGenerator::emitBreak(const BreakStmt &) {
+    if (!breakLabels_.empty()) {
+        text_ << "    jmp " << breakLabels_.back() << "\n";
+    }
+}
+
+void CodeGenerator::emitContinue(const ContinueStmt &) {
+    if (!continueLabels_.empty()) {
+        text_ << "    jmp " << continueLabels_.back() << "\n";
+    }
 }
 
 void CodeGenerator::emitReturn(const ReturnStmt &statement) {
@@ -839,14 +892,34 @@ void CodeGenerator::emitExpr(const Expr &expression) {
             emitCall("skkoa_substring", false);
             return;
         }
-        for (const auto &argument : call->arguments) {
-            emitExpr(*argument);
+        if (call->name == "배열길이") {
+            auto *variable = dynamic_cast<VariableExpr *>(call->arguments[0].get());
+            if (variable) {
+                auto slot = current_->locals.at(variable->name);
+                text_ << "    mov rax, " << slot.type.arraySize << "\n";
+            } else {
+                text_ << "    mov rax, 0\n";
+            }
+            return;
+        }
+        size_t registerCount = registers.size();
+        size_t stackCount =
+            call->arguments.size() > registerCount
+                ? call->arguments.size() - registerCount
+                : 0;
+        for (int i = static_cast<int>(call->arguments.size()) - 1;
+             i >= static_cast<int>(registerCount); i--) {
+            emitExpr(*call->arguments[static_cast<size_t>(i)]);
             text_ << "    push rax\n";
         }
-        for (int i = static_cast<int>(call->arguments.size()) - 1; i >= 0; i--) {
-            text_ << "    pop " << registers[i] << "\n";
+        for (size_t i = 0; i < call->arguments.size() && i < registerCount; i++) {
+            emitExpr(*call->arguments[i]);
+            text_ << "    mov " << registers[i] << ", rax\n";
         }
         emitCall(functionLabels_.at(call->name), false);
+        if (stackCount > 0) {
+            text_ << "    add rsp, " << (stackCount * 8) << "\n";
+        }
     }
 }
 
@@ -1178,6 +1251,10 @@ void CodeGenerator::dumpStatement(const Stmt &statement, ostringstream &out,
         out << pad << "  To\n";
         dumpExpr(*repeatStmt->end, out, depth + 4);
         dumpStatements(repeatStmt->body, out, depth + 2);
+    } else if (dynamic_cast<const BreakStmt *>(&statement)) {
+        out << pad << "Break\n";
+    } else if (dynamic_cast<const ContinueStmt *>(&statement)) {
+        out << pad << "Continue\n";
     } else if (auto *returnStmt = dynamic_cast<const ReturnStmt *>(&statement)) {
         out << pad << "Return\n";
         if (returnStmt->value) {

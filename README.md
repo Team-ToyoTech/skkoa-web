@@ -1,28 +1,28 @@
-# SKKOA
+# SKKOA; LTW
 
-SKKOA는 **Starter Kit with Korean Oriented Architecture**의 약자로, 한국어 기반 문법을 사용하는 교육용 프로그래밍 언어이다.
+SKKOA; LTW는 **Language to Write**를 뜻하며, 한국어 기반 문법을 사용하는 교육용 프로그래밍 언어이다.
 
 이 저장소는 다음을 포함한다.
 
-- SKKOA 소개 웹사이트
-- Markdown 기반 문서 웹 페이지
+- SKKOA; LTW 소개 웹사이트
+- 정적 HTML 문서 웹 페이지와 Markdown 문서 원문
 - 브라우저용 문법 미리보기 / 예제 실행 시뮬레이터
 - C++17로 작성된 x86-64용 NASM 기반 CLI 컴파일러
-- 다운로드 설치 시 함께 제공되는 표준 모듈(`stack.koa`, `queue.koa`)
+- 다운로드 설치 시 함께 제공되는 표준 모듈(`stack.koa`, `queue.koa`, `structures.koa`)
 
 ## 컴파일러 빌드
 
 수동 빌드에 필요한 도구:
 
 - C++17 컴파일러
-- CMake
+- CMake 또는 C++17 직접 빌드 환경
 - NASM
 - GCC 또는 Clang
 - x86-64 Windows, Linux, macOS 환경
 
-웹사이트의 Download 버튼은 Windows 통합 설치 파일 `skkoa-windows.cmd`를 기본으로 내려받는다. 운영체제별 파일은 `/download/` 페이지에서 선택할 수 있다.
+웹사이트의 Download 버튼은 Windows 통합 설치 파일 `skkoa-windows.exe`를 기본으로 내려받는다. 운영체제별 파일은 `/download/` 페이지에서 선택할 수 있다.
 
-- Windows: `skkoa-windows.cmd`가 SKKOA CLI, MSYS2 GCC, NASM을 함께 설치한다.
+- Windows: `skkoa-windows.exe`가 UI에서 설치 위치와 설정을 받은 뒤 SKKOA; LTW CLI, MSYS2 GCC, NASM을 함께 설치한다. 명령줄 설치가 필요하면 `skkoa-windows.cmd` 또는 `skkoa-windows.ps1`을 사용할 수 있다.
 - macOS: `skkoa-macos.command`가 Xcode Command Line Tools, Homebrew, NASM을 확인하고 설치한다.
 - Linux: `skkoa-linux.sh`가 배포판 패키지 관리자로 GCC와 NASM을 설치한다.
 
@@ -49,7 +49,7 @@ cmake --build build
 
 ## 표준 모듈
 
-SKKOA는 `가져오기 "파일.koa"` 문법으로 다른 파일을 가져온다.
+SKKOA; LTW는 `가져오기 "파일.koa"` 문법으로 다른 파일을 가져온다.
 
 ```koa
 가져오기 "stack.koa"
@@ -110,9 +110,12 @@ SKKOA는 `가져오기 "파일.koa"` 문법으로 다른 파일을 가져온다.
 - 정수/논리/실수/문자/문자열/포인터 입력
 - 조건문, `동안` 반복문
 - `반복 i: 0부터 10까지` 횟수 반복
+- 반복문 안의 `중단`, `계속`
 - 정수, 실수, 논리, 문자, 문자열, 포인터, 배열 매개변수 함수
-- 구조체 변수, 필드 읽기/쓰기, 구조체 참조 매개변수
+- 레지스터 범위를 넘는 함수 매개변수
+- 구조체 변수, 필드 읽기/쓰기, 구조체 참조 매개변수, 같은 타입 구조체 복사
 - 고정 크기 배열과 배열 리터럴 초기화/재대입
+- 배열 길이 조회 함수 `배열길이`
 - `주소(x)`, `값(p)` 포인터 읽기와 `값(p) = ...` 포인터 쓰기
 - `할당(크기)`, `해제(p)` 기본 동적 메모리 호출
 - 문자열 표준 함수 `길이`, `비교`, `부분문자열`

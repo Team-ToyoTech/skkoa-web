@@ -13,6 +13,7 @@ Lexer::Lexer(string source, ErrorReporter &errors)
         {"만약", TokenType::If},          {"이면", TokenType::Then},
         {"아니면", TokenType::Else},      {"아니면만약", TokenType::ElseIf},
         {"동안", TokenType::While},       {"반복", TokenType::Repeat},
+        {"중단", TokenType::Break},       {"계속", TokenType::Continue},
         {"함수", TokenType::Function},    {"반환", TokenType::Return},
         {"구조체", TokenType::Struct},
         {"정수", TokenType::TypeInt},     {"실수", TokenType::TypeFloat},

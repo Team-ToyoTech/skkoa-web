@@ -156,11 +156,11 @@ warn_runtime_tools() {
     done
     if (( ${#missing[@]} > 0 )); then
         printf '[skkoa] warning: missing runtime tool(s): %s\n' "${missing[*]}" >&2
-        printf '[skkoa] warning: SKKOA uses NASM and GCC when it links a .koa file into an executable.\n' >&2
+        printf '[skkoa] warning: SKKOA; LTW uses NASM and GCC when it links a .koa file into an executable.\n' >&2
     fi
 }
 
-info "Installing SKKOA compiler for macOS"
+info "Installing SKKOA; LTW compiler for macOS"
 install_toolchain
 download_sources
 install_libraries

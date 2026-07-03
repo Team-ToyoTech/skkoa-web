@@ -47,6 +47,8 @@ class Parser {
     unique_ptr<Stmt> parseIf();
     unique_ptr<Stmt> parseWhile();
     unique_ptr<Stmt> parseRepeat();
+    unique_ptr<Stmt> parseBreak();
+    unique_ptr<Stmt> parseContinue();
     unique_ptr<Stmt> parseReturn();
     TypeName parseType();
 

@@ -4,7 +4,7 @@
 
 다운로드 페이지에서 내 운영체제에 맞는 설치 파일을 받습니다.
 
-- Windows: `skkoa-windows.cmd`
+- Windows: `skkoa-windows.exe`
 - macOS: `skkoa-macos.command`
 - Linux: `skkoa-linux.sh`
 

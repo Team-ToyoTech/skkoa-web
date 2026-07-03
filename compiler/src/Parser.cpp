@@ -267,6 +267,14 @@ unique_ptr<Stmt> Parser::parseStatement() {
         current_--;
         return parseRepeat();
     }
+    if (match(TokenType::Break)) {
+        current_--;
+        return parseBreak();
+    }
+    if (match(TokenType::Continue)) {
+        current_--;
+        return parseContinue();
+    }
     if (match(TokenType::Return)) {
         current_--;
         return parseReturn();
@@ -474,6 +482,18 @@ unique_ptr<Stmt> Parser::parseReturn() {
         statement->value = parseExpression();
     }
     return statement;
+}
+
+unique_ptr<Stmt> Parser::parseBreak() {
+    SourceLocation location = peek().location;
+    consume(TokenType::Break, "'중단' 키워드가 필요합니다.", "");
+    return make_unique<BreakStmt>(location);
+}
+
+unique_ptr<Stmt> Parser::parseContinue() {
+    SourceLocation location = peek().location;
+    consume(TokenType::Continue, "'계속' 키워드가 필요합니다.", "");
+    return make_unique<ContinueStmt>(location);
 }
 
 TypeName Parser::parseType() {

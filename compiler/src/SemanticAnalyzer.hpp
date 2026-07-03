@@ -38,6 +38,7 @@ class SemanticAnalyzer {
     unordered_map<string, Symbol> symbols_;
     TypeName currentReturnType_;
     bool insideFunction_ = false;
+    int loopDepth_ = 0;
 
     void analyzeFunction(FunctionDecl &function);
     void analyzeStatements(vector<unique_ptr<Stmt>> &statements);
@@ -52,6 +53,8 @@ class SemanticAnalyzer {
     void analyzeIf(IfStmt &statement);
     void analyzeWhile(WhileStmt &statement);
     void analyzeRepeat(RepeatStmt &statement);
+    void analyzeBreak(BreakStmt &statement);
+    void analyzeContinue(ContinueStmt &statement);
     void analyzeReturn(ReturnStmt &statement);
     ValueType analyzeExpr(Expr &expression);
 

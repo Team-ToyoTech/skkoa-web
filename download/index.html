@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>SKKOA Download</title>
+        <title>SKKOA; LTW Download</title>
         <link
             rel="stylesheet"
             href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
@@ -22,12 +22,12 @@
             <div class="header-left">
                 <img
                     src="/image/skkoa_logo_remove_background_large.png"
-                    alt="SKKOA Logo"
+                    alt="SKKOA; LTW Logo"
                     class="logo"
                 />
                 <div class="header-text">
-                    <h1>SKKOA Download</h1>
-                    <p>Starter Kit with Korean Oriented Architecture</p>
+                    <h1>SKKOA; LTW Download</h1>
+                    <p>Language to Write</p>
                 </div>
             </div>
             <nav class="header-nav">
@@ -40,17 +40,17 @@
             <section class="download-hero">
                 <div>
                     <p class="download-kicker">기본 다운로드</p>
-                    <h2>Windows용 SKKOA 컴파일러</h2>
+                    <h2>Windows용 SKKOA; LTW 컴파일러</h2>
                     <p>
-                        Windows에서는 통합 설치 파일 하나가 SKKOA CLI와
-                        어셈블/링크 도구를 함께 설치합니다. 설치 후 새 터미널에서
-                        <code>skkoa hello.koa</code>를 실행합니다.
+                        Windows에서는 실행 파일 설치 프로그램이 SKKOA; LTW CLI와
+                        어셈블/링크 도구를 함께 설치합니다. 설치 위치와 PATH 설정을
+                        고른 뒤, 새 터미널에서 <code>skkoa hello.koa</code>를 실행합니다.
                     </p>
                 </div>
                 <a
                     class="download-primary"
-                    href="/compiler/download/skkoa-windows.cmd"
-                    download="skkoa-windows.cmd"
+                    href="/compiler/download/skkoa-windows.exe"
+                    download="skkoa-windows.exe"
                     >Windows 다운로드</a
                 >
             </section>
@@ -59,12 +59,26 @@
                 <article class="platform-card platform-windows">
                     <div class="platform-mark">WIN</div>
                     <h3>Windows</h3>
-                    <p>SKKOA CLI, MSYS2 GCC, NASM을 함께 설치합니다.</p>
+                    <p>UI에서 설치 위치, 도구 설치, PATH 설정을 고를 수 있습니다.</p>
                     <a
-                        href="/compiler/download/skkoa-windows.cmd"
-                        download="skkoa-windows.cmd"
-                        >Windows 설치 파일 받기</a
+                        href="/compiler/download/skkoa-windows.exe"
+                        download="skkoa-windows.exe"
+                        >Windows EXE 받기</a
                     >
+                    <p class="platform-extra">
+                        명령줄 설치가 필요하면
+                        <a
+                            href="/compiler/download/skkoa-windows.cmd"
+                            download="skkoa-windows.cmd"
+                            >CMD</a
+                        >
+                        또는
+                        <a
+                            href="/compiler/download/skkoa-windows.ps1"
+                            download="skkoa-windows.ps1"
+                            >PowerShell</a
+                        >을 사용할 수 있습니다.
+                    </p>
                 </article>
                 <article class="platform-card platform-macos">
                     <div class="platform-mark">MAC</div>
@@ -94,10 +108,12 @@
 skkoa hello.koa -o hello
 skkoa hello.koa --emit-asm</code></pre>
                 <p>
-                    설치 파일은 SKKOA 컴파일러와 어셈블리 변환/링크에 필요한
+                    설치 파일은 SKKOA; LTW 컴파일러와 어셈블리 변환/링크에 필요한
                     도구를 함께 준비합니다. 별도로 C++ 컴파일러, NASM, GCC를
                     미리 설치하지 않아도 됩니다. 단, 도구 다운로드를 위한 인터넷
-                    연결과 OS별 설치 권한은 필요합니다. 스택과 큐 표준 모듈도
+                    연결과 OS별 설치 권한은 필요합니다. Windows EXE는 설치 위치,
+                    도구 설치 여부, 사용자 PATH 추가 여부를 선택할 수 있습니다.
+                    스택과 큐 표준 모듈도
                     함께 설치되므로 코드에서 <code>가져오기 "stack.koa"</code>,
                     <code>가져오기 "queue.koa"</code>를 바로 사용할 수 있습니다.
                 </p>

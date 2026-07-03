@@ -19,7 +19,7 @@
     변수 age: 정수 = 20
     변수 height: 실수 = 170.5
     변수 passed: 논리 = 참
-    변수 name: 문자열 = "SKKOA"
+    변수 name: 문자열 = "SKKOA; LTW"
 
     출력 age
     출력 height

@@ -30,6 +30,8 @@ enum class TokenType {
     ElseIf,
     While,
     Repeat,
+    Break,
+    Continue,
     Function,
     Return,
     Struct,
@@ -116,6 +118,10 @@ inline string tokenTypeName(TokenType type) {
         return "동안";
     case TokenType::Repeat:
         return "반복";
+    case TokenType::Break:
+        return "중단";
+    case TokenType::Continue:
+        return "계속";
     case TokenType::Function:
         return "함수";
     case TokenType::Return:

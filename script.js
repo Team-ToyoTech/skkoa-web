@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
     try {
-        const defaultCompilerDownloadPath = "/compiler/download/skkoa-windows.cmd";
+        const defaultCompilerDownloadPath = "/compiler/download/skkoa-windows.exe";
 
         function downloadDefaultCompiler() {
             const link = document.createElement("a");
             link.href = defaultCompilerDownloadPath;
-            link.download = "skkoa-windows.cmd";
+            link.download = "skkoa-windows.exe";
             document.body.appendChild(link);
             link.click();
             setTimeout(() => {

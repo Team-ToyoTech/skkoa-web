@@ -10,7 +10,7 @@
 
 시작
     변수 user: 사람
-    user.name = "SKKOA"
+    user.name = "SKKOA; LTW"
     user.age = 3
 
     출력 user.name

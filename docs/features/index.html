@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SKKOA; LTW Features</title>
+        <link rel="icon" href="/image/skkoa_logo_remove_background_large.png" />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/pretendard@1.3.9/dist/web/static/pretendard.min.css"
+        />
+        <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/gh/wan2land/d2coding/d2coding-full.css"
+        />
+        <link rel="stylesheet" href="/style.css" />
+        <link rel="stylesheet" href="/docs/docs.css" />
+        <script src="/script.js" defer></script>
+    </head>
+    <body>
+        <header class="main-header">
+            <div class="header-left">
+                <img
+                    src="/image/skkoa_logo_remove_background_large.png"
+                    alt="SKKOA; LTW Logo"
+                    class="logo"
+                />
+                <div class="header-text">
+                    <h1>SKKOA; LTW Features</h1>
+                    <p>Language to Write</p>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="/" class="nav-link">Home</a>
+                <a href="/compiler/" class="nav-link">Compiler</a>
+                <a href="/download/" class="nav-link">Download</a>
+            </nav>
+        </header>
+        <main class="docs-shell">
+            <aside class="docs-sidebar" aria-label="기능 목차">
+                <div class="docs-sidebar-title">기능</div>
+                <nav class="docs-nav">
+                    <a href="/docs/">문서 개요</a>
+                    <a href="/docs/syntax/">문법 문서</a>
+                    <a class="active" href="/docs/features/">기능 문서</a>
+                    <a href="#supported">현재 지원</a>
+                    <a href="#standard-library">표준 라이브러리</a>
+                    <a href="#data-structures">자료구조</a>
+                    <a href="#compiler">컴파일러</a>
+                    <a href="#examples">예제</a>
+                    <a href="#limits">제한 사항</a>
+                </nav>
+            </aside>
+            <article class="docs-reader docs-article intro-section">
+                <div class="docs-reader-header">
+                    <span class="support-tag support-now">현재 지원</span>
+                    <span class="support-tag support-planned">현재 제한</span>
+                </div>
+
+                <section id="supported" class="doc-section">
+                    <h1>기능 문서</h1>
+                    <p>현재 구현된 주요 기능은 아래와 같습니다.</p>
+                    <ul>
+                        <li><code>.koa</code> 파일 읽기, 토큰화, 파싱, AST 생성, 의미 분석</li>
+                        <li>정수, 실수, 논리, 문자, 문자열, 포인터 자료형</li>
+                        <li>변수와 상수, 산술/비교/논리 연산</li>
+                        <li>문자열 결합과 문자열 리터럴 출력</li>
+                        <li>정수/논리/실수/문자/문자열/포인터 입력과 출력</li>
+                        <li><code>만약</code>, <code>아니면만약</code>, <code>아니면</code> 조건문</li>
+                        <li><code>동안</code> 반복문, <code>반복 i: 0부터 10까지</code> 횟수 반복, <code>중단</code>, <code>계속</code></li>
+                        <li>함수 정의와 호출, 레지스터 범위를 넘는 매개변수, 배열 매개변수, 구조체 참조 매개변수</li>
+                        <li>같은 타입 구조체 변수끼리의 전체 복사</li>
+                        <li>고정 크기 배열, 배열 리터럴 초기화와 재대입</li>
+                        <li><code>주소(x)</code>, <code>값(p)</code>, <code>할당(크기)</code>, <code>해제(p)</code></li>
+                        <li><code>길이</code>, <code>비교</code>, <code>부분문자열</code> 문자열 표준 함수</li>
+                        <li><code>배열길이</code> 배열 길이 조회 함수</li>
+                        <li><code>가져오기 "파일.koa"</code> 모듈 가져오기</li>
+                        <li><code>stack.koa</code>, <code>queue.koa</code>, <code>structures.koa</code> 표준 모듈</li>
+                        <li>NASM 어셈블리 생성과 실행 파일 링크</li>
+                    </ul>
+                </section>
+
+                <section id="standard-library" class="doc-section">
+                    <h2>표준 라이브러리</h2>
+                    <p>표준 라이브러리는 자주 쓰는 기능을 미리 준비해 둔 것입니다.</p>
+                    <h3>바로 쓸 수 있는 기능</h3>
+                    <pre><code>출력 "안녕하세요"
+변수 age: 정수
+입력 age</code></pre>
+                    <h3>문자열 함수</h3>
+                    <pre><code>출력 길이("SKKOA; LTW")
+출력 비교("A", "B")
+출력 부분문자열("SKKOA; LTW", 0, 2)</code></pre>
+                    <ul>
+                        <li><code>길이(text)</code>: 글자 수를 알려줍니다.</li>
+                        <li><code>비교(a, b)</code>: 같으면 <code>0</code>을 돌려줍니다.</li>
+                        <li><code>부분문자열(text, start, length)</code>: 문자열 일부를 꺼냅니다.</li>
+                    </ul>
+                    <h3>메모리 함수</h3>
+                    <pre><code>변수 p: 포인터&lt;정수&gt; = 할당(8)
+해제(p)</code></pre>
+                    <h3>배열 함수</h3>
+                    <pre><code>변수 numbers: 정수[] = [10, 20, 30, 40]
+출력 배열길이(numbers)</code></pre>
+                </section>
+
+                <section id="data-structures" class="doc-section">
+                    <h2>자료구조</h2>
+                    <p>SKKOA; LTW는 설치하면 스택과 큐 모듈을 함께 제공합니다.</p>
+                    <pre><code>가져오기 "stack.koa"
+가져오기 "queue.koa"</code></pre>
+                    <p>둘 다 한 번에 쓰고 싶다면 아래처럼 가져올 수도 있습니다.</p>
+                    <pre><code>가져오기 "structures.koa"</code></pre>
+
+                    <h3>스택</h3>
+                    <p>스택은 나중에 넣은 값을 먼저 꺼냅니다.</p>
+                    <pre><code>가져오기 "stack.koa"
+
+시작
+    변수 stack: 정수스택
+    변수 data: 정수[5]
+
+    스택초기화(stack, 5)
+    스택넣기(stack, data, 10)
+    스택넣기(stack, data, 20)
+
+    출력 스택빼기(stack, data)
+    출력 스택빼기(stack, data)
+끝</code></pre>
+                    <ul>
+                        <li><code>스택초기화(stack, 크기)</code></li>
+                        <li><code>스택넣기(stack, data, 값)</code></li>
+                        <li><code>스택빼기(stack, data)</code></li>
+                        <li><code>스택보기(stack, data)</code></li>
+                        <li><code>스택비었나(stack)</code></li>
+                        <li><code>스택가득찼나(stack)</code></li>
+                        <li><code>스택크기(stack)</code></li>
+                    </ul>
+
+                    <h3>큐</h3>
+                    <p>큐는 먼저 넣은 값을 먼저 꺼냅니다.</p>
+                    <pre><code>가져오기 "queue.koa"
+
+시작
+    변수 queue: 정수큐
+    변수 data: 정수[5]
+
+    큐초기화(queue, 5)
+    큐넣기(queue, data, 10)
+    큐넣기(queue, data, 20)
+
+    출력 큐빼기(queue, data)
+    출력 큐빼기(queue, data)
+끝</code></pre>
+                    <ul>
+                        <li><code>큐초기화(queue, 크기)</code></li>
+                        <li><code>큐넣기(queue, data, 값)</code></li>
+                        <li><code>큐빼기(queue, data)</code></li>
+                        <li><code>큐보기(queue, data)</code></li>
+                        <li><code>큐비었나(queue)</code></li>
+                        <li><code>큐가득찼나(queue)</code></li>
+                        <li><code>큐크기(queue)</code></li>
+                    </ul>
+                </section>
+
+                <section id="compiler" class="doc-section">
+                    <h2>컴파일러</h2>
+                    <p>SKKOA; LTW 코드는 <code>skkoa</code> 명령으로 실행 파일을 만들 수 있습니다.</p>
+                    <pre><code>skkoa hello.koa</code></pre>
+                    <h3>자주 쓰는 명령</h3>
+                    <pre><code>skkoa hello.koa
+skkoa hello.koa -o hello
+skkoa hello.koa --emit-asm</code></pre>
+                    <ul>
+                        <li>첫 번째 명령은 기본 이름으로 실행 파일을 만듭니다.</li>
+                        <li><code>-o</code>는 실행 파일 이름을 직접 정합니다.</li>
+                        <li><code>--emit-asm</code>은 중간 결과를 보고 싶을 때 사용합니다.</li>
+                    </ul>
+                    <h3>웹 컴파일러</h3>
+                    <p>
+                        웹 페이지의 컴파일러는 문법을 빠르게 확인하고 예제를
+                        시험해 보는 곳입니다. 실제 실행 파일을 만들려면
+                        다운로드한 <code>skkoa</code> 명령을 사용하세요.
+                    </p>
+                </section>
+
+                <section id="examples" class="doc-section">
+                    <h2>예제</h2>
+                    <h3>hello.koa</h3>
+                    <pre><code>시작
+    출력 "안녕하세요, SKKOA; LTW!"
+끝</code></pre>
+                    <h3>조건문</h3>
+                    <pre><code>시작
+    변수 score: 정수 = 85
+
+    만약 score >= 80 이면
+        출력 "통과"
+    아니면
+        출력 "실패"
+    끝
+끝</code></pre>
+                    <h3>함수</h3>
+                    <pre><code>함수 더하기(a: 정수, b: 정수): 정수
+    반환 a + b
+끝
+
+시작
+    출력 더하기(3, 4)
+끝</code></pre>
+                    <h3>배열</h3>
+                    <pre><code>시작
+    변수 numbers: 정수[] = [1, 2, 3]
+    출력 numbers[0] + numbers[1] + numbers[2]
+끝</code></pre>
+                </section>
+
+                <section id="limits" class="doc-section">
+                    <h2>제한 사항</h2>
+                    <ul>
+                        <li>표준 자료구조 모듈은 현재 정수 스택과 정수 큐를 우선 제공합니다.</li>
+                        <li>스택과 큐는 저장용 정수 배열을 사용자가 함께 넘기는 방식입니다.</li>
+                        <li>구조체 배열, 구조체 값 반환, 구조체 리터럴은 현재 제한합니다.</li>
+                        <li>배열 전체 대입은 배열 리터럴만 지원합니다. 예: <code>numbers = [1, 2, 3]</code></li>
+                        <li>모듈은 별도 네임스페이스 없이 소스 파일을 병합합니다.</li>
+                    </ul>
+                    <p class="back-to-top"><a href="#supported">기능 문서 맨 위로</a></p>
+                </section>
+            </article>
+            <div class="fixed-box">
+                <div class="cube3d" id="cube-toggle-btn">
+                    <div class="cube3d-inner">
+                        <div class="cube3d-face cube3d-front"></div>
+                        <div class="cube3d-face cube3d-back"></div>
+                        <div class="cube3d-face cube3d-right"></div>
+                        <div class="cube3d-face cube3d-left"></div>
+                        <div class="cube3d-face cube3d-top"></div>
+                        <div class="cube3d-face cube3d-bottom"></div>
+                    </div>
+                </div>
+                <div class="cube-menu" id="cube-menu" style="display: none">
+                    <a href="/" class="cube-menu-item">Home</a>
+                    <a href="/docs/" class="cube-menu-item">Docs</a>
+                    <a href="/compiler/" class="cube-menu-item">Online</a>
+                    <a href="/download/" class="cube-menu-item">Download</a>
+                </div>
+            </div>
+        </main>
+        <footer class="main-footer">
+            <p>
+                &copy; <span id="yearNow"></span> Team ToyoTech. All rights
+                reserved.
+            </p>
+        </footer>
+    </body>
+</html>
