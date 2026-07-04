@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     try {
-        const defaultCompilerDownloadPath = "/compiler/download/skkoa-windows.exe";
+        const defaultCompilerDownloadPath =
+            "/compiler/download/skkoa-windows.exe";
 
         function downloadDefaultCompiler() {
             const link = document.createElement("a");
@@ -67,7 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         rotX - 20
                     }deg) rotateY(${rotY}deg)`;
                 },
-                { passive: false }
+                { passive: false },
             );
         }
 

@@ -105,11 +105,14 @@ let consoleInputBuffer = "";
 function highlightCodeText(code) {
     const keywordPattern = new RegExp(
         `(^|[^A-Za-z0-9_가-힣])(${SKKOA_KEYWORDS.join("|")})(?=$|[^A-Za-z0-9_가-힣])`,
-        "g"
+        "g",
     );
 
     return escapeHtml(code)
-        .replace(/("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g, '<span class="str">$1</span>')
+        .replace(
+            /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*')/g,
+            '<span class="str">$1</span>',
+        )
         .replace(/(#.*|\/\/.*)$/gm, '<span class="comment">$1</span>')
         .replace(keywordPattern, function (match, prefix, keyword) {
             if (
@@ -217,7 +220,11 @@ function startsBlock(line) {
 function findMatchingEnd(lines, start) {
     let depth = 0;
     for (let i = start; i < lines.length; i++) {
-        if (startsBlock(lines[i]) || /^함수\s+/.test(lines[i]) || lines[i] === "시작") {
+        if (
+            startsBlock(lines[i]) ||
+            /^함수\s+/.test(lines[i]) ||
+            lines[i] === "시작"
+        ) {
             depth++;
         }
         if (lines[i] === "끝") {
@@ -235,11 +242,17 @@ function evalExpression(expr, env) {
         .replace(/\b그리고\b/g, "&&")
         .replace(/\b또는\b/g, "||")
         .replace(/\b아님\b/g, "!")
-        .replace(/주소\(\s*([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\s*\)/g, '__addr("$1")')
+        .replace(
+            /주소\(\s*([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\s*\)/g,
+            '__addr("$1")',
+        )
         .replace(/값\(([^)]+)\)/g, "__value($1)")
         .replace(/할당\(([^)]+)\)/g, "__alloc($1)")
         .replace(/해제\(([^)]+)\)/g, "__free($1)")
-        .replace(/배열길이\(\s*([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\s*\)/g, '__arrayLength("$1")');
+        .replace(
+            /배열길이\(\s*([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\s*\)/g,
+            '__arrayLength("$1")',
+        );
     return Function("env", `with (env) { return (${jsExpr}); }`)(env);
 }
 
@@ -314,7 +327,9 @@ function assignSimTarget(target, value, env) {
         return true;
     }
 
-    match = target.match(/^([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\.([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)$/);
+    match = target.match(
+        /^([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)\.([A-Za-z_가-힣][A-Za-z0-9_가-힣]*)$/,
+    );
     if (match) {
         if (!env[match[1]] || typeof env[match[1]] !== "object") {
             env[match[1]] = {};
@@ -328,7 +343,9 @@ function assignSimTarget(target, value, env) {
 }
 
 function handleDeclaration(line, env) {
-    const match = line.match(/^(변수|상수)\s+([A-Za-z_가-힣][A-Za-z0-9_가-힣]*):\s*([^\s=]+)(?:\s*=\s*(.+))?$/);
+    const match = line.match(
+        /^(변수|상수)\s+([A-Za-z_가-힣][A-Za-z0-9_가-힣]*):\s*([^\s=]+)(?:\s*=\s*(.+))?$/,
+    );
     if (!match) return false;
 
     const name = match[2];
@@ -336,7 +353,8 @@ function handleDeclaration(line, env) {
     const initializer = match[4];
     const arrayType = type.match(/^(.+)\[(\d*)\]$/);
     if (arrayType) {
-        if (env.__types) env.__types[name] = { base: arrayType[1], isArray: true };
+        if (env.__types)
+            env.__types[name] = { base: arrayType[1], isArray: true };
         if (initializer) {
             const value = evalExpression(initializer, env);
             env[name] = Array.isArray(value) ? value.slice() : [];
@@ -363,7 +381,11 @@ function handleDeclaration(line, env) {
 function handleAssignment(line, env) {
     let match = line.match(/^값\(([^)]+)\)\s*=\s*(.+)$/);
     if (match) {
-        setPointerValue(evalExpression(match[1], env), evalExpression(match[2], env), env);
+        setPointerValue(
+            evalExpression(match[1], env),
+            evalExpression(match[2], env),
+            env,
+        );
         return true;
     }
 
@@ -394,7 +416,11 @@ function executeSimpleLine(line, env) {
 function executeFunctionLines(lines, start, end, env) {
     for (let i = start; i < end; i++) {
         const line = lines[i];
-        if (line === "끝" || line === "아니면" || line.startsWith("아니면만약 ")) {
+        if (
+            line === "끝" ||
+            line === "아니면" ||
+            line.startsWith("아니면만약 ")
+        ) {
             continue;
         }
 
@@ -402,8 +428,16 @@ function executeFunctionLines(lines, start, end, env) {
             const blockEnd = findMatchingEnd(lines, i);
             const segments = splitIfSegments(lines, i, blockEnd);
             for (const segment of segments) {
-                if (segment.condition === null || evalExpression(segment.condition, env)) {
-                    const result = executeFunctionLines(lines, segment.start, segment.end, env);
+                if (
+                    segment.condition === null ||
+                    evalExpression(segment.condition, env)
+                ) {
+                    const result = executeFunctionLines(
+                        lines,
+                        segment.start,
+                        segment.end,
+                        env,
+                    );
                     if (result.returned) return result;
                     break;
                 }
@@ -426,7 +460,9 @@ function executeFunctionLines(lines, start, end, env) {
 }
 
 function splitIfSegments(lines, start, end) {
-    const firstCondition = lines[start].replace(/^만약\s+/, "").replace(/\s+이면$/, "");
+    const firstCondition = lines[start]
+        .replace(/^만약\s+/, "")
+        .replace(/\s+이면$/, "");
     const segments = [{ condition: firstCondition, start: start + 1, end }];
     let depth = 0;
 
@@ -437,7 +473,9 @@ function splitIfSegments(lines, start, end) {
         if (depth === 0 && /^아니면만약\s+.+\s+이면$/.test(line)) {
             segments[segments.length - 1].end = i;
             segments.push({
-                condition: line.replace(/^아니면만약\s+/, "").replace(/\s+이면$/, ""),
+                condition: line
+                    .replace(/^아니면만약\s+/, "")
+                    .replace(/\s+이면$/, ""),
                 start: i + 1,
                 end,
             });
@@ -493,7 +531,9 @@ function takeConsoleLine() {
     }
 
     const value = consoleInputBuffer.slice(0, newline.index);
-    consoleInputBuffer = consoleInputBuffer.slice(newline.index + newline[0].length);
+    consoleInputBuffer = consoleInputBuffer.slice(
+        newline.index + newline[0].length
+    );
     return value;
 }
 
@@ -502,7 +542,8 @@ function takeConsoleInput(mode) {
 }
 
 function simTypeForInputTarget(env, name) {
-    return env.__types?.[name]?.base || "";
+    const typeInfo = env.__types && env.__types[name];
+    return typeInfo ? typeInfo.base : "";
 }
 
 function simInputMode(type) {
@@ -564,7 +605,11 @@ async function executeBlock(lines, start, end, env, output) {
     for (let i = start; i < end; i++) {
         const line = lines[i];
 
-        if (line === "끝" || line === "아니면" || line.startsWith("아니면만약 ")) {
+        if (
+            line === "끝" ||
+            line === "아니면" ||
+            line.startsWith("아니면만약 ")
+        ) {
             continue;
         }
 
@@ -589,11 +634,11 @@ async function executeBlock(lines, start, end, env, output) {
             const inputType = simTypeForInputTarget(env, match[1]);
             const rawValue = await readConsoleInput(
                 `입력 ${match[1]}[${evalExpression(match[2], env)}]`,
-                simInputMode(inputType)
+                simInputMode(inputType),
             );
             env[match[1]][evalExpression(match[2], env)] = parseSimInputValue(
                 rawValue,
-                inputType
+                inputType,
             );
             continue;
         }
@@ -603,7 +648,7 @@ async function executeBlock(lines, start, end, env, output) {
             const inputType = simTypeForInputTarget(env, match[1]);
             const rawValue = await readConsoleInput(
                 `입력 ${match[1]}`,
-                simInputMode(inputType)
+                simInputMode(inputType),
             );
             env[match[1]] = parseSimInputValue(rawValue, inputType);
             continue;
@@ -613,7 +658,9 @@ async function executeBlock(lines, start, end, env, output) {
         if (match) {
             const expr = match[1];
             const stringMatch = expr.match(/^"(.*)"$/);
-            const value = stringMatch ? stringMatch[1] : evalExpression(expr, env);
+            const value = stringMatch
+                ? stringMatch[1]
+                : evalExpression(expr, env);
             emitSimOutput(env, value);
             continue;
         }
@@ -622,8 +669,17 @@ async function executeBlock(lines, start, end, env, output) {
             const blockEnd = findMatchingEnd(lines, i);
             const segments = splitIfSegments(lines, i, blockEnd);
             for (const segment of segments) {
-                if (segment.condition === null || evalExpression(segment.condition, env)) {
-                    await executeBlock(lines, segment.start, segment.end, env, output);
+                if (
+                    segment.condition === null ||
+                    evalExpression(segment.condition, env)
+                ) {
+                    await executeBlock(
+                        lines,
+                        segment.start,
+                        segment.end,
+                        env,
+                        output,
+                    );
                     break;
                 }
             }
@@ -632,7 +688,9 @@ async function executeBlock(lines, start, end, env, output) {
         }
 
         if (/^동안\s+.+\s+반복$/.test(line)) {
-            const condition = line.replace(/^동안\s+/, "").replace(/\s+반복$/, "");
+            const condition = line
+                .replace(/^동안\s+/, "")
+                .replace(/\s+반복$/, "");
             const blockEnd = findMatchingEnd(lines, i);
             let guard = 0;
             while (evalExpression(condition, env)) {
@@ -719,7 +777,10 @@ async function runSimulation() {
                 return left < right ? -1 : 1;
             },
             부분문자열(value, start, length) {
-                return String(value).substring(Number(start), Number(start) + Number(length));
+                return String(value).substring(
+                    Number(start),
+                    Number(start) + Number(length),
+                );
             },
         };
         parseFunctions(lines, env);
@@ -731,9 +792,11 @@ async function runSimulation() {
         if (!output.length) appendConsole("출력 없음\n");
     } catch (error) {
         if (error?.kind === "break") {
-            outputEl.textContent = "시뮬레이터 오류: '중단'은 반복문 안에서만 사용할 수 있습니다.";
+            outputEl.textContent =
+                "시뮬레이터 오류: '중단'은 반복문 안에서만 사용할 수 있습니다.";
         } else if (error?.kind === "continue") {
-            outputEl.textContent = "시뮬레이터 오류: '계속'은 반복문 안에서만 사용할 수 있습니다.";
+            outputEl.textContent =
+                "시뮬레이터 오류: '계속'은 반복문 안에서만 사용할 수 있습니다.";
         } else {
             outputEl.textContent = `시뮬레이터 오류: ${error.message}`;
         }
@@ -848,7 +911,7 @@ function renderTabs() {
                             tabs.some(
                                 (t) =>
                                     t.filename === finalName + ".koa" &&
-                                    t.id !== tab.id
+                                    t.id !== tab.id,
                             )
                         ) {
                             finalName = base + "_" + num;
@@ -941,7 +1004,8 @@ function applyEditorFontSize(size) {
     const codeHighlight = document.getElementById("codeHighlight");
     const linenumLayer = document.getElementById("editorLinenum");
 
-    if (editorRoot) editorRoot.style.setProperty("--editor-font-size", normalized);
+    if (editorRoot)
+        editorRoot.style.setProperty("--editor-font-size", normalized);
     if (codeInput) codeInput.style.fontSize = normalized;
     if (codeHighlight) codeHighlight.style.fontSize = normalized;
     if (linenumLayer) linenumLayer.style.fontSize = normalized;
@@ -971,7 +1035,9 @@ async function loadExample(filename) {
 
     const output = document.getElementById("runOutput");
     try {
-        const response = await fetch(`examples/${encodeURIComponent(filename)}`);
+        const response = await fetch(
+            `examples/${encodeURIComponent(filename)}`,
+        );
         if (!response.ok) {
             throw new Error(`${filename} 파일을 불러올 수 없습니다.`);
         }
@@ -1162,8 +1228,7 @@ function isBlockOpeningLine(trimmedLine) {
 
 function isBlockContinuationLine(trimmedLine) {
     return (
-        trimmedLine === "아니면" ||
-        /^아니면만약\s+.+\s+이면$/.test(trimmedLine)
+        trimmedLine === "아니면" || /^아니면만약\s+.+\s+이면$/.test(trimmedLine)
     );
 }
 
@@ -1322,12 +1387,14 @@ function submitConsoleInput() {
 document
     .getElementById("consoleSubmit")
     .addEventListener("click", submitConsoleInput);
-document.getElementById("consoleInput").addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
-        submitConsoleInput();
-    }
-});
+document
+    .getElementById("consoleInput")
+    .addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            submitConsoleInput();
+        }
+    });
 
 document
     .getElementById("settingsToolbarBtn")
@@ -1345,12 +1412,16 @@ document.getElementById("saveMenu").addEventListener("click", function () {
 document.getElementById("downloadMenu").addEventListener("click", function () {
     openCompilerDownloadPage();
 });
-document.getElementById("examplesMenu").addEventListener("click", openExamplePicker);
-document.getElementById("exampleSelect").addEventListener("change", function () {
-    const filename = this.value;
-    this.value = "";
-    loadExample(filename);
-});
+document
+    .getElementById("examplesMenu")
+    .addEventListener("click", openExamplePicker);
+document
+    .getElementById("exampleSelect")
+    .addEventListener("change", function () {
+        const filename = this.value;
+        this.value = "";
+        loadExample(filename);
+    });
 document.getElementById("studyMenu").addEventListener("click", function () {
     window.open("/docs/", "_blank");
 });

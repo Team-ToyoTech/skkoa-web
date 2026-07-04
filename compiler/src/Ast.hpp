@@ -110,7 +110,8 @@ struct FloatLiteralExpr : Expr {
 
 struct StringLiteralExpr : Expr {
     StringLiteralExpr(SourceLocation loc, string val)
-        : Expr(loc), value(move(val)) {}
+        : Expr(loc), value(move(val)) {
+    }
     string value;
 };
 
@@ -126,21 +127,24 @@ struct BoolLiteralExpr : Expr {
 
 struct VariableExpr : Expr {
     VariableExpr(SourceLocation loc, string variableName)
-        : Expr(loc), name(move(variableName)) {}
+        : Expr(loc), name(move(variableName)) {
+    }
     string name;
 };
 
 struct ArrayAccessExpr : Expr {
     ArrayAccessExpr(SourceLocation loc, string arrayName,
-                    unique_ptr<Expr> indexExpr)
-        : Expr(loc), name(move(arrayName)), index(move(indexExpr)) {}
+        unique_ptr<Expr> indexExpr)
+        : Expr(loc), name(move(arrayName)), index(move(indexExpr)) {
+    }
     string name;
     unique_ptr<Expr> index;
 };
 
 struct FieldAccessExpr : Expr {
     FieldAccessExpr(SourceLocation loc, string objectName, string fieldName)
-        : Expr(loc), object(move(objectName)), field(move(fieldName)) {}
+        : Expr(loc), object(move(objectName)), field(move(fieldName)) {
+    }
     string object;
     string field;
 };
@@ -152,8 +156,9 @@ struct ArrayLiteralExpr : Expr {
 
 struct BinaryExpr : Expr {
     BinaryExpr(SourceLocation loc, BinaryOp binaryOp, unique_ptr<Expr> leftExpr,
-               unique_ptr<Expr> rightExpr)
-        : Expr(loc), op(binaryOp), left(move(leftExpr)), right(move(rightExpr)) {}
+        unique_ptr<Expr> rightExpr)
+        : Expr(loc), op(binaryOp), left(move(leftExpr)), right(move(rightExpr)) {
+    }
     BinaryOp op;
     unique_ptr<Expr> left;
     unique_ptr<Expr> right;
@@ -161,28 +166,32 @@ struct BinaryExpr : Expr {
 
 struct UnaryExpr : Expr {
     UnaryExpr(SourceLocation loc, UnaryOp unaryOp, unique_ptr<Expr> operandExpr)
-        : Expr(loc), op(unaryOp), operand(move(operandExpr)) {}
+        : Expr(loc), op(unaryOp), operand(move(operandExpr)) {
+    }
     UnaryOp op;
     unique_ptr<Expr> operand;
 };
 
 struct CallExpr : Expr {
     CallExpr(SourceLocation loc, string functionName)
-        : Expr(loc), name(move(functionName)) {}
+        : Expr(loc), name(move(functionName)) {
+    }
     string name;
     vector<unique_ptr<Expr>> arguments;
 };
 
 struct AddressExpr : Expr {
     AddressExpr(SourceLocation loc, string variableName)
-        : Expr(loc), name(move(variableName)) {}
+        : Expr(loc), name(move(variableName)) {
+    }
     string name;
     unique_ptr<Expr> index;
 };
 
 struct DereferenceExpr : Expr {
     DereferenceExpr(SourceLocation loc, unique_ptr<Expr> pointerExpr)
-        : Expr(loc), pointer(move(pointerExpr)) {}
+        : Expr(loc), pointer(move(pointerExpr)) {
+    }
     unique_ptr<Expr> pointer;
 };
 
@@ -194,9 +203,10 @@ struct Stmt {
 
 struct VarDeclStmt : Stmt {
     VarDeclStmt(SourceLocation loc, bool constantFlag, string variableName,
-                TypeName variableType)
+        TypeName variableType)
         : Stmt(loc), isConst(constantFlag), name(move(variableName)),
-          type(variableType) {}
+        type(variableType) {
+    }
     bool isConst = false;
     string name;
     TypeName type;
@@ -205,7 +215,8 @@ struct VarDeclStmt : Stmt {
 
 struct AssignmentStmt : Stmt {
     AssignmentStmt(SourceLocation loc, string targetName)
-        : Stmt(loc), name(move(targetName)) {}
+        : Stmt(loc), name(move(targetName)) {
+    }
     string name;
     unique_ptr<Expr> index;
     unique_ptr<Expr> value;
@@ -213,7 +224,8 @@ struct AssignmentStmt : Stmt {
 
 struct FieldAssignmentStmt : Stmt {
     FieldAssignmentStmt(SourceLocation loc, string objectName, string fieldName)
-        : Stmt(loc), object(move(objectName)), field(move(fieldName)) {}
+        : Stmt(loc), object(move(objectName)), field(move(fieldName)) {
+    }
     string object;
     string field;
     unique_ptr<Expr> value;
@@ -232,7 +244,8 @@ struct PrintStmt : Stmt {
 
 struct InputStmt : Stmt {
     InputStmt(SourceLocation loc, string targetName)
-        : Stmt(loc), name(move(targetName)) {}
+        : Stmt(loc), name(move(targetName)) {
+    }
     string name;
     unique_ptr<Expr> index;
 };
@@ -261,7 +274,8 @@ struct WhileStmt : Stmt {
 
 struct RepeatStmt : Stmt {
     RepeatStmt(SourceLocation loc, string iteratorName)
-        : Stmt(loc), iterator(move(iteratorName)) {}
+        : Stmt(loc), iterator(move(iteratorName)) {
+    }
     string iterator;
     unique_ptr<Expr> start;
     unique_ptr<Expr> end;

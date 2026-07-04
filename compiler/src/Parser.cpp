@@ -5,8 +5,9 @@
 
 using namespace std;
 
-Parser::Parser(vector<Token> tokens, ErrorReporter &errors)
-    : tokens_(move(tokens)), errors_(errors) {}
+Parser::Parser(vector<Token> tokens, ErrorReporter& errors)
+    : tokens_(move(tokens)), errors_(errors) {
+}
 
 unique_ptr<Program> Parser::parse() {
     auto program = make_unique<Program>();
@@ -20,35 +21,38 @@ unique_ptr<Program> Parser::parse() {
             if (structure) {
                 program->structs.push_back(move(structure));
             }
-        } else if (match(TokenType::Function)) {
+        }
+        else if (match(TokenType::Function)) {
             current_--;
             auto function = parseFunction();
             if (function) {
                 program->functions.push_back(move(function));
             }
-        } else if (match(TokenType::Start)) {
+        }
+        else if (match(TokenType::Start)) {
             if (hasMain) {
                 errors_.error(previous().location,
-                              "'시작' 블록은 프로그램에 하나만 둘 수 있습니다.");
+                    "'시작' 블록은 프로그램에 하나만 둘 수 있습니다.");
             }
             hasMain = true;
             skipNewLines();
             program->mainStatements =
-                parseBlock({TokenType::End}, "시작");
+                parseBlock({ TokenType::End }, "시작");
             consume(TokenType::End, "'시작' 블록을 닫는 '끝'이 필요합니다.",
-                    "프로그램 본문 마지막 줄에 '끝'을 추가하세요.");
-        } else {
+                "프로그램 본문 마지막 줄에 '끝'을 추가하세요.");
+        }
+        else {
             errors_.error(peek().location,
-                          "최상위에는 '구조체', '함수' 정의 또는 '시작' 블록만 올 수 있습니다.",
-                          "실행할 코드는 '시작'과 '끝' 사이에 작성하세요.");
+                "최상위에는 '구조체', '함수' 정의 또는 '시작' 블록만 올 수 있습니다.",
+                "실행할 코드는 '시작'과 '끝' 사이에 작성하세요.");
             synchronize();
         }
         skipNewLines();
     }
 
     if (!hasMain) {
-        errors_.error({1, 1}, "프로그램에 '시작' 블록이 없습니다.",
-                      "SKKOA 프로그램은 '시작'으로 시작하고 '끝'으로 닫아야 합니다.");
+        errors_.error({ 1, 1 }, "프로그램에 '시작' 블록이 없습니다.",
+            "SKKOA 프로그램은 '시작'으로 시작하고 '끝'으로 닫아야 합니다.");
     }
 
     return program;
@@ -58,15 +62,15 @@ bool Parser::isAtEnd() const {
     return peek().type == TokenType::EndOfFile;
 }
 
-const Token &Parser::peek() const {
+const Token& Parser::peek() const {
     return tokens_[current_];
 }
 
-const Token &Parser::previous() const {
+const Token& Parser::previous() const {
     return tokens_[current_ - 1];
 }
 
-const Token &Parser::advance() {
+const Token& Parser::advance() {
     if (!isAtEnd()) {
         current_++;
     }
@@ -103,7 +107,7 @@ bool Parser::matchAny(initializer_list<TokenType> types) {
     return false;
 }
 
-bool Parser::consume(TokenType type, const string &message, const string &hint) {
+bool Parser::consume(TokenType type, const string& message, const string& hint) {
     if (check(type)) {
         advance();
         return true;
@@ -130,7 +134,7 @@ unique_ptr<StructDecl> Parser::parseStruct() {
 
     if (!check(TokenType::Identifier)) {
         errors_.error(peek().location, "구조체 이름이 필요합니다.",
-                      "예: 구조체 사람");
+            "예: 구조체 사람");
         synchronize();
         return nullptr;
     }
@@ -143,20 +147,20 @@ unique_ptr<StructDecl> Parser::parseStruct() {
     while (!isAtEnd() && !check(TokenType::End)) {
         if (!check(TokenType::Identifier)) {
             errors_.error(peek().location, "구조체 필드 이름이 필요합니다.",
-                          "예: 나이: 정수");
+                "예: 나이: 정수");
             synchronize();
             continue;
         }
         Token fieldName = advance();
         consume(TokenType::Colon, "구조체 필드 이름 뒤에는 ':'가 필요합니다.",
-                "예: 나이: 정수");
+            "예: 나이: 정수");
         TypeName fieldType = parseType();
-        structure->fields.push_back({fieldName.lexeme, fieldType, fieldName.location});
+        structure->fields.push_back({ fieldName.lexeme, fieldType, fieldName.location });
         skipNewLines();
     }
 
     consume(TokenType::End, "구조체 블록을 닫는 '끝'이 필요합니다.",
-            "구조체 필드 목록 마지막에 '끝'을 추가하세요.");
+        "구조체 필드 목록 마지막에 '끝'을 추가하세요.");
     return structure;
 }
 
@@ -166,7 +170,7 @@ unique_ptr<FunctionDecl> Parser::parseFunction() {
 
     if (!check(TokenType::Identifier)) {
         errors_.error(peek().location, "함수 이름이 필요합니다.",
-                      "예: 함수 더하기(a: 정수, b: 정수): 정수");
+            "예: 함수 더하기(a: 정수, b: 정수): 정수");
         synchronize();
         return nullptr;
     }
@@ -176,36 +180,36 @@ unique_ptr<FunctionDecl> Parser::parseFunction() {
     function->name = advance().lexeme;
 
     consume(TokenType::LeftParen, "함수 이름 뒤에는 '('가 필요합니다.",
-            "매개변수가 없어도 '()'를 작성하세요.");
+        "매개변수가 없어도 '()'를 작성하세요.");
     if (!check(TokenType::RightParen)) {
         do {
             if (!check(TokenType::Identifier)) {
                 errors_.error(peek().location, "매개변수 이름이 필요합니다.",
-                              "예: a: 정수");
+                    "예: a: 정수");
                 synchronize();
                 return function;
             }
             Token name = advance();
             consume(TokenType::Colon, "매개변수 이름 뒤에는 ':'가 필요합니다.",
-                    "예: a: 정수");
+                "예: a: 정수");
             TypeName type = parseType();
-            function->params.push_back({name.lexeme, type, name.location});
+            function->params.push_back({ name.lexeme, type, name.location });
         } while (match(TokenType::Comma));
     }
     consume(TokenType::RightParen, "매개변수 목록 뒤에는 ')'가 필요합니다.", "");
     consume(TokenType::Colon, "함수 반환 자료형 앞에는 ':'가 필요합니다.",
-            "예: 함수 더하기(a: 정수, b: 정수): 정수");
+        "예: 함수 더하기(a: 정수, b: 정수): 정수");
     function->returnType = parseType();
 
     skipNewLines();
-    function->body = parseBlock({TokenType::End}, "함수");
+    function->body = parseBlock({ TokenType::End }, "함수");
     consume(TokenType::End, "함수 블록을 닫는 '끝'이 필요합니다.",
-            "함수 본문 마지막에 '끝'을 추가하세요.");
+        "함수 본문 마지막에 '끝'을 추가하세요.");
     return function;
 }
 
 vector<unique_ptr<Stmt>> Parser::parseBlock(initializer_list<TokenType> terminators,
-                                            const string &blockName) {
+    const string& blockName) {
     vector<unique_ptr<Stmt>> statements;
     skipNewLines();
 
@@ -213,7 +217,8 @@ vector<unique_ptr<Stmt>> Parser::parseBlock(initializer_list<TokenType> terminat
         auto statement = parseStatement();
         if (statement) {
             statements.push_back(move(statement));
-        } else {
+        }
+        else {
             synchronize();
         }
         skipNewLines();
@@ -221,8 +226,8 @@ vector<unique_ptr<Stmt>> Parser::parseBlock(initializer_list<TokenType> terminat
 
     if (isAtEnd()) {
         errors_.error(previous().location,
-                      "'" + blockName + "' 블록이 닫히기 전에 파일이 끝났습니다.",
-                      "열린 블록마다 '끝'을 작성했는지 확인하세요.");
+            "'" + blockName + "' 블록이 닫히기 전에 파일이 끝났습니다.",
+            "열린 블록마다 '끝'을 작성했는지 확인하세요.");
     }
     return statements;
 }
@@ -284,7 +289,7 @@ unique_ptr<Stmt> Parser::parseStatement() {
         return parsePointerAssignment();
     }
     errors_.error(peek().location, "예상하지 못한 토큰 '" + peek().lexeme + "'을 발견했습니다.",
-                  "변수 선언, 대입, 출력, 조건문, 반복문 또는 반환문을 작성하세요.");
+        "변수 선언, 대입, 출력, 조건문, 반복문 또는 반환문을 작성하세요.");
     synchronize();
     return nullptr;
 }
@@ -295,12 +300,12 @@ unique_ptr<Stmt> Parser::parseVarDecl(bool isConst) {
 
     if (!check(TokenType::Identifier)) {
         errors_.error(peek().location, "변수 이름이 필요합니다.",
-                      "변수 선언은 '변수 이름: 자료형 = 값' 형식이어야 합니다.");
+            "변수 선언은 '변수 이름: 자료형 = 값' 형식이어야 합니다.");
         return nullptr;
     }
     Token name = advance();
     consume(TokenType::Colon, "변수 이름 뒤에는 ':'가 필요합니다.",
-            "예: 변수 x: 정수 = 10");
+        "예: 변수 x: 정수 = 10");
     TypeName type = parseType();
 
     auto statement = make_unique<VarDeclStmt>(location, isConst, name.lexeme, type);
@@ -316,10 +321,10 @@ unique_ptr<Stmt> Parser::parseAssignment() {
     if (match(TokenType::LeftBracket)) {
         statement->index = parseExpression();
         consume(TokenType::RightBracket, "배열 인덱스 뒤에는 ']'가 필요합니다.",
-                "예: numbers[0] = 10");
+            "예: numbers[0] = 10");
     }
     consume(TokenType::Assign, "대입문에는 '='가 필요합니다.",
-            "예: x = x + 1");
+        "예: x = x + 1");
     statement->value = parseExpression();
     return statement;
 }
@@ -327,18 +332,18 @@ unique_ptr<Stmt> Parser::parseAssignment() {
 unique_ptr<Stmt> Parser::parseFieldAssignment() {
     Token object = advance();
     consume(TokenType::Dot, "구조체 필드 접근에는 '.'이 필요합니다.",
-            "예: person.age = 20");
+        "예: person.age = 20");
     if (!check(TokenType::Identifier)) {
         errors_.error(peek().location, "필드 이름이 필요합니다.",
-                      "예: person.age = 20");
+            "예: person.age = 20");
         synchronize();
         return nullptr;
     }
     Token field = advance();
     auto statement = make_unique<FieldAssignmentStmt>(object.location,
-                                                     object.lexeme, field.lexeme);
+        object.lexeme, field.lexeme);
     consume(TokenType::Assign, "구조체 필드 대입문에는 '='가 필요합니다.",
-            "예: person.age = 20");
+        "예: person.age = 20");
     statement->value = parseExpression();
     return statement;
 }
@@ -347,13 +352,13 @@ unique_ptr<Stmt> Parser::parsePointerAssignment() {
     SourceLocation location = peek().location;
     consume(TokenType::Value, "'값' 키워드가 필요합니다.", "");
     consume(TokenType::LeftParen, "'값' 뒤에는 '('가 필요합니다.",
-            "예: 값(p) = 20");
+        "예: 값(p) = 20");
     auto statement = make_unique<PointerAssignmentStmt>(location);
     statement->pointer = parseExpression();
     consume(TokenType::RightParen, "'값' 대상은 ')'로 닫아야 합니다.",
-            "예: 값(p) = 20");
+        "예: 값(p) = 20");
     consume(TokenType::Assign, "포인터 쓰기에는 '='가 필요합니다.",
-            "예: 값(p) = 20");
+        "예: 값(p) = 20");
     statement->value = parseExpression();
     return statement;
 }
@@ -379,7 +384,7 @@ unique_ptr<Stmt> Parser::parseInput() {
 
     if (!check(TokenType::Identifier)) {
         errors_.error(peek().location, "입력 대상 변수 이름이 필요합니다.",
-                      "예: 입력 age");
+            "예: 입력 age");
         synchronize();
         return nullptr;
     }
@@ -389,7 +394,7 @@ unique_ptr<Stmt> Parser::parseInput() {
     if (match(TokenType::LeftBracket)) {
         statement->index = parseExpression();
         consume(TokenType::RightBracket, "배열 인덱스 뒤에는 ']'가 필요합니다.",
-                "예: 입력 numbers[0]");
+            "예: 입력 numbers[0]");
     }
     return statement;
 }
@@ -402,30 +407,30 @@ unique_ptr<Stmt> Parser::parseIf() {
     IfBranch firstBranch;
     firstBranch.condition = parseExpression();
     consume(TokenType::Then, "조건식 뒤에는 '이면'이 필요합니다.",
-            "예: 만약 score >= 80 이면");
+        "예: 만약 score >= 80 이면");
     skipNewLines();
-    firstBranch.body = parseBlock({TokenType::ElseIf, TokenType::Else, TokenType::End},
-                                  "만약");
+    firstBranch.body = parseBlock({ TokenType::ElseIf, TokenType::Else, TokenType::End },
+        "만약");
     statement->branches.push_back(move(firstBranch));
 
     while (match(TokenType::ElseIf)) {
         IfBranch branch;
         branch.condition = parseExpression();
         consume(TokenType::Then, "'아니면만약' 조건 뒤에는 '이면'이 필요합니다.",
-                "예: 아니면만약 score >= 80 이면");
+            "예: 아니면만약 score >= 80 이면");
         skipNewLines();
-        branch.body = parseBlock({TokenType::ElseIf, TokenType::Else, TokenType::End},
-                                 "아니면만약");
+        branch.body = parseBlock({ TokenType::ElseIf, TokenType::Else, TokenType::End },
+            "아니면만약");
         statement->branches.push_back(move(branch));
     }
 
     if (match(TokenType::Else)) {
         skipNewLines();
-        statement->elseBody = parseBlock({TokenType::End}, "아니면");
+        statement->elseBody = parseBlock({ TokenType::End }, "아니면");
     }
 
     consume(TokenType::End, "조건문을 닫는 '끝'이 필요합니다.",
-            "만약/아니면 블록 마지막에 '끝'을 추가하세요.");
+        "만약/아니면 블록 마지막에 '끝'을 추가하세요.");
     return statement;
 }
 
@@ -436,11 +441,11 @@ unique_ptr<Stmt> Parser::parseWhile() {
     auto statement = make_unique<WhileStmt>(location);
     statement->condition = parseExpression();
     consume(TokenType::Repeat, "동안 조건 뒤에는 '반복'이 필요합니다.",
-            "예: 동안 i < 5 반복");
+        "예: 동안 i < 5 반복");
     skipNewLines();
-    statement->body = parseBlock({TokenType::End}, "동안");
+    statement->body = parseBlock({ TokenType::End }, "동안");
     consume(TokenType::End, "반복문을 닫는 '끝'이 필요합니다.",
-            "동안 블록 마지막에 '끝'을 추가하세요.");
+        "동안 블록 마지막에 '끝'을 추가하세요.");
     return statement;
 }
 
@@ -450,7 +455,7 @@ unique_ptr<Stmt> Parser::parseRepeat() {
 
     if (!check(TokenType::Identifier)) {
         errors_.error(peek().location, "반복 변수 이름이 필요합니다.",
-                      "예: 반복 i: 0부터 10까지");
+            "예: 반복 i: 0부터 10까지");
         synchronize();
         return nullptr;
     }
@@ -458,17 +463,17 @@ unique_ptr<Stmt> Parser::parseRepeat() {
     Token iterator = advance();
     auto statement = make_unique<RepeatStmt>(location, iterator.lexeme);
     consume(TokenType::Colon, "반복 변수 뒤에는 ':'가 필요합니다.",
-            "예: 반복 i: 0부터 10까지");
+        "예: 반복 i: 0부터 10까지");
     statement->start = parseExpression();
     consume(TokenType::From, "반복 시작값 뒤에는 '부터'가 필요합니다.",
-            "예: 반복 i: 0부터 10까지");
+        "예: 반복 i: 0부터 10까지");
     statement->end = parseExpression();
     consume(TokenType::To, "반복 끝값 뒤에는 '까지'가 필요합니다.",
-            "예: 반복 i: 0부터 10까지");
+        "예: 반복 i: 0부터 10까지");
     skipNewLines();
-    statement->body = parseBlock({TokenType::End}, "반복");
+    statement->body = parseBlock({ TokenType::End }, "반복");
     consume(TokenType::End, "횟수 반복문을 닫는 '끝'이 필요합니다.",
-            "반복 블록 마지막에 '끝'을 추가하세요.");
+        "반복 블록 마지막에 '끝'을 추가하세요.");
     return statement;
 }
 
@@ -502,31 +507,39 @@ TypeName Parser::parseType() {
 
     if (match(TokenType::TypeInt)) {
         type.base = ValueType::Int;
-    } else if (match(TokenType::TypeBool)) {
+    }
+    else if (match(TokenType::TypeBool)) {
         type.base = ValueType::Bool;
-    } else if (match(TokenType::TypeString)) {
+    }
+    else if (match(TokenType::TypeString)) {
         type.base = ValueType::String;
-    } else if (match(TokenType::TypeVoid)) {
+    }
+    else if (match(TokenType::TypeVoid)) {
         type.base = ValueType::Void;
-    } else if (match(TokenType::TypeFloat)) {
+    }
+    else if (match(TokenType::TypeFloat)) {
         type.base = ValueType::Float;
-    } else if (match(TokenType::TypeChar)) {
+    }
+    else if (match(TokenType::TypeChar)) {
         type.base = ValueType::Char;
-    } else if (match(TokenType::Pointer)) {
+    }
+    else if (match(TokenType::Pointer)) {
         type.base = ValueType::Pointer;
         if (match(TokenType::Less)) {
             TypeName inner = parseType();
             type.pointerTarget = inner.base;
             consume(TokenType::Greater, "포인터 자료형은 '>'로 닫아야 합니다.",
-                    "예: 포인터<정수>");
+                "예: 포인터<정수>");
         }
-    } else if (check(TokenType::Identifier)) {
+    }
+    else if (check(TokenType::Identifier)) {
         Token name = advance();
         type.base = ValueType::Struct;
         type.structName = name.lexeme;
-    } else {
+    }
+    else {
         errors_.error(peek().location, "자료형이 필요합니다.",
-                      "지원되는 1차 자료형은 정수, 논리, 문자열입니다.");
+            "지원되는 1차 자료형은 정수, 논리, 문자열입니다.");
         if (!isAtEnd()) {
             advance();
         }
@@ -538,7 +551,7 @@ TypeName Parser::parseType() {
             type.arraySize = static_cast<int>(stoll(advance().lexeme));
         }
         consume(TokenType::RightBracket, "배열 자료형은 ']'로 닫아야 합니다.",
-                "예: 변수 numbers: 정수[3]");
+            "예: 변수 numbers: 정수[3]");
     }
 
     return type;
@@ -554,7 +567,7 @@ unique_ptr<Expr> Parser::parseOr() {
         Token op = previous();
         auto right = parseAnd();
         expression = make_unique<BinaryExpr>(op.location, BinaryOp::Or,
-                                             move(expression), move(right));
+            move(expression), move(right));
     }
     return expression;
 }
@@ -565,52 +578,52 @@ unique_ptr<Expr> Parser::parseAnd() {
         Token op = previous();
         auto right = parseEquality();
         expression = make_unique<BinaryExpr>(op.location, BinaryOp::And,
-                                             move(expression), move(right));
+            move(expression), move(right));
     }
     return expression;
 }
 
 unique_ptr<Expr> Parser::parseEquality() {
     auto expression = parseComparison();
-    while (matchAny({TokenType::Equal, TokenType::NotEqual})) {
+    while (matchAny({ TokenType::Equal, TokenType::NotEqual })) {
         Token op = previous();
         auto right = parseComparison();
         expression = make_unique<BinaryExpr>(op.location, binaryOpFromToken(op.type),
-                                             move(expression), move(right));
+            move(expression), move(right));
     }
     return expression;
 }
 
 unique_ptr<Expr> Parser::parseComparison() {
     auto expression = parseTerm();
-    while (matchAny({TokenType::Less, TokenType::LessEqual, TokenType::Greater,
-                     TokenType::GreaterEqual})) {
+    while (matchAny({ TokenType::Less, TokenType::LessEqual, TokenType::Greater,
+                     TokenType::GreaterEqual })) {
         Token op = previous();
         auto right = parseTerm();
         expression = make_unique<BinaryExpr>(op.location, binaryOpFromToken(op.type),
-                                             move(expression), move(right));
+            move(expression), move(right));
     }
     return expression;
 }
 
 unique_ptr<Expr> Parser::parseTerm() {
     auto expression = parseFactor();
-    while (matchAny({TokenType::Plus, TokenType::Minus})) {
+    while (matchAny({ TokenType::Plus, TokenType::Minus })) {
         Token op = previous();
         auto right = parseFactor();
         expression = make_unique<BinaryExpr>(op.location, binaryOpFromToken(op.type),
-                                             move(expression), move(right));
+            move(expression), move(right));
     }
     return expression;
 }
 
 unique_ptr<Expr> Parser::parseFactor() {
     auto expression = parseUnary();
-    while (matchAny({TokenType::Star, TokenType::Slash, TokenType::Percent})) {
+    while (matchAny({ TokenType::Star, TokenType::Slash, TokenType::Percent })) {
         Token op = previous();
         auto right = parseUnary();
         expression = make_unique<BinaryExpr>(op.location, binaryOpFromToken(op.type),
-                                             move(expression), move(right));
+            move(expression), move(right));
     }
     return expression;
 }
@@ -643,8 +656,8 @@ unique_ptr<Expr> Parser::parsePrimary() {
         Token token = previous();
         if (token.lexeme.size() != 1) {
             errors_.error(token.location,
-                          "현재 문자 리터럴은 ASCII 한 글자만 지원합니다.",
-                          "예: 'A'");
+                "현재 문자 리터럴은 ASCII 한 글자만 지원합니다.",
+                "예: 'A'");
             return make_unique<CharLiteralExpr>(token.location, 0);
         }
         return make_unique<CharLiteralExpr>(
@@ -664,13 +677,13 @@ unique_ptr<Expr> Parser::parsePrimary() {
         if (match(TokenType::Dot)) {
             if (!check(TokenType::Identifier)) {
                 errors_.error(peek().location, "필드 이름이 필요합니다.",
-                              "예: person.age");
+                    "예: person.age");
                 synchronize();
                 return make_unique<IntLiteralExpr>(name.location, 0);
             }
             Token field = advance();
             return make_unique<FieldAccessExpr>(name.location, name.lexeme,
-                                                field.lexeme);
+                field.lexeme);
         }
         if (match(TokenType::LeftParen)) {
             auto call = make_unique<CallExpr>(name.location, name.lexeme);
@@ -680,25 +693,25 @@ unique_ptr<Expr> Parser::parsePrimary() {
                 } while (match(TokenType::Comma));
             }
             consume(TokenType::RightParen, "함수 호출 인자 뒤에는 ')'가 필요합니다.",
-                    "예: 더하기(3, 4)");
+                "예: 더하기(3, 4)");
             return call;
         }
         if (match(TokenType::LeftBracket)) {
             auto index = parseExpression();
             consume(TokenType::RightBracket, "배열 인덱스 뒤에는 ']'가 필요합니다.",
-                    "예: numbers[0]");
+                "예: numbers[0]");
             return make_unique<ArrayAccessExpr>(name.location, name.lexeme,
-                                                move(index));
+                move(index));
         }
         return make_unique<VariableExpr>(name.location, name.lexeme);
     }
     if (match(TokenType::Address)) {
         Token token = previous();
         consume(TokenType::LeftParen, "'주소' 뒤에는 '('가 필요합니다.",
-                "예: 주소(x)");
+            "예: 주소(x)");
         if (!check(TokenType::Identifier)) {
             errors_.error(peek().location, "주소를 얻을 변수 이름이 필요합니다.",
-                          "예: 주소(x)");
+                "예: 주소(x)");
             synchronize();
             return make_unique<IntLiteralExpr>(token.location, 0);
         }
@@ -707,19 +720,19 @@ unique_ptr<Expr> Parser::parsePrimary() {
         if (match(TokenType::LeftBracket)) {
             expression->index = parseExpression();
             consume(TokenType::RightBracket, "배열 인덱스 뒤에는 ']'가 필요합니다.",
-                    "예: 주소(numbers[0])");
+                "예: 주소(numbers[0])");
         }
         consume(TokenType::RightParen, "'주소' 호출은 ')'로 닫아야 합니다.",
-                "예: 주소(x)");
+            "예: 주소(x)");
         return expression;
     }
     if (match(TokenType::Value)) {
         Token token = previous();
         consume(TokenType::LeftParen, "'값' 뒤에는 '('가 필요합니다.",
-                "예: 값(p)");
+            "예: 값(p)");
         auto pointer = parseExpression();
         consume(TokenType::RightParen, "'값' 호출은 ')'로 닫아야 합니다.",
-                "예: 값(p)");
+            "예: 값(p)");
         return make_unique<DereferenceExpr>(token.location, move(pointer));
     }
     if (match(TokenType::LeftParen)) {
@@ -736,12 +749,12 @@ unique_ptr<Expr> Parser::parsePrimary() {
             } while (match(TokenType::Comma));
         }
         consume(TokenType::RightBracket, "배열 리터럴은 ']'로 닫아야 합니다.",
-                "예: [1, 2, 3]");
+            "예: [1, 2, 3]");
         return literal;
     }
 
     errors_.error(peek().location, "표현식이 필요합니다.",
-                  "숫자, 문자열, 변수 이름, 함수 호출 또는 괄호식을 작성하세요.");
+        "숫자, 문자열, 변수 이름, 함수 호출 또는 괄호식을 작성하세요.");
     SourceLocation location = peek().location;
     if (!isAtEnd()) {
         advance();

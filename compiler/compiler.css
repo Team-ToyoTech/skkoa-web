@@ -6,10 +6,14 @@
     --editor-code-padding-x: 30px;
     --editor-line-padding-right: 8px;
     --editor-line-number-width: 36px;
-    --editor-code-font: 'D2Coding', 'D2Coding ligature', 'Nanum Gothic Coding', 'IBM Plex Mono KR', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+    --editor-code-font:
+        "D2Coding", "D2Coding ligature", "Nanum Gothic Coding",
+        "IBM Plex Mono KR", "JetBrains Mono", "Fira Code", "Cascadia Code",
+        "Consolas", monospace;
 }
 
-html, body {
+html,
+body {
     height: 100%;
     min-height: 100%;
 }
@@ -17,7 +21,12 @@ html, body {
 body {
     background: #14151e;
     margin: 0;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:
+        "Pretendard",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
     height: 100vh;
     min-height: 100vh;
     width: 100vw;
@@ -38,19 +47,24 @@ body {
     flex-direction: column;
     padding: 0;
     min-width: 160px;
-    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family:
+        "Pretendard",
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
     position: fixed;
     top: 0;
     left: 0;
     height: 100vh;
     z-index: 100;
     transform: translateX(-100%);
-    transition: transform 0.28s cubic-bezier(.4,1.2,.4,1);
+    transition: transform 0.28s cubic-bezier(0.4, 1.2, 0.4, 1);
 }
 
 .side-menu.open {
     transform: translateX(0);
-    box-shadow: 2px 0 16px 0 rgba(0,0,0,0.18);
+    box-shadow: 2px 0 16px 0 rgba(0, 0, 0, 0.18);
 }
 
 .menu-toggle-btn {
@@ -89,7 +103,7 @@ body {
     height: 100vh;
     min-width: 0;
     margin-left: 0;
-    transition: margin-left 0.28s cubic-bezier(.4,1.2,.4,1);
+    transition: margin-left 0.28s cubic-bezier(0.4, 1.2, 0.4, 1);
 }
 
 .side-menu.open ~ .editor-area {
@@ -102,19 +116,25 @@ body {
     font-weight: bold;
     padding: 28px 0 18px 32px;
     letter-spacing: 2px;
-    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Malgun Gothic', '맑은 고딕', monospace;
+    font-family:
+        "Fira Mono", "Consolas", "Menlo", "Malgun Gothic", "맑은 고딕",
+        monospace;
 }
 
 .menu-list {
     list-style: none;
     padding: 0 0 0 18px;
     margin: 0;
-    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Malgun Gothic', '맑은 고딕', monospace;
+    font-family:
+        "Fira Mono", "Consolas", "Menlo", "Malgun Gothic", "맑은 고딕",
+        monospace;
 }
 
 .menu-list li {
     color: #fff !important;
-    transition: color 0.2s, background 0.2s;
+    transition:
+        color 0.2s,
+        background 0.2s;
     cursor: pointer;
     padding: 8px 16px;
     border-radius: 8px;
@@ -322,7 +342,8 @@ body {
     font-family: var(--editor-code-font);
     font-size: var(--editor-font-size);
     text-align: right;
-    padding: var(--editor-padding-y) var(--editor-line-padding-right) var(--editor-padding-y) 0;
+    padding: var(--editor-padding-y) var(--editor-line-padding-right)
+        var(--editor-padding-y) 0;
     user-select: none;
     min-width: var(--editor-line-number-width);
     border-radius: 0 0 0 18px;
@@ -440,7 +461,7 @@ body {
     background: #1e2130;
     border-radius: 8px;
     border: 1.2px solid #393a55;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.07);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.07);
     user-select: none;
     height: 26px;
     display: flex;
@@ -464,9 +485,11 @@ body {
     padding: 4px;
     display: flex;
     align-items: center;
-    transition: box-shadow 0.18s, transform 0.13s;
+    transition:
+        box-shadow 0.18s,
+        transform 0.13s;
     position: relative;
-    box-shadow: 0 2px 8px 0 rgba(40,80,255,0.14);
+    box-shadow: 0 2px 8px 0 rgba(40, 80, 255, 0.14);
     width: 32px;
     height: 32px;
     min-width: 32px;
@@ -499,9 +522,9 @@ body {
     pointer-events: none;
     transition: opacity 0.18s;
     white-space: nowrap;
-    font-family: 'Segoe UI', 'Fira Mono', monospace;
+    font-family: "Segoe UI", "Fira Mono", monospace;
     z-index: 2147483647;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .icon-btn:hover .tooltip {
@@ -525,7 +548,7 @@ body {
 }
 
 .tab-bar::after {
-    content: '';
+    content: "";
     flex: 1 1 auto;
     background: #181926;
     height: 100%;
@@ -546,9 +569,14 @@ body {
     border: 1.5px solid #23263a;
     border-bottom: none;
     outline: none;
-    transition: background 0.15s, color 0.15s, border 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s,
+        border 0.15s;
     position: relative;
-    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Malgun Gothic', '맑은 고딕', monospace;
+    font-family:
+        "Fira Mono", "Consolas", "Menlo", "Malgun Gothic", "맑은 고딕",
+        monospace;
     opacity: 0.7;
     z-index: 1;
 }
@@ -589,7 +617,9 @@ body {
     font-weight: bold;
     margin-left: 2px;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s;
+    transition:
+        background 0.15s,
+        color 0.15s;
     position: relative;
     top: 2px;
     outline: none;
@@ -616,7 +646,9 @@ body {
     text-align: left;
     margin: 0;
     letter-spacing: 1.5px;
-    font-family: 'Fira Mono', 'Consolas', 'Menlo', 'Malgun Gothic', '맑은 고딕', monospace;
+    font-family:
+        "Fira Mono", "Consolas", "Menlo", "Malgun Gothic", "맑은 고딕",
+        monospace;
     line-height: 1.2;
 }
 .logo-link {
@@ -634,8 +666,11 @@ body {
 
 .settings-modal {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(20,21,30,0.45);
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(20, 21, 30, 0.45);
     z-index: 9999;
     display: flex;
     align-items: center;
@@ -648,7 +683,7 @@ body {
     border-radius: 14px;
     padding: 32px 38px 24px 38px;
     min-width: 320px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
     display: flex;
     flex-direction: column;
     gap: 18px;
@@ -746,11 +781,14 @@ body.bg-purple .editor-linenum {
     color: #bfaaff;
 }
 
-.tab-bar, .tab, .tab-add-btn {
+.tab-bar,
+.tab,
+.tab-add-btn {
     z-index: 10;
 }
 
-#fontsizeInput, #tabsizeInput {
+#fontsizeInput,
+#tabsizeInput {
     width: 60px;
     font-size: 15px;
     padding: 3px 7px;
@@ -761,7 +799,8 @@ body.bg-purple .editor-linenum {
     margin-right: 6px;
 }
 
-#fontsizeToggleBtn, #tabsizeToggleBtn {
+#fontsizeToggleBtn,
+#tabsizeToggleBtn {
     background: #393a55;
     color: #fff;
     border: none;
@@ -772,7 +811,8 @@ body.bg-purple .editor-linenum {
     transition: background 0.15s;
 }
 
-#fontsizeToggleBtn:hover, #tabsizeToggleBtn:hover {
+#fontsizeToggleBtn:hover,
+#tabsizeToggleBtn:hover {
     background: #4e73fa;
 }
 
@@ -786,7 +826,10 @@ body.bg-purple .editor-linenum {
     margin-left: 8px;
 }
 
-#runMenu, #stopMenu, #saveMenu, #downloadMenu {
+#runMenu,
+#stopMenu,
+#saveMenu,
+#downloadMenu {
     cursor: pointer;
     padding: 8px 16px;
     font-size: 1rem;
@@ -794,10 +837,15 @@ body.bg-purple .editor-linenum {
     background: none;
     border: none;
     outline: none;
-    transition: background 0.2s, color 0.2s;
+    transition:
+        background 0.2s,
+        color 0.2s;
 }
 
-#runMenu:hover, #stopMenu:hover, #saveMenu:hover, #downloadMenu:hover {
+#runMenu:hover,
+#stopMenu:hover,
+#saveMenu:hover,
+#downloadMenu:hover {
     background: #232635;
     color: #fff;
     border-radius: 6px;

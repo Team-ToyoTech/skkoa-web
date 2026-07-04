@@ -11,11 +11,11 @@
 using namespace std;
 
 class SemanticAnalyzer {
-  public:
-    explicit SemanticAnalyzer(ErrorReporter &errors);
-    void analyze(Program &program);
+public:
+    explicit SemanticAnalyzer(ErrorReporter& errors);
+    void analyze(Program& program);
 
-  private:
+private:
     struct Symbol {
         TypeName type;
         bool isConst = false;
@@ -32,7 +32,7 @@ class SemanticAnalyzer {
         SourceLocation location;
     };
 
-    ErrorReporter &errors_;
+    ErrorReporter& errors_;
     unordered_map<string, StructInfo> structs_;
     unordered_map<string, FunctionInfo> functions_;
     unordered_map<string, Symbol> symbols_;
@@ -40,28 +40,28 @@ class SemanticAnalyzer {
     bool insideFunction_ = false;
     int loopDepth_ = 0;
 
-    void analyzeFunction(FunctionDecl &function);
-    void analyzeStatements(vector<unique_ptr<Stmt>> &statements);
-    void analyzeStatement(Stmt &statement);
-    void analyzeVarDecl(VarDeclStmt &statement);
-    void analyzeAssignment(AssignmentStmt &statement);
-    void analyzeFieldAssignment(FieldAssignmentStmt &statement);
-    void analyzePointerAssignment(PointerAssignmentStmt &statement);
-    void analyzeExpressionStatement(ExpressionStmt &statement);
-    void analyzePrint(PrintStmt &statement);
-    void analyzeInput(InputStmt &statement);
-    void analyzeIf(IfStmt &statement);
-    void analyzeWhile(WhileStmt &statement);
-    void analyzeRepeat(RepeatStmt &statement);
-    void analyzeBreak(BreakStmt &statement);
-    void analyzeContinue(ContinueStmt &statement);
-    void analyzeReturn(ReturnStmt &statement);
-    ValueType analyzeExpr(Expr &expression);
+    void analyzeFunction(FunctionDecl& function);
+    void analyzeStatements(vector<unique_ptr<Stmt>>& statements);
+    void analyzeStatement(Stmt& statement);
+    void analyzeVarDecl(VarDeclStmt& statement);
+    void analyzeAssignment(AssignmentStmt& statement);
+    void analyzeFieldAssignment(FieldAssignmentStmt& statement);
+    void analyzePointerAssignment(PointerAssignmentStmt& statement);
+    void analyzeExpressionStatement(ExpressionStmt& statement);
+    void analyzePrint(PrintStmt& statement);
+    void analyzeInput(InputStmt& statement);
+    void analyzeIf(IfStmt& statement);
+    void analyzeWhile(WhileStmt& statement);
+    void analyzeRepeat(RepeatStmt& statement);
+    void analyzeBreak(BreakStmt& statement);
+    void analyzeContinue(ContinueStmt& statement);
+    void analyzeReturn(ReturnStmt& statement);
+    ValueType analyzeExpr(Expr& expression);
 
     bool sameType(ValueType expected, ValueType actual) const;
-    bool sameTypeName(const TypeName &expected, const TypeName &actual) const;
-    const StructField *findStructField(const string &structName,
-                                       const string &fieldName) const;
+    bool sameTypeName(const TypeName& expected, const TypeName& actual) const;
+    const StructField* findStructField(const string& structName,
+        const string& fieldName) const;
     bool isIntegerLike(ValueType type) const;
     bool isNumeric(ValueType type) const;
     bool isConditionType(ValueType type) const;

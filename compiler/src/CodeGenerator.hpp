@@ -12,7 +12,7 @@
 using namespace std;
 
 class CodeGenerator {
-  public:
+public:
     enum class AssemblyTarget {
         LinuxX64,
         WindowsX64,
@@ -22,10 +22,10 @@ class CodeGenerator {
     explicit CodeGenerator(AssemblyTarget target = defaultTarget());
     static AssemblyTarget defaultTarget();
 
-    string generateAssembly(Program &program, const string &sourceName);
-    string generateAstDump(const Program &program);
+    string generateAssembly(Program& program, const string& sourceName);
+    string generateAstDump(const Program& program);
 
-  private:
+private:
     struct LocalSlot {
         TypeName type;
         int offset = 0;
@@ -62,64 +62,64 @@ class CodeGenerator {
     unordered_map<string, string> functionLabels_;
     vector<string> breakLabels_;
     vector<string> continueLabels_;
-    FunctionContext *current_ = nullptr;
+    FunctionContext* current_ = nullptr;
     AssemblyTarget target_;
     int labelCounter_ = 0;
     int stringCounter_ = 0;
 
-    void prepareFunctionLabels(Program &program);
-    void prepareStructLayouts(Program &program);
-    FunctionContext buildContext(const string &label,
-                                 const vector<Param> &params,
-                                 const vector<unique_ptr<Stmt>> &body);
-    void collectLocals(const vector<unique_ptr<Stmt>> &statements,
-                       FunctionContext &context, int &offset);
-    void collectLocalFromStmt(const Stmt &statement, FunctionContext &context,
-                              int &offset);
+    void prepareFunctionLabels(Program& program);
+    void prepareStructLayouts(Program& program);
+    FunctionContext buildContext(const string& label,
+        const vector<Param>& params,
+        const vector<unique_ptr<Stmt>>& body);
+    void collectLocals(const vector<unique_ptr<Stmt>>& statements,
+        FunctionContext& context, int& offset);
+    void collectLocalFromStmt(const Stmt& statement, FunctionContext& context,
+        int& offset);
     int alignTo16(int value) const;
     bool isWindowsTarget() const;
     bool isMacOSTarget() const;
-    string externalSymbol(const string &name) const;
+    string externalSymbol(const string& name) const;
     string mainSymbol() const;
-    const vector<string> &argumentRegisters() const;
-    void emitCall(const string &symbol, bool external);
+    const vector<string>& argumentRegisters() const;
+    void emitCall(const string& symbol, bool external);
 
-    void emitFunction(FunctionDecl &function);
-    void emitMain(Program &program);
-    void emitPrologue(const vector<Param> &params, bool isMain);
+    void emitFunction(FunctionDecl& function);
+    void emitMain(Program& program);
+    void emitPrologue(const vector<Param>& params, bool isMain);
     void emitEpilogue();
-    void emitStatements(const vector<unique_ptr<Stmt>> &statements);
-    void emitStatement(const Stmt &statement);
-    void emitVarDecl(const VarDeclStmt &statement);
-    void emitAssignment(const AssignmentStmt &statement);
-    void emitFieldAssignment(const FieldAssignmentStmt &statement);
-    void emitPointerAssignment(const PointerAssignmentStmt &statement);
-    void emitPrint(const PrintStmt &statement);
-    void emitInput(const InputStmt &statement);
-    void emitIf(const IfStmt &statement);
-    void emitWhile(const WhileStmt &statement);
-    void emitRepeat(const RepeatStmt &statement);
-    void emitBreak(const BreakStmt &statement);
-    void emitContinue(const ContinueStmt &statement);
-    void emitReturn(const ReturnStmt &statement);
-    void emitExpr(const Expr &expression);
-    void emitFloatExpr(const Expr &expression);
-    void emitAddress(const AddressExpr &expression);
-    void emitArrayAddress(const string &name, const Expr &index);
-    void emitFieldAddress(const string &object, const string &field);
+    void emitStatements(const vector<unique_ptr<Stmt>>& statements);
+    void emitStatement(const Stmt& statement);
+    void emitVarDecl(const VarDeclStmt& statement);
+    void emitAssignment(const AssignmentStmt& statement);
+    void emitFieldAssignment(const FieldAssignmentStmt& statement);
+    void emitPointerAssignment(const PointerAssignmentStmt& statement);
+    void emitPrint(const PrintStmt& statement);
+    void emitInput(const InputStmt& statement);
+    void emitIf(const IfStmt& statement);
+    void emitWhile(const WhileStmt& statement);
+    void emitRepeat(const RepeatStmt& statement);
+    void emitBreak(const BreakStmt& statement);
+    void emitContinue(const ContinueStmt& statement);
+    void emitReturn(const ReturnStmt& statement);
+    void emitExpr(const Expr& expression);
+    void emitFloatExpr(const Expr& expression);
+    void emitAddress(const AddressExpr& expression);
+    void emitArrayAddress(const string& name, const Expr& index);
+    void emitFieldAddress(const string& object, const string& field);
     void emitStringConcat();
 
-    string newLabel(const string &prefix);
-    string addStringLiteral(const string &value);
+    string newLabel(const string& prefix);
+    string addStringLiteral(const string& value);
     string addFloatLiteral(double value);
-    string bytesForString(const string &value) const;
+    string bytesForString(const string& value) const;
     string binaryOpName(BinaryOp op) const;
     string unaryOpName(UnaryOp op) const;
-    void dumpStatements(const vector<unique_ptr<Stmt>> &statements,
-                        ostringstream &out, int indent) const;
-    void dumpStatement(const Stmt &statement, ostringstream &out,
-                       int indent) const;
-    void dumpExpr(const Expr &expression, ostringstream &out, int indent) const;
+    void dumpStatements(const vector<unique_ptr<Stmt>>& statements,
+        ostringstream& out, int indent) const;
+    void dumpStatement(const Stmt& statement, ostringstream& out,
+        int indent) const;
+    void dumpExpr(const Expr& expression, ostringstream& out, int indent) const;
     string indent(int count) const;
 };
 

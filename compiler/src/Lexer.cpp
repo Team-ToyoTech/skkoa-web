@@ -1,12 +1,13 @@
 #include "Lexer.hpp"
 
+#include <algorithm>
 #include <cctype>
+#include <unordered_map>
 
 using namespace std;
 
-Lexer::Lexer(string source, ErrorReporter &errors)
-    : source_(move(source)), errors_(errors) {
-    keywords_ = {
+static const unordered_map<string, TokenType>& keywordMap() {
+    static const unordered_map<string, TokenType> keywords = {
         {"시작", TokenType::Start},       {"끝", TokenType::End},
         {"변수", TokenType::Var},         {"상수", TokenType::Const},
         {"출력", TokenType::Print},       {"입력", TokenType::Input},
@@ -26,10 +27,16 @@ Lexer::Lexer(string source, ErrorReporter &errors)
         {"값", TokenType::Value},         {"포인터", TokenType::Pointer},
         {"부터", TokenType::From},         {"까지", TokenType::To},
     };
+    return keywords;
+}
+
+Lexer::Lexer(string source, ErrorReporter& errors)
+    : source_(move(source)), errors_(errors) {
 }
 
 vector<Token> Lexer::tokenize() {
     vector<Token> tokens;
+    tokens.reserve(source_.size() / 4 + 1);
 
     while (!isAtEnd()) {
         skipIgnored();
@@ -107,35 +114,39 @@ vector<Token> Lexer::tokenize() {
         case '=':
             if (matchByte('=')) {
                 tokens.push_back(makeToken(TokenType::Equal, "==", location));
-            } else {
+            }
+            else {
                 tokens.push_back(makeToken(TokenType::Assign, "=", location));
             }
             break;
         case '!':
             if (matchByte('=')) {
                 tokens.push_back(makeToken(TokenType::NotEqual, "!=", location));
-            } else {
+            }
+            else {
                 errors_.error(location, "알 수 없는 문자 '!'를 발견했습니다.",
-                              "'!=' 비교 연산자를 쓰려면 등호를 함께 적어야 합니다.");
+                    "'!=' 비교 연산자를 쓰려면 등호를 함께 적어야 합니다.");
             }
             break;
         case '<':
             if (matchByte('=')) {
                 tokens.push_back(makeToken(TokenType::LessEqual, "<=", location));
-            } else {
+            }
+            else {
                 tokens.push_back(makeToken(TokenType::Less, "<", location));
             }
             break;
         case '>':
             if (matchByte('=')) {
                 tokens.push_back(makeToken(TokenType::GreaterEqual, ">=", location));
-            } else {
+            }
+            else {
                 tokens.push_back(makeToken(TokenType::Greater, ">", location));
             }
             break;
         default:
             errors_.error(location, "알 수 없는 문자를 발견했습니다.",
-                          "SKKOA 키워드, 식별자, 숫자, 문자열 또는 지원되는 연산자를 사용하세요.");
+                "SKKOA 키워드, 식별자, 숫자, 문자열 또는 지원되는 연산자를 사용하세요.");
             break;
         }
     }
@@ -158,33 +169,36 @@ char Lexer::peekByte(size_t offset) const {
 }
 
 SourceLocation Lexer::currentLocation() const {
-    return {line_, column_};
+    return { line_, column_ };
 }
 
-string Lexer::advanceUtf8() {
+void Lexer::advanceUtf8() {
     if (isAtEnd()) {
-        return "";
+        return;
     }
 
     unsigned char first = static_cast<unsigned char>(source_[index_]);
+    bool isNewLine = source_[index_] == '\n';
     size_t length = 1;
     if ((first & 0b11100000) == 0b11000000) {
         length = 2;
-    } else if ((first & 0b11110000) == 0b11100000) {
+    }
+    else if ((first & 0b11110000) == 0b11100000) {
         length = 3;
-    } else if ((first & 0b11111000) == 0b11110000) {
+    }
+    else if ((first & 0b11111000) == 0b11110000) {
         length = 4;
     }
 
-    string result = source_.substr(index_, length);
+    length = min(length, source_.size() - index_);
     index_ += length;
-    if (result == "\n") {
+    if (isNewLine) {
         line_++;
         column_ = 1;
-    } else {
+    }
+    else {
         column_++;
     }
-    return result;
 }
 
 bool Lexer::matchByte(char expected) {
@@ -204,7 +218,8 @@ void Lexer::skipIgnored() {
             if (byte == ' ' || byte == '\t' || byte == '\r') {
                 advanceUtf8();
                 advanced = true;
-            } else {
+            }
+            else {
                 break;
             }
         }
@@ -214,12 +229,14 @@ void Lexer::skipIgnored() {
                 advanceUtf8();
             }
             advanced = true;
-        } else if (currentByte() == '/' && peekByte() == '/') {
+        }
+        else if (currentByte() == '/' && peekByte() == '/') {
             while (!isAtEnd() && currentByte() != '\n') {
                 advanceUtf8();
             }
             advanced = true;
-        } else if (currentByte() == '/' && peekByte() == '*') {
+        }
+        else if (currentByte() == '/' && peekByte() == '*') {
             SourceLocation start = currentLocation();
             advanceUtf8();
             advanceUtf8();
@@ -235,73 +252,97 @@ void Lexer::skipIgnored() {
             }
             if (!closed) {
                 errors_.error(start, "닫히지 않은 여러 줄 주석입니다.",
-                              "'*/'로 주석을 닫아야 합니다.");
+                    "'*/'로 주석을 닫아야 합니다.");
             }
             advanced = true;
         }
     }
 }
 
-Token Lexer::makeToken(TokenType type, const string &lexeme,
-                       SourceLocation location) const {
-    return {type, lexeme, location};
+Token Lexer::makeToken(TokenType type, const string& lexeme,
+    SourceLocation location) const {
+    return { type, lexeme, location };
 }
 
 Token Lexer::number() {
     SourceLocation location = currentLocation();
-    string value;
+    size_t start = index_;
     while (!isAtEnd() && isdigit(static_cast<unsigned char>(currentByte()))) {
-        value += advanceUtf8();
+        advanceUtf8();
     }
     if (!isAtEnd() && currentByte() == '.' &&
         isdigit(static_cast<unsigned char>(peekByte()))) {
-        value += advanceUtf8();
+        advanceUtf8();
         while (!isAtEnd() &&
-               isdigit(static_cast<unsigned char>(currentByte()))) {
-            value += advanceUtf8();
+            isdigit(static_cast<unsigned char>(currentByte()))) {
+            advanceUtf8();
         }
     }
-    return makeToken(TokenType::Number, value, location);
+    return makeToken(TokenType::Number, source_.substr(start, index_ - start),
+        location);
 }
 
 Token Lexer::stringLiteral() {
     SourceLocation location = currentLocation();
     advanceUtf8();
     string value;
+    size_t chunkStart = index_;
 
     while (!isAtEnd() && currentByte() != '"') {
         if (currentByte() == '\n') {
+            if (index_ > chunkStart) {
+                value.append(source_, chunkStart, index_ - chunkStart);
+            }
             errors_.error(location, "닫히지 않은 문자열입니다.",
-                          "문자열은 같은 줄에서 큰따옴표로 닫아야 합니다.");
+                "문자열은 같은 줄에서 큰따옴표로 닫아야 합니다.");
             return makeToken(TokenType::String, value, location);
         }
         if (currentByte() == '\\') {
+            if (index_ > chunkStart) {
+                value.append(source_, chunkStart, index_ - chunkStart);
+            }
             advanceUtf8();
+            chunkStart = index_;
             if (isAtEnd()) {
                 break;
             }
+            size_t escapedStart = index_;
             char escaped = currentByte();
             if (escaped == 'n') {
                 value += '\n';
-            } else if (escaped == 't') {
-                value += '\t';
-            } else if (escaped == '"' || escaped == '\\') {
-                value += escaped;
-            } else {
-                value += escaped;
+                advanceUtf8();
             }
+            else if (escaped == 't') {
+                value += '\t';
+                advanceUtf8();
+            }
+            else if (escaped == '"' || escaped == '\\') {
+                value += escaped;
+                advanceUtf8();
+            }
+            else {
+                advanceUtf8();
+                value.append(source_, escapedStart, index_ - escapedStart);
+            }
+            chunkStart = index_;
+        }
+        else {
             advanceUtf8();
-        } else {
-            value += advanceUtf8();
         }
     }
 
     if (isAtEnd()) {
+        if (index_ > chunkStart) {
+            value.append(source_, chunkStart, index_ - chunkStart);
+        }
         errors_.error(location, "닫히지 않은 문자열입니다.",
-                      "문자열 끝에 큰따옴표를 추가하세요.");
+            "문자열 끝에 큰따옴표를 추가하세요.");
         return makeToken(TokenType::String, value, location);
     }
 
+    if (index_ > chunkStart) {
+        value.append(source_, chunkStart, index_ - chunkStart);
+    }
     advanceUtf8();
     return makeToken(TokenType::String, value, location);
 }
@@ -313,7 +354,7 @@ Token Lexer::charLiteral() {
 
     if (isAtEnd() || currentByte() == '\n') {
         errors_.error(location, "닫히지 않은 문자 리터럴입니다.",
-                      "문자는 작은따옴표로 감싸야 합니다. 예: 'A'");
+            "문자는 작은따옴표로 감싸야 합니다. 예: 'A'");
         return makeToken(TokenType::Char, value, location);
     }
 
@@ -326,19 +367,24 @@ Token Lexer::charLiteral() {
         char escaped = currentByte();
         if (escaped == 'n') {
             value += '\n';
-        } else if (escaped == 't') {
+        }
+        else if (escaped == 't') {
             value += '\t';
-        } else {
+        }
+        else {
             value += escaped;
         }
         advanceUtf8();
-    } else {
-        value += advanceUtf8();
+    }
+    else {
+        size_t start = index_;
+        advanceUtf8();
+        value.assign(source_, start, index_ - start);
     }
 
     if (isAtEnd() || currentByte() != '\'') {
         errors_.error(location, "문자 리터럴은 작은따옴표로 닫아야 합니다.",
-                      "예: 'A'");
+            "예: 'A'");
         return makeToken(TokenType::Char, value, location);
     }
 
@@ -348,13 +394,15 @@ Token Lexer::charLiteral() {
 
 Token Lexer::identifier() {
     SourceLocation location = currentLocation();
-    string value;
+    size_t start = index_;
     while (!isAtEnd() && !isIdentifierBoundary(currentByte())) {
-        value += advanceUtf8();
+        advanceUtf8();
     }
 
-    auto keyword = keywords_.find(value);
-    if (keyword != keywords_.end()) {
+    string value = source_.substr(start, index_ - start);
+    const auto& keywords = keywordMap();
+    auto keyword = keywords.find(value);
+    if (keyword != keywords.end()) {
         return makeToken(keyword->second, value, location);
     }
     return makeToken(TokenType::Identifier, value, location);

@@ -24,7 +24,7 @@ bool CodeGenerator::isMacOSTarget() const {
     return target_ == AssemblyTarget::MacOSX64;
 }
 
-string CodeGenerator::externalSymbol(const string &name) const {
+string CodeGenerator::externalSymbol(const string& name) const {
     return isMacOSTarget() ? "_" + name : name;
 }
 
@@ -32,14 +32,14 @@ string CodeGenerator::mainSymbol() const {
     return externalSymbol("main");
 }
 
-const vector<string> &CodeGenerator::argumentRegisters() const {
-    static const vector<string> sysvRegisters = {"rdi", "rsi", "rdx",
-                                                 "rcx", "r8",  "r9"};
-    static const vector<string> windowsRegisters = {"rcx", "rdx", "r8", "r9"};
+const vector<string>& CodeGenerator::argumentRegisters() const {
+    static const vector<string> sysvRegisters = { "rdi", "rsi", "rdx",
+                                                 "rcx", "r8",  "r9" };
+    static const vector<string> windowsRegisters = { "rcx", "rdx", "r8", "r9" };
     return isWindowsTarget() ? windowsRegisters : sysvRegisters;
 }
 
-void CodeGenerator::emitCall(const string &symbol, bool external) {
+void CodeGenerator::emitCall(const string& symbol, bool external) {
     if (isWindowsTarget() && external) {
         text_ << "    sub rsp, 32\n";
     }
@@ -49,8 +49,8 @@ void CodeGenerator::emitCall(const string &symbol, bool external) {
     }
 }
 
-string CodeGenerator::generateAssembly(Program &program,
-                                       const string &sourceName) {
+string CodeGenerator::generateAssembly(Program& program,
+    const string& sourceName) {
     text_.str("");
     text_.clear();
     strings_.clear();
@@ -81,7 +81,7 @@ string CodeGenerator::generateAssembly(Program &program,
     text_ << "    push rsi\n";
     text_ << "    sub rsp, 64\n";
     {
-        const vector<string> &registers = argumentRegisters();
+        const vector<string>& registers = argumentRegisters();
         text_ << "    mov [rbp - 32], " << registers[0] << "\n";
         text_ << "    mov [rbp - 40], " << registers[1] << "\n";
         text_ << "    mov [rbp - 48], " << registers[2] << "\n";
@@ -114,7 +114,7 @@ string CodeGenerator::generateAssembly(Program &program,
     text_ << "    pop rbp\n";
     text_ << "    ret\n";
 
-    for (auto &function : program.functions) {
+    for (auto& function : program.functions) {
         emitFunction(*function);
     }
     emitMain(program);
@@ -129,15 +129,15 @@ string CodeGenerator::generateAssembly(Program &program,
     output << "    fmt_scan_int db \"%ld\", 0\n";
     output << "    fmt_scan_float db \"%lf\", 0\n";
     output << "    fmt_scan_char db \" %c\", 0\n";
-    output << "    fmt_scan_str db \" %255[^\", 10, \"]\", 0\n";
+    output << "    fmt_scan_str db 32, 37, 50, 53, 53, 91, 94, 10, 93, 0\n";
     output << "    fmt_scan_ptr db \"%p\", 0\n";
     output << "    fmt_str db \"%s\", 10, 0\n";
-    for (const auto &entry : strings_) {
+    for (const auto& entry : strings_) {
         output << "    " << entry.label << " db " << bytesForString(entry.value)
-               << ", 0\n";
+            << ", 0\n";
     }
     output << dec << setprecision(17);
-    for (const auto &entry : floats_) {
+    for (const auto& entry : floats_) {
         output << "    " << entry.label << " dq " << entry.value << "\n";
     }
     output << "\n";
@@ -145,21 +145,21 @@ string CodeGenerator::generateAssembly(Program &program,
     return output.str();
 }
 
-void CodeGenerator::prepareFunctionLabels(Program &program) {
+void CodeGenerator::prepareFunctionLabels(Program& program) {
     functionLabels_.clear();
     int index = 0;
-    for (auto &function : program.functions) {
+    for (auto& function : program.functions) {
         functionLabels_[function->name] = "skkoa_fn_" + to_string(index++);
     }
 }
 
-void CodeGenerator::prepareStructLayouts(Program &program) {
+void CodeGenerator::prepareStructLayouts(Program& program) {
     structLayouts_.clear();
-    for (const auto &structure : program.structs) {
+    for (const auto& structure : program.structs) {
         StructLayout layout;
         layout.fields = structure->fields;
         int offset = 0;
-        for (const auto &field : structure->fields) {
+        for (const auto& field : structure->fields) {
             layout.fieldOffsets[field.name] = offset;
             offset += 8;
         }
@@ -169,65 +169,70 @@ void CodeGenerator::prepareStructLayouts(Program &program) {
 }
 
 CodeGenerator::FunctionContext
-CodeGenerator::buildContext(const string &label, const vector<Param> &params,
-                            const vector<unique_ptr<Stmt>> &body) {
+CodeGenerator::buildContext(const string& label, const vector<Param>& params,
+    const vector<unique_ptr<Stmt>>& body) {
     FunctionContext context;
     context.label = label;
     context.endLabel = label + "_end";
 
     int offset = 0;
-    for (const auto &param : params) {
+    for (const auto& param : params) {
         offset += 8;
         context.locals[param.name] = {
             param.type, offset,
-            param.type.isArray || param.type.base == ValueType::Struct};
+            param.type.isArray || param.type.base == ValueType::Struct };
     }
     collectLocals(body, context, offset);
     context.stackSize = alignTo16(offset);
     return context;
 }
 
-void CodeGenerator::collectLocals(const vector<unique_ptr<Stmt>> &statements,
-                                  FunctionContext &context, int &offset) {
-    for (const auto &statement : statements) {
+void CodeGenerator::collectLocals(const vector<unique_ptr<Stmt>>& statements,
+    FunctionContext& context, int& offset) {
+    for (const auto& statement : statements) {
         collectLocalFromStmt(*statement, context, offset);
     }
 }
 
-void CodeGenerator::collectLocalFromStmt(const Stmt &statement,
-                                         FunctionContext &context,
-                                         int &offset) {
-    if (auto *varDecl = dynamic_cast<const VarDeclStmt *>(&statement)) {
+void CodeGenerator::collectLocalFromStmt(const Stmt& statement,
+    FunctionContext& context,
+    int& offset) {
+    if (auto* varDecl = dynamic_cast<const VarDeclStmt*>(&statement)) {
         if (context.locals.count(varDecl->name) == 0) {
             if (varDecl->type.base == ValueType::Struct) {
                 int bytes = structLayouts_[varDecl->type.structName].size;
                 int baseOffset = offset + 8;
                 offset += bytes;
-                context.locals[varDecl->name] = {varDecl->type, baseOffset};
-            } else if (varDecl->type.isArray) {
+                context.locals[varDecl->name] = { varDecl->type, baseOffset };
+            }
+            else if (varDecl->type.isArray) {
                 int bytes = varDecl->type.arraySize * 8;
                 int baseOffset = offset + 8;
                 offset += bytes;
-                context.locals[varDecl->name] = {varDecl->type, baseOffset};
-            } else {
+                context.locals[varDecl->name] = { varDecl->type, baseOffset };
+            }
+            else {
                 offset += 8;
-                context.locals[varDecl->name] = {varDecl->type, offset};
+                context.locals[varDecl->name] = { varDecl->type, offset };
             }
         }
-    } else if (auto *ifStmt = dynamic_cast<const IfStmt *>(&statement)) {
-        for (const auto &branch : ifStmt->branches) {
+    }
+    else if (auto* ifStmt = dynamic_cast<const IfStmt*>(&statement)) {
+        for (const auto& branch : ifStmt->branches) {
             collectLocals(branch.body, context, offset);
         }
         collectLocals(ifStmt->elseBody, context, offset);
-    } else if (auto *whileStmt = dynamic_cast<const WhileStmt *>(&statement)) {
+    }
+    else if (auto* whileStmt = dynamic_cast<const WhileStmt*>(&statement)) {
         collectLocals(whileStmt->body, context, offset);
-    } else if (auto *repeatStmt = dynamic_cast<const RepeatStmt *>(&statement)) {
+    }
+    else if (auto* repeatStmt = dynamic_cast<const RepeatStmt*>(&statement)) {
         if (context.locals.count(repeatStmt->iterator) == 0) {
             TypeName iteratorType;
             iteratorType.base = ValueType::Int;
             iteratorType.location = repeatStmt->location;
             offset += 8;
-            context.locals[repeatStmt->iterator] = {iteratorType, offset};
+            context.locals[repeatStmt->iterator] = { iteratorType, offset };
         }
         collectLocals(repeatStmt->body, context, offset);
     }
@@ -241,7 +246,7 @@ int CodeGenerator::alignTo16(int value) const {
     return remainder == 0 ? value : value + (16 - remainder);
 }
 
-void CodeGenerator::emitFunction(FunctionDecl &function) {
+void CodeGenerator::emitFunction(FunctionDecl& function) {
     string label = functionLabels_[function.name];
     FunctionContext context = buildContext(label, function.params, function.body);
     current_ = &context;
@@ -256,7 +261,7 @@ void CodeGenerator::emitFunction(FunctionDecl &function) {
     current_ = nullptr;
 }
 
-void CodeGenerator::emitMain(Program &program) {
+void CodeGenerator::emitMain(Program& program) {
     vector<Param> params;
     FunctionContext context = buildContext("main", params, program.mainStatements);
     current_ = &context;
@@ -269,8 +274,8 @@ void CodeGenerator::emitMain(Program &program) {
     current_ = nullptr;
 }
 
-void CodeGenerator::emitPrologue(const vector<Param> &params, bool isMain) {
-    const vector<string> &registers = argumentRegisters();
+void CodeGenerator::emitPrologue(const vector<Param>& params, bool isMain) {
+    const vector<string>& registers = argumentRegisters();
     text_ << "    push rbp\n";
     text_ << "    mov rbp, rsp\n";
     if (current_->stackSize > 0) {
@@ -279,13 +284,14 @@ void CodeGenerator::emitPrologue(const vector<Param> &params, bool isMain) {
 
     if (!isMain) {
         for (size_t i = 0; i < params.size(); i++) {
-            const auto &slot = current_->locals[params[i].name];
+            const auto& slot = current_->locals[params[i].name];
             if (i < registers.size()) {
                 text_ << "    mov [rbp - " << slot.offset << "], "
-                      << registers[i] << "\n";
-            } else {
+                    << registers[i] << "\n";
+            }
+            else {
                 text_ << "    mov rax, [rbp + " << (16 + (i - registers.size()) * 8)
-                      << "]\n";
+                    << "]\n";
                 text_ << "    mov [rbp - " << slot.offset << "], rax\n";
             }
         }
@@ -299,59 +305,72 @@ void CodeGenerator::emitEpilogue() {
     text_ << "    ret\n";
 }
 
-void CodeGenerator::emitStatements(const vector<unique_ptr<Stmt>> &statements) {
-    for (const auto &statement : statements) {
+void CodeGenerator::emitStatements(const vector<unique_ptr<Stmt>>& statements) {
+    for (const auto& statement : statements) {
         emitStatement(*statement);
     }
 }
 
-void CodeGenerator::emitStatement(const Stmt &statement) {
-    if (auto *varDecl = dynamic_cast<const VarDeclStmt *>(&statement)) {
+void CodeGenerator::emitStatement(const Stmt& statement) {
+    if (auto* varDecl = dynamic_cast<const VarDeclStmt*>(&statement)) {
         emitVarDecl(*varDecl);
-    } else if (auto *assignment = dynamic_cast<const AssignmentStmt *>(&statement)) {
+    }
+    else if (auto* assignment = dynamic_cast<const AssignmentStmt*>(&statement)) {
         emitAssignment(*assignment);
-    } else if (auto *fieldAssignment =
-                   dynamic_cast<const FieldAssignmentStmt *>(&statement)) {
+    }
+    else if (auto* fieldAssignment =
+        dynamic_cast<const FieldAssignmentStmt*>(&statement)) {
         emitFieldAssignment(*fieldAssignment);
-    } else if (auto *pointerAssignment =
-                   dynamic_cast<const PointerAssignmentStmt *>(&statement)) {
+    }
+    else if (auto* pointerAssignment =
+        dynamic_cast<const PointerAssignmentStmt*>(&statement)) {
         emitPointerAssignment(*pointerAssignment);
-    } else if (auto *expression = dynamic_cast<const ExpressionStmt *>(&statement)) {
+    }
+    else if (auto* expression = dynamic_cast<const ExpressionStmt*>(&statement)) {
         emitExpr(*expression->expression);
-    } else if (auto *print = dynamic_cast<const PrintStmt *>(&statement)) {
+    }
+    else if (auto* print = dynamic_cast<const PrintStmt*>(&statement)) {
         emitPrint(*print);
-    } else if (auto *input = dynamic_cast<const InputStmt *>(&statement)) {
+    }
+    else if (auto* input = dynamic_cast<const InputStmt*>(&statement)) {
         emitInput(*input);
-    } else if (auto *ifStmt = dynamic_cast<const IfStmt *>(&statement)) {
+    }
+    else if (auto* ifStmt = dynamic_cast<const IfStmt*>(&statement)) {
         emitIf(*ifStmt);
-    } else if (auto *whileStmt = dynamic_cast<const WhileStmt *>(&statement)) {
+    }
+    else if (auto* whileStmt = dynamic_cast<const WhileStmt*>(&statement)) {
         emitWhile(*whileStmt);
-    } else if (auto *repeatStmt = dynamic_cast<const RepeatStmt *>(&statement)) {
+    }
+    else if (auto* repeatStmt = dynamic_cast<const RepeatStmt*>(&statement)) {
         emitRepeat(*repeatStmt);
-    } else if (auto *breakStmt = dynamic_cast<const BreakStmt *>(&statement)) {
+    }
+    else if (auto* breakStmt = dynamic_cast<const BreakStmt*>(&statement)) {
         emitBreak(*breakStmt);
-    } else if (auto *continueStmt = dynamic_cast<const ContinueStmt *>(&statement)) {
+    }
+    else if (auto* continueStmt = dynamic_cast<const ContinueStmt*>(&statement)) {
         emitContinue(*continueStmt);
-    } else if (auto *returnStmt = dynamic_cast<const ReturnStmt *>(&statement)) {
+    }
+    else if (auto* returnStmt = dynamic_cast<const ReturnStmt*>(&statement)) {
         emitReturn(*returnStmt);
     }
 }
 
-void CodeGenerator::emitVarDecl(const VarDeclStmt &statement) {
+void CodeGenerator::emitVarDecl(const VarDeclStmt& statement) {
     auto slot = current_->locals.at(statement.name);
     if (statement.type.isArray) {
-        if (auto *arrayLiteral =
-                dynamic_cast<ArrayLiteralExpr *>(statement.initializer.get())) {
+        if (auto* arrayLiteral =
+            dynamic_cast<ArrayLiteralExpr*>(statement.initializer.get())) {
             for (size_t i = 0; i < arrayLiteral->elements.size(); i++) {
                 auto index = make_unique<IntLiteralExpr>(statement.location,
-                                                         static_cast<long long>(i));
+                    static_cast<long long>(i));
                 emitArrayAddress(statement.name, *index);
                 text_ << "    push rax\n";
                 if (statement.type.base == ValueType::Float) {
                     emitFloatExpr(*arrayLiteral->elements[i]);
                     text_ << "    pop rbx\n";
                     text_ << "    movsd [rbx], xmm0\n";
-                } else {
+                }
+                else {
                     emitExpr(*arrayLiteral->elements[i]);
                     text_ << "    pop rbx\n";
                     text_ << "    mov [rbx], rax\n";
@@ -361,10 +380,10 @@ void CodeGenerator::emitVarDecl(const VarDeclStmt &statement) {
         return;
     }
     if (statement.type.base == ValueType::Struct) {
-        const auto &layout = structLayouts_.at(statement.type.structName);
+        const auto& layout = structLayouts_.at(statement.type.structName);
         for (int offset = 0; offset < layout.size; offset += 8) {
             text_ << "    mov qword [rbp - " << (slot.offset + offset)
-                  << "], 0\n";
+                << "], 0\n";
         }
         if (statement.initializer) {
             emitExpr(*statement.initializer);
@@ -372,7 +391,7 @@ void CodeGenerator::emitVarDecl(const VarDeclStmt &statement) {
             for (int offset = 0; offset < layout.size; offset += 8) {
                 text_ << "    mov rax, [rbx - " << offset << "]\n";
                 text_ << "    mov [rbp - " << (slot.offset + offset)
-                      << "], rax\n";
+                    << "], rax\n";
             }
         }
         return;
@@ -382,16 +401,18 @@ void CodeGenerator::emitVarDecl(const VarDeclStmt &statement) {
         if (statement.type.base == ValueType::Float) {
             emitFloatExpr(*statement.initializer);
             text_ << "    movsd [rbp - " << slot.offset << "], xmm0\n";
-        } else {
+        }
+        else {
             emitExpr(*statement.initializer);
             text_ << "    mov [rbp - " << slot.offset << "], rax\n";
         }
-    } else {
+    }
+    else {
         text_ << "    mov qword [rbp - " << slot.offset << "], 0\n";
     }
 }
 
-void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
+void CodeGenerator::emitAssignment(const AssignmentStmt& statement) {
     if (statement.index) {
         emitArrayAddress(statement.name, *statement.index);
         text_ << "    push rax\n";
@@ -400,7 +421,8 @@ void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
             emitFloatExpr(*statement.value);
             text_ << "    pop rbx\n";
             text_ << "    movsd [rbx], xmm0\n";
-        } else {
+        }
+        else {
             emitExpr(*statement.value);
             text_ << "    pop rbx\n";
             text_ << "    mov [rbx], rax\n";
@@ -410,7 +432,7 @@ void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
 
     auto slot = current_->locals.at(statement.name);
     if (slot.type.base == ValueType::Struct) {
-        const auto &layout = structLayouts_.at(slot.type.structName);
+        const auto& layout = structLayouts_.at(slot.type.structName);
         emitExpr(*statement.value);
         text_ << "    mov rbx, rax\n";
         for (int offset = 0; offset < layout.size; offset += 8) {
@@ -420,8 +442,8 @@ void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
         return;
     }
     if (slot.type.isArray) {
-        auto *arrayLiteral =
-            dynamic_cast<ArrayLiteralExpr *>(statement.value.get());
+        auto* arrayLiteral =
+            dynamic_cast<ArrayLiteralExpr*>(statement.value.get());
         if (arrayLiteral) {
             for (size_t i = 0; i < arrayLiteral->elements.size(); i++) {
                 auto index = make_unique<IntLiteralExpr>(
@@ -432,7 +454,8 @@ void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
                     emitFloatExpr(*arrayLiteral->elements[i]);
                     text_ << "    pop rbx\n";
                     text_ << "    movsd [rbx], xmm0\n";
-                } else {
+                }
+                else {
                     emitExpr(*arrayLiteral->elements[i]);
                     text_ << "    pop rbx\n";
                     text_ << "    mov [rbx], rax\n";
@@ -444,19 +467,20 @@ void CodeGenerator::emitAssignment(const AssignmentStmt &statement) {
     if (slot.type.base == ValueType::Float) {
         emitFloatExpr(*statement.value);
         text_ << "    movsd [rbp - " << slot.offset << "], xmm0\n";
-    } else {
+    }
+    else {
         emitExpr(*statement.value);
         text_ << "    mov [rbp - " << slot.offset << "], rax\n";
     }
 }
 
-void CodeGenerator::emitFieldAssignment(const FieldAssignmentStmt &statement) {
+void CodeGenerator::emitFieldAssignment(const FieldAssignmentStmt& statement) {
     emitFieldAddress(statement.object, statement.field);
     text_ << "    push rax\n";
     auto objectSlot = current_->locals.at(statement.object);
-    const auto &layout = structLayouts_.at(objectSlot.type.structName);
-    const StructField *field = nullptr;
-    for (const auto &candidate : layout.fields) {
+    const auto& layout = structLayouts_.at(objectSlot.type.structName);
+    const StructField* field = nullptr;
+    for (const auto& candidate : layout.fields) {
         if (candidate.name == statement.field) {
             field = &candidate;
             break;
@@ -466,14 +490,15 @@ void CodeGenerator::emitFieldAssignment(const FieldAssignmentStmt &statement) {
         emitFloatExpr(*statement.value);
         text_ << "    pop rbx\n";
         text_ << "    movsd [rbx], xmm0\n";
-    } else {
+    }
+    else {
         emitExpr(*statement.value);
         text_ << "    pop rbx\n";
         text_ << "    mov [rbx], rax\n";
     }
 }
 
-void CodeGenerator::emitPointerAssignment(const PointerAssignmentStmt &statement) {
+void CodeGenerator::emitPointerAssignment(const PointerAssignmentStmt& statement) {
     emitExpr(*statement.pointer);
     text_ << "    push rax\n";
     emitExpr(*statement.value);
@@ -481,8 +506,8 @@ void CodeGenerator::emitPointerAssignment(const PointerAssignmentStmt &statement
     text_ << "    mov [rbx], rax\n";
 }
 
-void CodeGenerator::emitPrint(const PrintStmt &statement) {
-    const vector<string> &registers = argumentRegisters();
+void CodeGenerator::emitPrint(const PrintStmt& statement) {
+    const vector<string>& registers = argumentRegisters();
     if (statement.expression->inferredType == ValueType::String) {
         emitExpr(*statement.expression);
         text_ << "    mov " << registers[1] << ", rax\n";
@@ -498,7 +523,8 @@ void CodeGenerator::emitPrint(const PrintStmt &statement) {
             text_ << "    movq " << registers[1] << ", xmm0\n";
             text_ << "    movq xmm1, " << registers[1] << "\n";
             text_ << "    xor eax, eax\n";
-        } else {
+        }
+        else {
             text_ << "    mov eax, 1\n";
         }
         emitCall("printf", true);
@@ -528,12 +554,15 @@ void CodeGenerator::emitPrint(const PrintStmt &statement) {
     emitCall("printf", true);
 }
 
-void CodeGenerator::emitInput(const InputStmt &statement) {
+void CodeGenerator::emitInput(const InputStmt& statement) {
     auto slot = current_->locals.at(statement.name);
-    const vector<string> &registers = argumentRegisters();
+    const vector<string>& registers = argumentRegisters();
 
     if (statement.index) {
         emitArrayAddress(statement.name, *statement.index);
+        if (slot.type.base == ValueType::Bool) {
+            text_ << "    push rax\n";
+        }
         if (slot.type.base == ValueType::String) {
             text_ << "    push rax\n";
             text_ << "    mov " << registers[0] << ", 256\n";
@@ -542,41 +571,58 @@ void CodeGenerator::emitInput(const InputStmt &statement) {
             text_ << "    mov [rbx], rax\n";
             text_ << "    mov " << registers[1] << ", rax\n";
             text_ << "    lea " << registers[0] << ", [fmt_scan_str]\n";
-        } else {
+        }
+        else {
             text_ << "    mov " << registers[1] << ", rax\n";
             if (slot.type.base == ValueType::Float) {
                 text_ << "    lea " << registers[0] << ", [fmt_scan_float]\n";
-            } else if (slot.type.base == ValueType::Char) {
+            }
+            else if (slot.type.base == ValueType::Char) {
                 text_ << "    lea " << registers[0] << ", [fmt_scan_char]\n";
-            } else if (slot.type.base == ValueType::Pointer) {
+            }
+            else if (slot.type.base == ValueType::Pointer) {
                 text_ << "    lea " << registers[0] << ", [fmt_scan_ptr]\n";
-            } else {
+            }
+            else {
                 text_ << "    lea " << registers[0] << ", [fmt_scan_int]\n";
             }
         }
-    } else {
+    }
+    else {
         text_ << "    lea " << registers[1] << ", [rbp - " << slot.offset
-              << "]\n";
+            << "]\n";
         if (slot.type.base == ValueType::Float) {
             text_ << "    lea " << registers[0] << ", [fmt_scan_float]\n";
-        } else if (slot.type.base == ValueType::Char) {
+        }
+        else if (slot.type.base == ValueType::Char) {
             text_ << "    lea " << registers[0] << ", [fmt_scan_char]\n";
-        } else if (slot.type.base == ValueType::String) {
+        }
+        else if (slot.type.base == ValueType::String) {
             text_ << "    mov " << registers[0] << ", 256\n";
             emitCall("malloc", true);
             text_ << "    mov [rbp - " << slot.offset << "], rax\n";
             text_ << "    mov " << registers[1] << ", rax\n";
             text_ << "    lea " << registers[0] << ", [fmt_scan_str]\n";
-        } else if (slot.type.base == ValueType::Pointer) {
+        }
+        else if (slot.type.base == ValueType::Pointer) {
             text_ << "    lea " << registers[0] << ", [fmt_scan_ptr]\n";
-        } else {
+        }
+        else {
             text_ << "    lea " << registers[0] << ", [fmt_scan_int]\n";
         }
     }
     text_ << "    xor eax, eax\n";
     emitCall("scanf", true);
 
-    if (!statement.index && slot.type.base == ValueType::Bool) {
+    if (statement.index && slot.type.base == ValueType::Bool) {
+        text_ << "    pop rbx\n";
+        text_ << "    mov rax, [rbx]\n";
+        text_ << "    cmp rax, 0\n";
+        text_ << "    setne al\n";
+        text_ << "    movzx rax, al\n";
+        text_ << "    mov [rbx], rax\n";
+    }
+    else if (!statement.index && slot.type.base == ValueType::Bool) {
         text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
         text_ << "    cmp rax, 0\n";
         text_ << "    setne al\n";
@@ -585,7 +631,7 @@ void CodeGenerator::emitInput(const InputStmt &statement) {
     }
 }
 
-void CodeGenerator::emitIf(const IfStmt &statement) {
+void CodeGenerator::emitIf(const IfStmt& statement) {
     string endLabel = newLabel("if_end");
     vector<string> nextLabels;
     for (size_t i = 0; i < statement.branches.size(); i++) {
@@ -605,7 +651,7 @@ void CodeGenerator::emitIf(const IfStmt &statement) {
     text_ << endLabel << ":\n";
 }
 
-void CodeGenerator::emitWhile(const WhileStmt &statement) {
+void CodeGenerator::emitWhile(const WhileStmt& statement) {
     string startLabel = newLabel("while_start");
     string endLabel = newLabel("while_end");
 
@@ -622,7 +668,7 @@ void CodeGenerator::emitWhile(const WhileStmt &statement) {
     text_ << endLabel << ":\n";
 }
 
-void CodeGenerator::emitRepeat(const RepeatStmt &statement) {
+void CodeGenerator::emitRepeat(const RepeatStmt& statement) {
     auto slot = current_->locals.at(statement.iterator);
     string startLabel = newLabel("repeat_start");
     string continueLabel = newLabel("repeat_continue");
@@ -651,85 +697,102 @@ void CodeGenerator::emitRepeat(const RepeatStmt &statement) {
     text_ << endLabel << ":\n";
 }
 
-void CodeGenerator::emitBreak(const BreakStmt &) {
+void CodeGenerator::emitBreak(const BreakStmt&) {
     if (!breakLabels_.empty()) {
         text_ << "    jmp " << breakLabels_.back() << "\n";
     }
 }
 
-void CodeGenerator::emitContinue(const ContinueStmt &) {
+void CodeGenerator::emitContinue(const ContinueStmt&) {
     if (!continueLabels_.empty()) {
         text_ << "    jmp " << continueLabels_.back() << "\n";
     }
 }
 
-void CodeGenerator::emitReturn(const ReturnStmt &statement) {
+void CodeGenerator::emitReturn(const ReturnStmt& statement) {
     if (statement.value) {
         emitExpr(*statement.value);
-    } else {
+    }
+    else {
         text_ << "    mov rax, 0\n";
     }
     text_ << "    jmp " << current_->endLabel << "\n";
 }
 
-void CodeGenerator::emitExpr(const Expr &expression) {
-    if (auto *literal = dynamic_cast<const IntLiteralExpr *>(&expression)) {
+void CodeGenerator::emitExpr(const Expr& expression) {
+    if (auto* literal = dynamic_cast<const IntLiteralExpr*>(&expression)) {
         text_ << "    mov rax, " << literal->value << "\n";
-    } else if (auto *literal = dynamic_cast<const FloatLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const FloatLiteralExpr*>(&expression)) {
         string label = addFloatLiteral(literal->value);
         text_ << "    movq rax, [rel " << label << "]\n";
-    } else if (auto *literal = dynamic_cast<const BoolLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const BoolLiteralExpr*>(&expression)) {
         text_ << "    mov rax, " << (literal->value ? 1 : 0) << "\n";
-    } else if (auto *literal = dynamic_cast<const CharLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const CharLiteralExpr*>(&expression)) {
         text_ << "    mov rax, " << literal->value << "\n";
-    } else if (auto *literal = dynamic_cast<const StringLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const StringLiteralExpr*>(&expression)) {
         string label = addStringLiteral(literal->value);
         text_ << "    lea rax, [" << label << "]\n";
-    } else if (auto *variable = dynamic_cast<const VariableExpr *>(&expression)) {
+    }
+    else if (auto* variable = dynamic_cast<const VariableExpr*>(&expression)) {
         auto slot = current_->locals.at(variable->name);
         if (slot.type.isArray) {
             if (slot.isReference) {
                 text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
-            } else {
+            }
+            else {
                 text_ << "    lea rax, [rbp - " << slot.offset << "]\n";
             }
-        } else if (slot.type.base == ValueType::Struct) {
+        }
+        else if (slot.type.base == ValueType::Struct) {
             if (slot.isReference) {
                 text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
-            } else {
+            }
+            else {
                 text_ << "    lea rax, [rbp - " << slot.offset << "]\n";
             }
-        } else {
+        }
+        else {
             text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
         }
-    } else if (auto *arrayAccess = dynamic_cast<const ArrayAccessExpr *>(&expression)) {
+    }
+    else if (auto* arrayAccess = dynamic_cast<const ArrayAccessExpr*>(&expression)) {
         emitArrayAddress(arrayAccess->name, *arrayAccess->index);
         text_ << "    mov rax, [rax]\n";
-    } else if (auto *fieldAccess = dynamic_cast<const FieldAccessExpr *>(&expression)) {
+    }
+    else if (auto* fieldAccess = dynamic_cast<const FieldAccessExpr*>(&expression)) {
         emitFieldAddress(fieldAccess->object, fieldAccess->field);
         text_ << "    mov rax, [rax]\n";
-    } else if (auto *address = dynamic_cast<const AddressExpr *>(&expression)) {
+    }
+    else if (auto* address = dynamic_cast<const AddressExpr*>(&expression)) {
         emitAddress(*address);
-    } else if (auto *deref = dynamic_cast<const DereferenceExpr *>(&expression)) {
+    }
+    else if (auto* deref = dynamic_cast<const DereferenceExpr*>(&expression)) {
         emitExpr(*deref->pointer);
         text_ << "    mov rax, [rax]\n";
-    } else if (auto *unary = dynamic_cast<const UnaryExpr *>(&expression)) {
+    }
+    else if (auto* unary = dynamic_cast<const UnaryExpr*>(&expression)) {
         emitExpr(*unary->operand);
         if (unary->op == UnaryOp::Negate) {
             text_ << "    neg rax\n";
-        } else {
+        }
+        else {
             text_ << "    cmp rax, 0\n";
             text_ << "    sete al\n";
             text_ << "    movzx rax, al\n";
         }
-    } else if (auto *binary = dynamic_cast<const BinaryExpr *>(&expression)) {
+    }
+    else if (auto* binary = dynamic_cast<const BinaryExpr*>(&expression)) {
         if (binary->inferredType == ValueType::Float) {
             emitFloatExpr(expression);
             text_ << "    movq rax, xmm0\n";
             return;
         }
         if (binary->inferredType == ValueType::String && binary->op == BinaryOp::Add) {
-            const vector<string> &registers = argumentRegisters();
+            const vector<string>& registers = argumentRegisters();
             emitExpr(*binary->left);
             text_ << "    sub rsp, 16\n";
             text_ << "    mov [rsp], rax\n";
@@ -741,10 +804,10 @@ void CodeGenerator::emitExpr(const Expr &expression) {
             return;
         }
         if ((binary->left->inferredType == ValueType::Float ||
-             binary->right->inferredType == ValueType::Float) &&
+            binary->right->inferredType == ValueType::Float) &&
             (binary->op == BinaryOp::Equal || binary->op == BinaryOp::NotEqual ||
-             binary->op == BinaryOp::Less || binary->op == BinaryOp::LessEqual ||
-             binary->op == BinaryOp::Greater || binary->op == BinaryOp::GreaterEqual)) {
+                binary->op == BinaryOp::Less || binary->op == BinaryOp::LessEqual ||
+                binary->op == BinaryOp::Greater || binary->op == BinaryOp::GreaterEqual)) {
             emitFloatExpr(*binary->left);
             text_ << "    sub rsp, 16\n";
             text_ << "    movsd [rsp], xmm0\n";
@@ -851,8 +914,9 @@ void CodeGenerator::emitExpr(const Expr &expression) {
             text_ << "    or rax, rbx\n";
             break;
         }
-    } else if (auto *call = dynamic_cast<const CallExpr *>(&expression)) {
-        const vector<string> &registers = argumentRegisters();
+    }
+    else if (auto* call = dynamic_cast<const CallExpr*>(&expression)) {
+        const vector<string>& registers = argumentRegisters();
         if (call->name == "할당") {
             emitExpr(*call->arguments[0]);
             text_ << "    mov " << registers[0] << ", rax\n";
@@ -882,7 +946,7 @@ void CodeGenerator::emitExpr(const Expr &expression) {
             return;
         }
         if (call->name == "부분문자열") {
-            for (const auto &argument : call->arguments) {
+            for (const auto& argument : call->arguments) {
                 emitExpr(*argument);
                 text_ << "    push rax\n";
             }
@@ -893,11 +957,12 @@ void CodeGenerator::emitExpr(const Expr &expression) {
             return;
         }
         if (call->name == "배열길이") {
-            auto *variable = dynamic_cast<VariableExpr *>(call->arguments[0].get());
+            auto* variable = dynamic_cast<VariableExpr*>(call->arguments[0].get());
             if (variable) {
                 auto slot = current_->locals.at(variable->name);
                 text_ << "    mov rax, " << slot.type.arraySize << "\n";
-            } else {
+            }
+            else {
                 text_ << "    mov rax, 0\n";
             }
             return;
@@ -905,10 +970,10 @@ void CodeGenerator::emitExpr(const Expr &expression) {
         size_t registerCount = registers.size();
         size_t stackCount =
             call->arguments.size() > registerCount
-                ? call->arguments.size() - registerCount
-                : 0;
+            ? call->arguments.size() - registerCount
+            : 0;
         for (int i = static_cast<int>(call->arguments.size()) - 1;
-             i >= static_cast<int>(registerCount); i--) {
+            i >= static_cast<int>(registerCount); i--) {
             emitExpr(*call->arguments[static_cast<size_t>(i)]);
             text_ << "    push rax\n";
         }
@@ -923,38 +988,46 @@ void CodeGenerator::emitExpr(const Expr &expression) {
     }
 }
 
-void CodeGenerator::emitFloatExpr(const Expr &expression) {
-    if (auto *literal = dynamic_cast<const FloatLiteralExpr *>(&expression)) {
+void CodeGenerator::emitFloatExpr(const Expr& expression) {
+    if (auto* literal = dynamic_cast<const FloatLiteralExpr*>(&expression)) {
         string label = addFloatLiteral(literal->value);
         text_ << "    movsd xmm0, [rel " << label << "]\n";
-    } else if (auto *literal = dynamic_cast<const IntLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const IntLiteralExpr*>(&expression)) {
         text_ << "    mov rax, " << literal->value << "\n";
         text_ << "    cvtsi2sd xmm0, rax\n";
-    } else if (auto *literal = dynamic_cast<const CharLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const CharLiteralExpr*>(&expression)) {
         text_ << "    mov rax, " << literal->value << "\n";
         text_ << "    cvtsi2sd xmm0, rax\n";
-    } else if (auto *variable = dynamic_cast<const VariableExpr *>(&expression)) {
+    }
+    else if (auto* variable = dynamic_cast<const VariableExpr*>(&expression)) {
         auto slot = current_->locals.at(variable->name);
         if (slot.type.base == ValueType::Float) {
             text_ << "    movsd xmm0, [rbp - " << slot.offset << "]\n";
-        } else {
+        }
+        else {
             text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
             text_ << "    cvtsi2sd xmm0, rax\n";
         }
-    } else if (auto *arrayAccess = dynamic_cast<const ArrayAccessExpr *>(&expression)) {
+    }
+    else if (auto* arrayAccess = dynamic_cast<const ArrayAccessExpr*>(&expression)) {
         emitArrayAddress(arrayAccess->name, *arrayAccess->index);
         text_ << "    movsd xmm0, [rax]\n";
-    } else if (auto *fieldAccess = dynamic_cast<const FieldAccessExpr *>(&expression)) {
+    }
+    else if (auto* fieldAccess = dynamic_cast<const FieldAccessExpr*>(&expression)) {
         emitFieldAddress(fieldAccess->object, fieldAccess->field);
         text_ << "    movsd xmm0, [rax]\n";
-    } else if (auto *unary = dynamic_cast<const UnaryExpr *>(&expression)) {
+    }
+    else if (auto* unary = dynamic_cast<const UnaryExpr*>(&expression)) {
         emitFloatExpr(*unary->operand);
         if (unary->op == UnaryOp::Negate) {
             string label = addFloatLiteral(-1.0);
             text_ << "    movsd xmm1, [rel " << label << "]\n";
             text_ << "    mulsd xmm0, xmm1\n";
         }
-    } else if (auto *binary = dynamic_cast<const BinaryExpr *>(&expression)) {
+    }
+    else if (auto* binary = dynamic_cast<const BinaryExpr*>(&expression)) {
         emitFloatExpr(*binary->left);
         text_ << "    sub rsp, 16\n";
         text_ << "    movsd [rsp], xmm0\n";
@@ -978,57 +1051,63 @@ void CodeGenerator::emitFloatExpr(const Expr &expression) {
             break;
         }
         text_ << "    movapd xmm0, xmm1\n";
-    } else if (auto *call = dynamic_cast<const CallExpr *>(&expression)) {
+    }
+    else if (auto* call = dynamic_cast<const CallExpr*>(&expression)) {
         emitExpr(*call);
         text_ << "    movq xmm0, rax\n";
-    } else {
+    }
+    else {
         emitExpr(expression);
         text_ << "    cvtsi2sd xmm0, rax\n";
     }
 }
 
-void CodeGenerator::emitAddress(const AddressExpr &expression) {
+void CodeGenerator::emitAddress(const AddressExpr& expression) {
     auto slot = current_->locals.at(expression.name);
     if (expression.index) {
         emitArrayAddress(expression.name, *expression.index);
-    } else if (slot.isReference &&
-               (slot.type.isArray || slot.type.base == ValueType::Struct)) {
+    }
+    else if (slot.isReference &&
+        (slot.type.isArray || slot.type.base == ValueType::Struct)) {
         text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
-    } else {
+    }
+    else {
         text_ << "    lea rax, [rbp - " << slot.offset << "]\n";
     }
 }
 
-void CodeGenerator::emitArrayAddress(const string &name, const Expr &index) {
+void CodeGenerator::emitArrayAddress(const string& name, const Expr& index) {
     auto slot = current_->locals.at(name);
     emitExpr(index);
     text_ << "    shl rax, 3\n";
     if (slot.isReference) {
         text_ << "    mov rbx, [rbp - " << slot.offset << "]\n";
         text_ << "    sub rbx, rax\n";
-    } else {
+    }
+    else {
         text_ << "    lea rbx, [rbp - " << slot.offset << "]\n";
         text_ << "    sub rbx, rax\n";
     }
     text_ << "    mov rax, rbx\n";
 }
 
-void CodeGenerator::emitFieldAddress(const string &object, const string &field) {
+void CodeGenerator::emitFieldAddress(const string& object, const string& field) {
     auto slot = current_->locals.at(object);
-    const auto &layout = structLayouts_.at(slot.type.structName);
+    const auto& layout = structLayouts_.at(slot.type.structName);
     int fieldOffset = layout.fieldOffsets.at(field);
     if (slot.isReference) {
         text_ << "    mov rax, [rbp - " << slot.offset << "]\n";
         if (fieldOffset > 0) {
             text_ << "    sub rax, " << fieldOffset << "\n";
         }
-    } else {
+    }
+    else {
         text_ << "    lea rax, [rbp - " << (slot.offset + fieldOffset) << "]\n";
     }
 }
 
 void CodeGenerator::emitStringConcat() {
-    const vector<string> &registers = argumentRegisters();
+    const vector<string>& registers = argumentRegisters();
     text_ << "\nskkoa_concat:\n";
     text_ << "    push rbp\n";
     text_ << "    mov rbp, rsp\n";
@@ -1091,23 +1170,23 @@ void CodeGenerator::emitStringConcat() {
     text_ << "    ret\n";
 }
 
-string CodeGenerator::newLabel(const string &prefix) {
+string CodeGenerator::newLabel(const string& prefix) {
     return ".L_" + prefix + "_" + to_string(labelCounter_++);
 }
 
-string CodeGenerator::addStringLiteral(const string &value) {
+string CodeGenerator::addStringLiteral(const string& value) {
     string label = "str_" + to_string(stringCounter_++);
-    strings_.push_back({label, value});
+    strings_.push_back({ label, value });
     return label;
 }
 
 string CodeGenerator::addFloatLiteral(double value) {
     string label = "float_" + to_string(static_cast<int>(floats_.size()));
-    floats_.push_back({label, value});
+    floats_.push_back({ label, value });
     return label;
 }
 
-string CodeGenerator::bytesForString(const string &value) const {
+string CodeGenerator::bytesForString(const string& value) const {
     ostringstream out;
     for (size_t i = 0; i < value.size(); i++) {
         if (i > 0) {
@@ -1122,20 +1201,20 @@ string CodeGenerator::bytesForString(const string &value) const {
     return out.str();
 }
 
-string CodeGenerator::generateAstDump(const Program &program) {
+string CodeGenerator::generateAstDump(const Program& program) {
     ostringstream out;
     out << "Program\n";
-    for (const auto &structure : program.structs) {
+    for (const auto& structure : program.structs) {
         out << "  Struct " << structure->name << "\n";
-        for (const auto &field : structure->fields) {
+        for (const auto& field : structure->fields) {
             out << "    Field " << field.name << ": " << field.type.display()
                 << "\n";
         }
     }
-    for (const auto &function : program.functions) {
+    for (const auto& function : program.functions) {
         out << "  Function " << function->name << " -> "
             << function->returnType.display() << "\n";
-        for (const auto &param : function->params) {
+        for (const auto& param : function->params) {
             out << "    Param " << param.name << ": " << param.type.display()
                 << "\n";
         }
@@ -1182,56 +1261,63 @@ string CodeGenerator::unaryOpName(UnaryOp op) const {
     return op == UnaryOp::Negate ? "-" : "아님";
 }
 
-void CodeGenerator::dumpStatements(const vector<unique_ptr<Stmt>> &statements,
-                                   ostringstream &out, int depth) const {
-    for (const auto &statement : statements) {
+void CodeGenerator::dumpStatements(const vector<unique_ptr<Stmt>>& statements,
+    ostringstream& out, int depth) const {
+    for (const auto& statement : statements) {
         dumpStatement(*statement, out, depth);
     }
 }
 
-void CodeGenerator::dumpStatement(const Stmt &statement, ostringstream &out,
-                                  int depth) const {
+void CodeGenerator::dumpStatement(const Stmt& statement, ostringstream& out,
+    int depth) const {
     string pad = indent(depth);
-    if (auto *varDecl = dynamic_cast<const VarDeclStmt *>(&statement)) {
+    if (auto* varDecl = dynamic_cast<const VarDeclStmt*>(&statement)) {
         out << pad << (varDecl->isConst ? "ConstDecl " : "VarDecl ")
             << varDecl->name << ": " << varDecl->type.display() << "\n";
         if (varDecl->initializer) {
             dumpExpr(*varDecl->initializer, out, depth + 2);
         }
-    } else if (auto *assignment = dynamic_cast<const AssignmentStmt *>(&statement)) {
+    }
+    else if (auto* assignment = dynamic_cast<const AssignmentStmt*>(&statement)) {
         out << pad << "Assignment " << assignment->name << "\n";
         if (assignment->index) {
             out << pad << "  Index\n";
             dumpExpr(*assignment->index, out, depth + 4);
         }
         dumpExpr(*assignment->value, out, depth + 2);
-    } else if (auto *fieldAssignment =
-                   dynamic_cast<const FieldAssignmentStmt *>(&statement)) {
+    }
+    else if (auto* fieldAssignment =
+        dynamic_cast<const FieldAssignmentStmt*>(&statement)) {
         out << pad << "FieldAssignment " << fieldAssignment->object << "."
             << fieldAssignment->field << "\n";
         dumpExpr(*fieldAssignment->value, out, depth + 2);
-    } else if (auto *pointerAssignment =
-                   dynamic_cast<const PointerAssignmentStmt *>(&statement)) {
+    }
+    else if (auto* pointerAssignment =
+        dynamic_cast<const PointerAssignmentStmt*>(&statement)) {
         out << pad << "PointerAssignment\n";
         out << pad << "  Pointer\n";
         dumpExpr(*pointerAssignment->pointer, out, depth + 4);
         out << pad << "  Value\n";
         dumpExpr(*pointerAssignment->value, out, depth + 4);
-    } else if (auto *print = dynamic_cast<const PrintStmt *>(&statement)) {
+    }
+    else if (auto* print = dynamic_cast<const PrintStmt*>(&statement)) {
         out << pad << "Print\n";
         dumpExpr(*print->expression, out, depth + 2);
-    } else if (auto *input = dynamic_cast<const InputStmt *>(&statement)) {
+    }
+    else if (auto* input = dynamic_cast<const InputStmt*>(&statement)) {
         out << pad << "Input " << input->name << "\n";
         if (input->index) {
             out << pad << "  Index\n";
             dumpExpr(*input->index, out, depth + 4);
         }
-    } else if (auto *expression = dynamic_cast<const ExpressionStmt *>(&statement)) {
+    }
+    else if (auto* expression = dynamic_cast<const ExpressionStmt*>(&statement)) {
         out << pad << "ExpressionStmt\n";
         dumpExpr(*expression->expression, out, depth + 2);
-    } else if (auto *ifStmt = dynamic_cast<const IfStmt *>(&statement)) {
+    }
+    else if (auto* ifStmt = dynamic_cast<const IfStmt*>(&statement)) {
         out << pad << "If\n";
-        for (const auto &branch : ifStmt->branches) {
+        for (const auto& branch : ifStmt->branches) {
             out << pad << "  Branch\n";
             dumpExpr(*branch.condition, out, depth + 4);
             dumpStatements(branch.body, out, depth + 4);
@@ -1240,22 +1326,27 @@ void CodeGenerator::dumpStatement(const Stmt &statement, ostringstream &out,
             out << pad << "  Else\n";
             dumpStatements(ifStmt->elseBody, out, depth + 4);
         }
-    } else if (auto *whileStmt = dynamic_cast<const WhileStmt *>(&statement)) {
+    }
+    else if (auto* whileStmt = dynamic_cast<const WhileStmt*>(&statement)) {
         out << pad << "While\n";
         dumpExpr(*whileStmt->condition, out, depth + 2);
         dumpStatements(whileStmt->body, out, depth + 2);
-    } else if (auto *repeatStmt = dynamic_cast<const RepeatStmt *>(&statement)) {
+    }
+    else if (auto* repeatStmt = dynamic_cast<const RepeatStmt*>(&statement)) {
         out << pad << "Repeat " << repeatStmt->iterator << "\n";
         out << pad << "  From\n";
         dumpExpr(*repeatStmt->start, out, depth + 4);
         out << pad << "  To\n";
         dumpExpr(*repeatStmt->end, out, depth + 4);
         dumpStatements(repeatStmt->body, out, depth + 2);
-    } else if (dynamic_cast<const BreakStmt *>(&statement)) {
+    }
+    else if (dynamic_cast<const BreakStmt*>(&statement)) {
         out << pad << "Break\n";
-    } else if (dynamic_cast<const ContinueStmt *>(&statement)) {
+    }
+    else if (dynamic_cast<const ContinueStmt*>(&statement)) {
         out << pad << "Continue\n";
-    } else if (auto *returnStmt = dynamic_cast<const ReturnStmt *>(&statement)) {
+    }
+    else if (auto* returnStmt = dynamic_cast<const ReturnStmt*>(&statement)) {
         out << pad << "Return\n";
         if (returnStmt->value) {
             dumpExpr(*returnStmt->value, out, depth + 2);
@@ -1263,50 +1354,63 @@ void CodeGenerator::dumpStatement(const Stmt &statement, ostringstream &out,
     }
 }
 
-void CodeGenerator::dumpExpr(const Expr &expression, ostringstream &out,
-                             int depth) const {
+void CodeGenerator::dumpExpr(const Expr& expression, ostringstream& out,
+    int depth) const {
     string pad = indent(depth);
-    if (auto *literal = dynamic_cast<const IntLiteralExpr *>(&expression)) {
+    if (auto* literal = dynamic_cast<const IntLiteralExpr*>(&expression)) {
         out << pad << "IntLiteral " << literal->value << "\n";
-    } else if (auto *literal = dynamic_cast<const FloatLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const FloatLiteralExpr*>(&expression)) {
         out << pad << "FloatLiteral " << literal->value << "\n";
-    } else if (auto *literal = dynamic_cast<const StringLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const StringLiteralExpr*>(&expression)) {
         out << pad << "StringLiteral \"" << literal->value << "\"\n";
-    } else if (auto *literal = dynamic_cast<const CharLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const CharLiteralExpr*>(&expression)) {
         out << pad << "CharLiteral " << literal->value << "\n";
-    } else if (auto *literal = dynamic_cast<const BoolLiteralExpr *>(&expression)) {
+    }
+    else if (auto* literal = dynamic_cast<const BoolLiteralExpr*>(&expression)) {
         out << pad << "BoolLiteral " << (literal->value ? "참" : "거짓") << "\n";
-    } else if (auto *variable = dynamic_cast<const VariableExpr *>(&expression)) {
+    }
+    else if (auto* variable = dynamic_cast<const VariableExpr*>(&expression)) {
         out << pad << "Variable " << variable->name << "\n";
-    } else if (auto *arrayAccess = dynamic_cast<const ArrayAccessExpr *>(&expression)) {
+    }
+    else if (auto* arrayAccess = dynamic_cast<const ArrayAccessExpr*>(&expression)) {
         out << pad << "ArrayAccess " << arrayAccess->name << "\n";
         dumpExpr(*arrayAccess->index, out, depth + 2);
-    } else if (auto *fieldAccess = dynamic_cast<const FieldAccessExpr *>(&expression)) {
+    }
+    else if (auto* fieldAccess = dynamic_cast<const FieldAccessExpr*>(&expression)) {
         out << pad << "FieldAccess " << fieldAccess->object << "."
             << fieldAccess->field << "\n";
-    } else if (auto *arrayLiteral = dynamic_cast<const ArrayLiteralExpr *>(&expression)) {
+    }
+    else if (auto* arrayLiteral = dynamic_cast<const ArrayLiteralExpr*>(&expression)) {
         out << pad << "ArrayLiteral\n";
-        for (const auto &element : arrayLiteral->elements) {
+        for (const auto& element : arrayLiteral->elements) {
             dumpExpr(*element, out, depth + 2);
         }
-    } else if (auto *address = dynamic_cast<const AddressExpr *>(&expression)) {
+    }
+    else if (auto* address = dynamic_cast<const AddressExpr*>(&expression)) {
         out << pad << "Address " << address->name << "\n";
         if (address->index) {
             dumpExpr(*address->index, out, depth + 2);
         }
-    } else if (auto *deref = dynamic_cast<const DereferenceExpr *>(&expression)) {
+    }
+    else if (auto* deref = dynamic_cast<const DereferenceExpr*>(&expression)) {
         out << pad << "Dereference\n";
         dumpExpr(*deref->pointer, out, depth + 2);
-    } else if (auto *unary = dynamic_cast<const UnaryExpr *>(&expression)) {
+    }
+    else if (auto* unary = dynamic_cast<const UnaryExpr*>(&expression)) {
         out << pad << "Unary " << unaryOpName(unary->op) << "\n";
         dumpExpr(*unary->operand, out, depth + 2);
-    } else if (auto *binary = dynamic_cast<const BinaryExpr *>(&expression)) {
+    }
+    else if (auto* binary = dynamic_cast<const BinaryExpr*>(&expression)) {
         out << pad << "Binary " << binaryOpName(binary->op) << "\n";
         dumpExpr(*binary->left, out, depth + 2);
         dumpExpr(*binary->right, out, depth + 2);
-    } else if (auto *call = dynamic_cast<const CallExpr *>(&expression)) {
+    }
+    else if (auto* call = dynamic_cast<const CallExpr*>(&expression)) {
         out << pad << "Call " << call->name << "\n";
-        for (const auto &argument : call->arguments) {
+        for (const auto& argument : call->arguments) {
             dumpExpr(*argument, out, depth + 2);
         }
     }

@@ -25,7 +25,7 @@ struct CliOptions {
     bool help = false;
 };
 
-static string readFile(const string &path) {
+static string readFile(const string& path) {
     ifstream file(path, ios::binary);
     if (!file) {
         throw runtime_error("파일을 열 수 없습니다: " + path);
@@ -42,7 +42,7 @@ static string readFile(const string &path) {
     return content;
 }
 
-static string trim(const string &value) {
+static string trim(const string& value) {
     size_t start = value.find_first_not_of(" \t\r");
     if (start == string::npos) {
         return "";
@@ -51,7 +51,7 @@ static string trim(const string &value) {
     return value.substr(start, end - start + 1);
 }
 
-static bool parseImportLine(const string &line, string &importPath) {
+static bool parseImportLine(const string& line, string& importPath) {
     string trimmed = trim(line);
     const string keyword = "가져오기";
     if (trimmed.rfind(keyword, 0) != 0) {
@@ -65,18 +65,18 @@ static bool parseImportLine(const string &line, string &importPath) {
     return true;
 }
 
-static bool fileExists(const fs::path &path) {
+static bool fileExists(const fs::path& path) {
     error_code ec;
     return fs::is_regular_file(path, ec);
 }
 
-static void addSearchDir(vector<fs::path> &dirs, const fs::path &dir) {
+static void addSearchDir(vector<fs::path>& dirs, const fs::path& dir) {
     if (dir.empty()) {
         return;
     }
     fs::path normalized = fs::absolute(dir).lexically_normal();
     string key = normalized.string();
-    for (const auto &existing : dirs) {
+    for (const auto& existing : dirs) {
         if (existing.string() == key) {
             return;
         }
@@ -84,7 +84,7 @@ static void addSearchDir(vector<fs::path> &dirs, const fs::path &dir) {
     dirs.push_back(normalized);
 }
 
-static void addPathList(vector<fs::path> &dirs, const char *value) {
+static void addPathList(vector<fs::path>& dirs, const char* value) {
     if (!value) {
         return;
     }
@@ -98,7 +98,7 @@ static void addPathList(vector<fs::path> &dirs, const char *value) {
     while (start <= list.size()) {
         size_t end = list.find(delimiter, start);
         string item = list.substr(start, end == string::npos ? string::npos
-                                                            : end - start);
+            : end - start);
         if (!trim(item).empty()) {
             addSearchDir(dirs, item);
         }
@@ -113,19 +113,19 @@ static vector<fs::path> standardLibraryDirs() {
     vector<fs::path> dirs;
     addPathList(dirs, getenv("SKKOA_LIB_PATH"));
 
-    if (const char *home = getenv("SKKOA_HOME")) {
+    if (const char* home = getenv("SKKOA_HOME")) {
         addSearchDir(dirs, fs::path(home) / "lib");
     }
-    if (const char *installRoot = getenv("SKKOA_INSTALL_ROOT")) {
+    if (const char* installRoot = getenv("SKKOA_INSTALL_ROOT")) {
         addSearchDir(dirs, fs::path(installRoot) / "lib");
     }
 
 #if defined(_WIN32)
-    if (const char *localAppData = getenv("LOCALAPPDATA")) {
+    if (const char* localAppData = getenv("LOCALAPPDATA")) {
         addSearchDir(dirs, fs::path(localAppData) / "SKKOA" / "lib");
     }
 #else
-    if (const char *home = getenv("HOME")) {
+    if (const char* home = getenv("HOME")) {
         addSearchDir(dirs, fs::path(home) / ".skkoa" / "lib");
     }
 #endif
@@ -135,36 +135,37 @@ static vector<fs::path> standardLibraryDirs() {
     return dirs;
 }
 
-static vector<fs::path> importNameVariants(const fs::path &path) {
-    vector<fs::path> variants = {path};
+static vector<fs::path> importNameVariants(const fs::path& path) {
+    vector<fs::path> variants = { path };
     if (!path.has_extension()) {
         variants.push_back(path.string() + ".koa");
     }
     return variants;
 }
 
-static fs::path resolveImport(const string &importPath, const fs::path &baseDir,
-                              const fs::path &currentFile) {
+static fs::path resolveImport(const string& importPath, const fs::path& baseDir,
+    const fs::path& currentFile) {
     fs::path requested(importPath);
     vector<fs::path> candidates;
 
-    for (const auto &variant : importNameVariants(requested)) {
+    for (const auto& variant : importNameVariants(requested)) {
         if (variant.is_absolute()) {
             candidates.push_back(variant);
-        } else {
+        }
+        else {
             candidates.push_back(baseDir / variant);
         }
     }
 
     if (requested.is_relative()) {
-        for (const auto &dir : standardLibraryDirs()) {
-            for (const auto &variant : importNameVariants(requested)) {
+        for (const auto& dir : standardLibraryDirs()) {
+            for (const auto& variant : importNameVariants(requested)) {
                 candidates.push_back(dir / variant);
             }
         }
     }
 
-    for (const auto &candidate : candidates) {
+    for (const auto& candidate : candidates) {
         fs::path normalized = fs::absolute(candidate).lexically_normal();
         if (normalized.string() == currentFile.string()) {
             continue;
@@ -176,15 +177,15 @@ static fs::path resolveImport(const string &importPath, const fs::path &baseDir,
 
     ostringstream message;
     message << "가져올 파일을 찾을 수 없습니다: " << importPath
-            << "\n확인한 위치:";
-    for (const auto &candidate : candidates) {
+        << "\n확인한 위치:";
+    for (const auto& candidate : candidates) {
         message << "\n- " << fs::absolute(candidate).lexically_normal().string();
     }
     throw runtime_error(message.str());
 }
 
-static string expandImports(const fs::path &path, unordered_set<string> &active,
-                            unordered_set<string> &included) {
+static string expandImports(const fs::path& path, unordered_set<string>& active,
+    unordered_set<string>& included) {
     fs::path absolute = fs::absolute(path).lexically_normal();
     string key = absolute.string();
     if (active.count(key) > 0) {
@@ -206,11 +207,13 @@ static string expandImports(const fs::path &path, unordered_set<string> &active,
         string importPath;
         if (parseImportLine(line, importPath)) {
             fs::path child = resolveImport(importPath, baseDir, absolute);
-            output << expandImports(child, active, included);
-            if (!output.str().empty() && output.str().back() != '\n') {
+            string expanded = expandImports(child, active, included);
+            output << expanded;
+            if (!expanded.empty() && expanded.back() != '\n') {
                 output << '\n';
             }
-        } else {
+        }
+        else {
             output << line << '\n';
         }
     }
@@ -219,7 +222,7 @@ static string expandImports(const fs::path &path, unordered_set<string> &active,
     return output.str();
 }
 
-static void writeFile(const string &path, const string &content) {
+static void writeFile(const string& path, const string& content) {
     ofstream file(path, ios::binary);
     if (!file) {
         throw runtime_error("파일을 쓸 수 없습니다: " + path);
@@ -227,13 +230,14 @@ static void writeFile(const string &path, const string &content) {
     file << content;
 }
 
-static string shellQuote(const string &value) {
+static string shellQuote(const string& value) {
 #if defined(_WIN32)
     string quoted = "\"";
     for (char ch : value) {
         if (ch == '"') {
             quoted += "\\\"";
-        } else {
+        }
+        else {
             quoted += ch;
         }
     }
@@ -244,7 +248,8 @@ static string shellQuote(const string &value) {
     for (char ch : value) {
         if (ch == '\'') {
             quoted += "'\\''";
-        } else {
+        }
+        else {
             quoted += ch;
         }
     }
@@ -263,16 +268,16 @@ static string nasmFormat() {
 #endif
 }
 
-static string linkCommand(const fs::path &objectPath, const string &outputPath) {
+static string linkCommand(const fs::path& objectPath, const string& outputPath) {
 #if defined(_WIN32)
     return "gcc " + shellQuote(objectPath.string()) + " -o " +
-           shellQuote(outputPath);
+        shellQuote(outputPath);
 #elif defined(__APPLE__)
     return "cc " + shellQuote(objectPath.string()) + " -o " +
-           shellQuote(outputPath);
+        shellQuote(outputPath);
 #else
     return "gcc -no-pie " + shellQuote(objectPath.string()) + " -o " +
-           shellQuote(outputPath);
+        shellQuote(outputPath);
 #endif
 }
 
@@ -289,31 +294,36 @@ static void printHelp() {
     cout << "  -h, --help     도움말을 표시합니다.\n";
 }
 
-static CliOptions parseArgs(int argc, char **argv) {
+static CliOptions parseArgs(int argc, char** argv) {
     CliOptions options;
     for (int i = 1; i < argc; i++) {
         string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
             options.help = true;
-        } else if (arg == "--emit-asm") {
+        }
+        else if (arg == "--emit-asm") {
             options.emitAsm = true;
-        } else if (arg == "--emit-ast") {
+        }
+        else if (arg == "--emit-ast") {
             options.emitAst = true;
-        } else if (arg == "-o") {
+        }
+        else if (arg == "-o") {
             if (i + 1 >= argc) {
                 throw runtime_error("-o 뒤에는 출력 경로가 필요합니다.");
             }
             options.outputPath = argv[++i];
-        } else if (options.inputPath.empty()) {
+        }
+        else if (options.inputPath.empty()) {
             options.inputPath = arg;
-        } else {
+        }
+        else {
             throw runtime_error("알 수 없는 인자입니다: " + arg);
         }
     }
     return options;
 }
 
-static string defaultOutputPath(const CliOptions &options) {
+static string defaultOutputPath(const CliOptions& options) {
     fs::path input(options.inputPath);
     if (!options.outputPath.empty()) {
         return options.outputPath;
@@ -328,7 +338,7 @@ static string defaultOutputPath(const CliOptions &options) {
 #endif
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     try {
         CliOptions options = parseArgs(argc, argv);
         if (options.help) {
@@ -351,7 +361,7 @@ int main(int argc, char **argv) {
         unordered_set<string> activeImports;
         unordered_set<string> includedImports;
         string source = expandImports(options.inputPath, activeImports,
-                                      includedImports);
+            includedImports);
         Lexer lexer(source, errors);
         vector<Token> tokens = lexer.tokenize();
         if (errors.hasErrors()) {
@@ -384,7 +394,7 @@ int main(int argc, char **argv) {
 
         string outputPath = defaultOutputPath(options);
         fs::path asmPath = options.emitAsm ? fs::path(outputPath)
-                                           : fs::path(outputPath).replace_extension(".asm");
+            : fs::path(outputPath).replace_extension(".asm");
         string assembly = generator.generateAssembly(*program, options.inputPath);
         writeFile(asmPath.string(), assembly);
         cout << "어셈블리 생성: " << asmPath.string() << '\n';
@@ -395,8 +405,8 @@ int main(int argc, char **argv) {
 
         fs::path objectPath = fs::path(outputPath).replace_extension(".o");
         string nasmCommand = "nasm -f " + nasmFormat() + " " +
-                             shellQuote(asmPath.string()) +
-                             " -o " + shellQuote(objectPath.string());
+            shellQuote(asmPath.string()) +
+            " -o " + shellQuote(objectPath.string());
         int nasmResult = system(nasmCommand.c_str());
         if (nasmResult != 0) {
             cerr << "오류: NASM 어셈블 단계에 실패했습니다.\n";
@@ -414,7 +424,8 @@ int main(int argc, char **argv) {
 
         cout << "실행 파일 생성: " << outputPath << '\n';
         return 0;
-    } catch (const exception &ex) {
+    }
+    catch (const exception& ex) {
         cerr << "오류: " << ex.what() << '\n';
         return 1;
     }

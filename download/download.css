@@ -140,7 +140,8 @@ body {
 
 .download-page code,
 .download-page pre {
-    font-family: "D2Coding", "D2Coding ligature", "Nanum Gothic Coding",
+    font-family:
+        "D2Coding", "D2Coding ligature", "Nanum Gothic Coding",
         "IBM Plex Mono KR", "JetBrains Mono", "Fira Code", "Cascadia Code",
         "Consolas", monospace;
 }
