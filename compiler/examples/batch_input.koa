@@ -1,0 +1,12 @@
+시작
+    변수 left: 정수
+    변수 right: 정수
+    변수 name: 문자열
+
+    입력 left
+    입력 right
+    입력 name
+
+    출력 left + right
+    출력 name
+끝

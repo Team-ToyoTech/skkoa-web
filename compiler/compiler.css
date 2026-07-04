@@ -249,9 +249,10 @@ body {
 
 .console-input-row {
     display: flex;
+    align-items: stretch;
     gap: 8px;
     margin-top: 8px;
-    min-height: 32px;
+    min-height: 70px;
 }
 
 .console-input {
@@ -264,7 +265,9 @@ body {
     padding: 7px 10px;
     font-family: inherit;
     font-size: 13px;
+    line-height: 1.4;
     outline: none;
+    resize: vertical;
 }
 
 .console-input:focus {
@@ -273,7 +276,7 @@ body {
 
 .console-submit {
     flex: 0 0 auto;
-    height: 32px;
+    min-height: 32px;
     padding: 0 12px;
     border: none;
     border-radius: 7px;

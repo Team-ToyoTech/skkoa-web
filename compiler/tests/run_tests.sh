@@ -80,7 +80,8 @@ run_case "module" "21"
 run_case "stack" $'20\n20\n10'
 run_case "queue" $'10\n10\n20'
 run_case "structures_usage" "7"
-run_case "string_input" "Daniel" $'Daniel\n'
+run_case "string_input" "Daniel Kim" $'Daniel Kim\n'
+run_case "batch_input" $'42\nDaniel Kim' $'10 32\nDaniel Kim\n'
 run_case "stdlib_strings" $'10\n0\nSK'
 run_case "break_continue" $'1\n3\n4'
 run_case "array_length" "4"

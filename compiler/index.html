@@ -272,13 +272,14 @@
                         <div class="panel-title">Console</div>
                         <pre id="runOutput" class="run-output"></pre>
                         <div class="console-input-row">
-                            <input
+                            <textarea
                                 id="consoleInput"
                                 class="console-input"
-                                type="text"
                                 autocomplete="off"
-                                placeholder="입력 대기 중일 때 값을 입력하세요"
-                            />
+                                spellcheck="false"
+                                rows="3"
+                                placeholder="입력값을 공백 또는 줄바꿈으로 입력하세요"
+                            ></textarea>
                             <button
                                 id="consoleSubmit"
                                 class="console-submit"

@@ -129,7 +129,7 @@ string CodeGenerator::generateAssembly(Program &program,
     output << "    fmt_scan_int db \"%ld\", 0\n";
     output << "    fmt_scan_float db \"%lf\", 0\n";
     output << "    fmt_scan_char db \" %c\", 0\n";
-    output << "    fmt_scan_str db \"%255s\", 0\n";
+    output << "    fmt_scan_str db \" %255[^\", 10, \"]\", 0\n";
     output << "    fmt_scan_ptr db \"%p\", 0\n";
     output << "    fmt_str db \"%s\", 10, 0\n";
     for (const auto &entry : strings_) {

@@ -76,6 +76,7 @@ const EXAMPLE_FILES = [
     ["array_length.koa", "Array Length"],
     ["strings.koa", "Strings"],
     ["string_input.koa", "String Input"],
+    ["batch_input.koa", "Batch Input"],
     ["stdlib_strings.koa", "String Library"],
     ["float.koa", "Float"],
     ["char.koa", "Char"],
@@ -99,6 +100,7 @@ function escapeHtml(value) {
 }
 
 let pendingInputResolver = null;
+let consoleInputBuffer = "";
 
 function highlightCodeText(code) {
     const keywordPattern = new RegExp(
@@ -255,6 +257,7 @@ function parseFunctions(lines, env) {
             .map((part) => part.split(":")[0].trim());
         env[match[1]] = (...args) => {
             const localEnv = Object.create(env);
+            localEnv.__types = Object.create(env.__types || null);
             params.forEach((name, index) => {
                 localEnv[name] = args[index];
             });
@@ -333,6 +336,7 @@ function handleDeclaration(line, env) {
     const initializer = match[4];
     const arrayType = type.match(/^(.+)\[(\d*)\]$/);
     if (arrayType) {
+        if (env.__types) env.__types[name] = { base: arrayType[1], isArray: true };
         if (initializer) {
             const value = evalExpression(initializer, env);
             env[name] = Array.isArray(value) ? value.slice() : [];
@@ -343,6 +347,7 @@ function handleDeclaration(line, env) {
         return true;
     }
 
+    if (env.__types) env.__types[name] = { base: type, isArray: false };
     if (initializer) {
         env[name] = cloneSimValue(evalExpression(initializer, env));
     } else if (["정수", "논리", "실수", "문자", "문자열"].includes(type)) {
@@ -451,19 +456,106 @@ function appendConsole(text) {
     outputEl.scrollTop = outputEl.scrollHeight;
 }
 
-function readConsoleInput(promptText) {
+function queueConsoleInput(value) {
+    if (typeof value === "string" && value.length > 0) {
+        consoleInputBuffer += value;
+    }
+}
+
+function takeConsoleToken() {
+    const firstValueIndex = consoleInputBuffer.search(/\S/);
+    if (firstValueIndex < 0) {
+        consoleInputBuffer = "";
+        return null;
+    }
+
+    consoleInputBuffer = consoleInputBuffer.slice(firstValueIndex);
+    const match = consoleInputBuffer.match(/^\S+/);
+    if (!match) return null;
+
+    consoleInputBuffer = consoleInputBuffer.slice(match[0].length);
+    return match[0];
+}
+
+function takeConsoleLine() {
+    const firstValueIndex = consoleInputBuffer.search(/\S/);
+    if (firstValueIndex < 0) {
+        consoleInputBuffer = "";
+        return null;
+    }
+
+    consoleInputBuffer = consoleInputBuffer.slice(firstValueIndex);
+    const newline = consoleInputBuffer.match(/\r?\n/);
+    if (!newline) {
+        const value = consoleInputBuffer;
+        consoleInputBuffer = "";
+        return value;
+    }
+
+    const value = consoleInputBuffer.slice(0, newline.index);
+    consoleInputBuffer = consoleInputBuffer.slice(newline.index + newline[0].length);
+    return value;
+}
+
+function takeConsoleInput(mode) {
+    return mode === "line" ? takeConsoleLine() : takeConsoleToken();
+}
+
+function simTypeForInputTarget(env, name) {
+    return env.__types?.[name]?.base || "";
+}
+
+function simInputMode(type) {
+    return type === "문자열" ? "line" : "token";
+}
+
+function parseSimInputValue(rawValue, type) {
+    if (type === "문자열") return rawValue;
+    if (type === "문자") return String(rawValue || "\0")[0];
+    if (type === "논리") {
+        if (rawValue === "참" || rawValue === "true") return true;
+        if (rawValue === "거짓" || rawValue === "false") return false;
+        return Number(rawValue) !== 0;
+    }
+
+    const numeric = Number(rawValue);
+    return Number.isNaN(numeric) ? rawValue : numeric;
+}
+
+function readConsoleInput(promptText, mode = "token") {
     const input = document.getElementById("consoleInput");
     const button = document.getElementById("consoleSubmit");
     appendConsole(`${promptText}> `);
+
+    if (input.value) {
+        queueConsoleInput(input.value);
+        input.value = "";
+    }
+
+    const queuedValue = takeConsoleInput(mode);
+    if (queuedValue !== null) {
+        appendConsole(`${queuedValue}\n`);
+        return Promise.resolve(queuedValue);
+    }
+
     input.disabled = false;
     button.disabled = false;
     input.focus();
 
     return new Promise((resolve) => {
         pendingInputResolver = (value) => {
-            appendConsole(`${value}\n`);
+            queueConsoleInput(value);
+            const resolvedValue = takeConsoleInput(mode);
+            if (resolvedValue === null) {
+                input.disabled = false;
+                button.disabled = false;
+                input.focus();
+                return;
+            }
+
+            appendConsole(`${resolvedValue}\n`);
             pendingInputResolver = null;
-            resolve(value);
+            resolve(resolvedValue);
         };
     });
 }
@@ -494,17 +586,26 @@ async function executeBlock(lines, start, end, env, output) {
 
         let match = line.match(/^입력\s+([^\s[\]]+)\[(.+)\]$/);
         if (match) {
+            const inputType = simTypeForInputTarget(env, match[1]);
             const rawValue = await readConsoleInput(
-                `입력 ${match[1]}[${evalExpression(match[2], env)}]`
+                `입력 ${match[1]}[${evalExpression(match[2], env)}]`,
+                simInputMode(inputType)
             );
-            env[match[1]][evalExpression(match[2], env)] = Number(rawValue);
+            env[match[1]][evalExpression(match[2], env)] = parseSimInputValue(
+                rawValue,
+                inputType
+            );
             continue;
         }
 
         match = line.match(/^입력\s+([^\s]+)$/);
         if (match) {
-            const rawValue = await readConsoleInput(`입력 ${match[1]}`);
-            env[match[1]] = isNaN(Number(rawValue)) ? rawValue : Number(rawValue);
+            const inputType = simTypeForInputTarget(env, match[1]);
+            const rawValue = await readConsoleInput(
+                `입력 ${match[1]}`,
+                simInputMode(inputType)
+            );
+            env[match[1]] = parseSimInputValue(rawValue, inputType);
             continue;
         }
 
@@ -578,12 +679,15 @@ async function runSimulation() {
     const code = document.querySelector(".code-input").value;
     try {
         outputEl.textContent = "";
+        pendingInputResolver = null;
+        consoleInputBuffer = "";
         const lines = normalizeLines(await expandImports(code));
         const heap = [];
         const output = [];
         const env = {
             __heap: heap,
             __output: output,
+            __types: Object.create(null),
             __addr(name) {
                 return { kind: "var", name };
             },
@@ -1219,7 +1323,7 @@ document
     .getElementById("consoleSubmit")
     .addEventListener("click", submitConsoleInput);
 document.getElementById("consoleInput").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
         e.preventDefault();
         submitConsoleInput();
     }
