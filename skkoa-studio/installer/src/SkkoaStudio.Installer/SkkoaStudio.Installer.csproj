@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Product>SKKOA Studio Installer</Product>
+    <Company>Team ToyoTech</Company>
+    <Description>Installer project for SKKOA Studio</Description>
+    <Version>0.1.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="SkkoaStudioInstaller.iss" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,1 @@
+SKKOA Studio icons are generated from `image/skkoa_logo_remove_background_large.png`. No standalone SVG original was present in the repository, so `skkoa.svg` embeds that source PNG. Replace the PNG and rerun `skkoa-studio/installer/scripts/generate-icons.py` to regenerate ICO assets.

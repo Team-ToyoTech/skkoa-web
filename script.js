@@ -2,15 +2,19 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
         const defaultCompilerDownloadPath =
             "/compiler/download/skkoa-windows.exe";
+        const studioDownloadPath =
+            "/download/studio/SKKOA-Studio-Setup-x64.exe";
 
-        function downloadDefaultCompiler() {
+        function startDownload(path, fileName) {
             const link = document.createElement("a");
-            link.href = defaultCompilerDownloadPath;
-            link.download = "skkoa-windows.exe";
+            link.href = path;
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             setTimeout(() => {
-                document.body.removeChild(link);
+                if (link.parentNode) {
+                    link.parentNode.removeChild(link);
+                }
             }, 0);
         }
 
@@ -39,7 +43,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (downloadBtn) {
             downloadBtn.addEventListener("click", function (e) {
                 e.preventDefault();
-                downloadDefaultCompiler();
+                startDownload(defaultCompilerDownloadPath, "skkoa-windows.exe");
+            });
+        }
+
+        const studioBtn = document.getElementById("download-studio-btn");
+        if (studioBtn) {
+            studioBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+                startDownload(studioDownloadPath, "SKKOA-Studio-Setup-x64.exe");
             });
         }
 
@@ -102,4 +114,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 
-document.getElementById("yearNow").textContent = new Date().getFullYear();
+const yearNow = document.getElementById("yearNow");
+if (yearNow) {
+    yearNow.textContent = new Date().getFullYear();
+}

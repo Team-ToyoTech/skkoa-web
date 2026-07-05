@@ -75,6 +75,24 @@ AST 확인:
 ./build/skkoa examples/function.koa --emit-ast
 ```
 
+분석만 수행하고 JSON 진단 출력:
+
+```bash
+./build/skkoa examples/hello.koa --check --diagnostics-json
+```
+
+AST JSON 출력:
+
+```bash
+./build/skkoa examples/function.koa --emit-ast-json
+```
+
+모듈 검색 경로 지정:
+
+```bash
+./build/skkoa main.koa --working-dir . --lib-path lib
+```
+
 ## 입력 규칙
 
 `입력`은 정수, 논리, 실수, 문자, 포인터 값을 공백이나 줄바꿈으로 구분해 순서대로 읽는다. 문자열 변수는 다음 줄 전체를 읽어 문자열 안의 띄어쓰기를 보존한다.

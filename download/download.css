@@ -25,6 +25,12 @@ body {
     padding: 34px;
 }
 
+.studio-callout {
+    margin-bottom: 22px;
+    background: #111116;
+    border-color: #33333a;
+}
+
 .download-kicker {
     margin: 0 0 8px;
     color: #8ea3ff;

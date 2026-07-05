@@ -1,0 +1,17 @@
+bin/
+obj/
+build/
+publish/
+.vs/
+.vscode/
+*.user
+*.suo
+*.log
+*.tmp
+*.bak
+TestResults/
+coverage/
+coverage.*/
+skkoa-studio/editor/artifacts/
+skkoa-studio/installer/output/
+skkoa-studio/installer/.tools/

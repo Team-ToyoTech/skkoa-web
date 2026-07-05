@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -22,8 +23,18 @@ struct CliOptions {
     string outputPath;
     bool emitAsm = false;
     bool emitAst = false;
+    bool emitAstJson = false;
+    bool checkOnly = false;
+    bool diagnosticsJson = false;
+    bool noLink = false;
     bool help = false;
+    string workingDir;
+    vector<string> libPaths;
 };
+
+static bool gDiagnosticsJson = false;
+static vector<fs::path> gExtraLibDirs;
+static fs::path gWorkingDir;
 
 static string readFile(const string& path) {
     ifstream file(path, ios::binary);
@@ -111,6 +122,9 @@ static void addPathList(vector<fs::path>& dirs, const char* value) {
 
 static vector<fs::path> standardLibraryDirs() {
     vector<fs::path> dirs;
+    for (const auto& dir : gExtraLibDirs) {
+        addSearchDir(dirs, dir);
+    }
     addPathList(dirs, getenv("SKKOA_LIB_PATH"));
 
     if (const char* home = getenv("SKKOA_HOME")) {
@@ -154,6 +168,9 @@ static fs::path resolveImport(const string& importPath, const fs::path& baseDir,
         }
         else {
             candidates.push_back(baseDir / variant);
+            if (!gWorkingDir.empty()) {
+                candidates.push_back(gWorkingDir / variant);
+            }
         }
     }
 
@@ -230,6 +247,72 @@ static void writeFile(const string& path, const string& content) {
     file << content;
 }
 
+static string jsonEscape(const string& value) {
+    ostringstream out;
+    for (char ch : value) {
+        switch (ch) {
+        case '\\':
+            out << "\\\\";
+            break;
+        case '"':
+            out << "\\\"";
+            break;
+        case '\n':
+            out << "\\n";
+            break;
+        case '\r':
+            out << "\\r";
+            break;
+        case '\t':
+            out << "\\t";
+            break;
+        default:
+            out << ch;
+            break;
+        }
+    }
+    return out.str();
+}
+
+static void printDiagnosticsJson(const ErrorReporter& errors,
+    const string& fileName, ostream& out) {
+    out << "[\n";
+    const auto& messages = errors.messages();
+    for (size_t i = 0; i < messages.size(); i++) {
+        const auto& message = messages[i];
+        out << "  {\n";
+        out << "    \"severity\": \""
+            << (message.warning ? "warning" : "error") << "\",\n";
+        out << "    \"code\": \"SKK" << setw(3) << setfill('0') << (i + 1)
+            << setfill(' ') << "\",\n";
+        out << "    \"message\": \"" << jsonEscape(message.message);
+        if (!message.hint.empty()) {
+            out << " " << jsonEscape(message.hint);
+        }
+        out << "\",\n";
+        out << "    \"file\": \"" << jsonEscape(fileName) << "\",\n";
+        out << "    \"line\": " << message.location.line << ",\n";
+        out << "    \"column\": " << message.location.column << ",\n";
+        out << "    \"length\": 1\n";
+        out << "  }" << (i + 1 < messages.size() ? "," : "") << "\n";
+    }
+    out << "]\n";
+}
+
+static void printExceptionJson(const string& message, ostream& out) {
+    out << "[\n";
+    out << "  {\n";
+    out << "    \"severity\": \"error\",\n";
+    out << "    \"code\": \"SKK999\",\n";
+    out << "    \"message\": \"" << jsonEscape(message) << "\",\n";
+    out << "    \"file\": \"\",\n";
+    out << "    \"line\": 1,\n";
+    out << "    \"column\": 1,\n";
+    out << "    \"length\": 1\n";
+    out << "  }\n";
+    out << "]\n";
+}
+
 static string shellQuote(const string& value) {
 #if defined(_WIN32)
     string quoted = "\"";
@@ -286,12 +369,19 @@ static void printHelp() {
     cout << "사용법:\n";
     cout << "  skkoa <파일.koa> [-o 실행파일]\n";
     cout << "  skkoa <파일.koa> --emit-asm [-o 출력.asm]\n";
-    cout << "  skkoa <파일.koa> --emit-ast\n\n";
+    cout << "  skkoa <파일.koa> --emit-ast\n";
+    cout << "  skkoa <파일.koa> --check --diagnostics-json\n\n";
     cout << "옵션:\n";
-    cout << "  -o <path>      출력 파일 경로를 지정합니다.\n";
-    cout << "  --emit-asm     NASM 어셈블리만 생성합니다.\n";
-    cout << "  --emit-ast     AST를 표준 출력으로 표시합니다.\n";
-    cout << "  -h, --help     도움말을 표시합니다.\n";
+    cout << "  -o <path>            출력 파일 경로를 지정합니다.\n";
+    cout << "  --emit-asm           NASM 어셈블리만 생성합니다.\n";
+    cout << "  --emit-ast           AST를 텍스트로 표시합니다.\n";
+    cout << "  --emit-ast-json      AST를 JSON으로 표시합니다.\n";
+    cout << "  --check              분석만 수행하고 산출물을 만들지 않습니다.\n";
+    cout << "  --diagnostics-json   오류/경고를 JSON으로 출력합니다.\n";
+    cout << "  --no-link            오브젝트 파일까지만 만들고 링크하지 않습니다.\n";
+    cout << "  --working-dir <dir>  모듈 검색 기준 경로를 지정합니다.\n";
+    cout << "  --lib-path <dir>     표준 모듈 검색 경로를 추가합니다.\n";
+    cout << "  -h, --help           도움말을 표시합니다.\n";
 }
 
 static CliOptions parseArgs(int argc, char** argv) {
@@ -306,6 +396,31 @@ static CliOptions parseArgs(int argc, char** argv) {
         }
         else if (arg == "--emit-ast") {
             options.emitAst = true;
+        }
+        else if (arg == "--emit-ast-json") {
+            options.emitAstJson = true;
+        }
+        else if (arg == "--check") {
+            options.checkOnly = true;
+        }
+        else if (arg == "--diagnostics-json") {
+            options.diagnosticsJson = true;
+            gDiagnosticsJson = true;
+        }
+        else if (arg == "--no-link") {
+            options.noLink = true;
+        }
+        else if (arg == "--working-dir") {
+            if (i + 1 >= argc) {
+                throw runtime_error("--working-dir 뒤에는 경로가 필요합니다.");
+            }
+            options.workingDir = argv[++i];
+        }
+        else if (arg == "--lib-path") {
+            if (i + 1 >= argc) {
+                throw runtime_error("--lib-path 뒤에는 경로가 필요합니다.");
+            }
+            options.libPaths.push_back(argv[++i]);
         }
         else if (arg == "-o") {
             if (i + 1 >= argc) {
@@ -341,6 +456,7 @@ static string defaultOutputPath(const CliOptions& options) {
 int main(int argc, char** argv) {
     try {
         CliOptions options = parseArgs(argc, argv);
+        gDiagnosticsJson = options.diagnosticsJson;
         if (options.help) {
             printHelp();
             return 0;
@@ -351,7 +467,23 @@ int main(int argc, char** argv) {
             return 1;
         }
 
+        gExtraLibDirs.clear();
+        for (const auto& dir : options.libPaths) {
+            addSearchDir(gExtraLibDirs, dir);
+        }
+        if (!options.workingDir.empty()) {
+            gWorkingDir = fs::absolute(options.workingDir).lexically_normal();
+        }
+        else {
+            gWorkingDir.clear();
+        }
+
         fs::path inputPath(options.inputPath);
+        if (!gWorkingDir.empty() && inputPath.is_relative() &&
+            !fileExists(inputPath) && fileExists(gWorkingDir / inputPath)) {
+            inputPath = gWorkingDir / inputPath;
+            options.inputPath = inputPath.string();
+        }
         if (inputPath.extension() != ".koa") {
             cerr << "오류: SKKOA 소스 파일은 .koa 확장자를 사용해야 합니다.\n";
             return 1;
@@ -365,28 +497,58 @@ int main(int argc, char** argv) {
         Lexer lexer(source, errors);
         vector<Token> tokens = lexer.tokenize();
         if (errors.hasErrors()) {
-            errors.print(cerr);
+            if (options.diagnosticsJson) {
+                printDiagnosticsJson(errors, options.inputPath, cout);
+            }
+            else {
+                errors.print(cerr);
+            }
             return 1;
         }
 
         Parser parser(tokens, errors);
         unique_ptr<Program> program = parser.parse();
         if (errors.hasErrors()) {
-            errors.print(cerr);
+            if (options.diagnosticsJson) {
+                printDiagnosticsJson(errors, options.inputPath, cout);
+            }
+            else {
+                errors.print(cerr);
+            }
             return 1;
         }
 
         SemanticAnalyzer semantic(errors);
         semantic.analyze(*program);
         if (errors.hasErrors()) {
-            errors.print(cerr);
+            if (options.diagnosticsJson) {
+                printDiagnosticsJson(errors, options.inputPath, cout);
+            }
+            else {
+                errors.print(cerr);
+            }
             return 1;
         }
         if (errors.hasWarnings()) {
-            errors.print(cerr);
+            if (options.diagnosticsJson) {
+                printDiagnosticsJson(errors, options.inputPath, cout);
+            }
+            else {
+                errors.print(cerr);
+            }
         }
 
         CodeGenerator generator;
+        if (options.checkOnly) {
+            if (options.diagnosticsJson && !errors.hasWarnings()) {
+                cout << "[]\n";
+            }
+            return 0;
+        }
+        if (options.emitAstJson) {
+            cout << generator.generateAstJson(*program);
+            return 0;
+        }
         if (options.emitAst) {
             cout << generator.generateAstDump(*program);
             return 0;
@@ -414,6 +576,11 @@ int main(int argc, char** argv) {
             return 1;
         }
 
+        if (options.noLink) {
+            cout << "오브젝트 파일 생성: " << objectPath.string() << '\n';
+            return 0;
+        }
+
         string linkerCommand = linkCommand(objectPath, outputPath);
         int linkResult = system(linkerCommand.c_str());
         if (linkResult != 0) {
@@ -426,7 +593,12 @@ int main(int argc, char** argv) {
         return 0;
     }
     catch (const exception& ex) {
-        cerr << "오류: " << ex.what() << '\n';
+        if (gDiagnosticsJson) {
+            printExceptionJson(ex.what(), cout);
+        }
+        else {
+            cerr << "오류: " << ex.what() << '\n';
+        }
         return 1;
     }
 }

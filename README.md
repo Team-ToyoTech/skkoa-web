@@ -8,6 +8,7 @@ SKKOA; LTW는 **Language to Write**를 뜻하며, 한국어 기반 문법을 사
 - 정적 HTML 문서 웹 페이지와 Markdown 문서 원문
 - 브라우저용 문법 미리보기 / 예제 실행 시뮬레이터
 - C++17로 작성된 x86-64용 NASM 기반 CLI 컴파일러
+- Windows 전용 데스크톱 IDE `SKKOA Studio`
 - 다운로드 설치 시 함께 제공되는 표준 모듈(`stack.koa`, `queue.koa`, `structures.koa`)
 
 ## 컴파일러 빌드
@@ -20,7 +21,9 @@ SKKOA; LTW는 **Language to Write**를 뜻하며, 한국어 기반 문법을 사
 - GCC 또는 Clang
 - x86-64 Windows, Linux, macOS 환경
 
-웹사이트의 Download 버튼은 Windows 통합 설치 파일 `skkoa-windows.exe`를 기본으로 내려받는다. 운영체제별 파일은 `/download/` 페이지에서 선택할 수 있다.
+웹사이트의 Download 버튼은 Windows IDE 설치 파일 `SKKOA-Studio-Setup-x64.exe`를 기본으로 내려받는다. CLI 컴파일러용 운영체제별 파일은 `/download/` 페이지에서 선택할 수 있다.
+
+- SKKOA Studio IDE: `/download/studio/`에서 Windows 10/11 x64용 설치 관리자를 받을 수 있다.
 
 - Windows: `skkoa-windows.exe`가 UI에서 설치 위치와 설정을 받은 뒤 SKKOA; LTW CLI, MSYS2 GCC, NASM을 함께 설치한다. 명령줄 설치가 필요하면 `skkoa-windows.cmd` 또는 `skkoa-windows.ps1`을 사용할 수 있다.
 - macOS: `skkoa-macos.command`가 Xcode Command Line Tools, Homebrew, NASM을 확인하고 설치한다.

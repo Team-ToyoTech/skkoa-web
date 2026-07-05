@@ -1,0 +1,10 @@
+{
+  "theme": "Dark",
+  "primary": "#a259ff",
+  "background": "#111111",
+  "surface": "#1b1b1f",
+  "surfaceAlt": "#24242a",
+  "border": "#33333a",
+  "text": "#f2f2f2",
+  "mutedText": "#a9a9b3"
+}

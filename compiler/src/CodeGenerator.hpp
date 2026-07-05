@@ -24,6 +24,7 @@ public:
 
     string generateAssembly(Program& program, const string& sourceName);
     string generateAstDump(const Program& program);
+    string generateAstJson(const Program& program);
 
 private:
     struct LocalSlot {
@@ -120,6 +121,14 @@ private:
     void dumpStatement(const Stmt& statement, ostringstream& out,
         int indent) const;
     void dumpExpr(const Expr& expression, ostringstream& out, int indent) const;
+    void jsonStatements(const vector<unique_ptr<Stmt>>& statements,
+        ostringstream& out, int indent) const;
+    void jsonStatement(const Stmt& statement, ostringstream& out,
+        int indent) const;
+    void jsonExpr(const Expr& expression, ostringstream& out, int indent) const;
+    string jsonEscape(const string& value) const;
+    string jsonLocation(SourceLocation location) const;
+    string jsonType(const TypeName& type) const;
     string indent(int count) const;
 };
 

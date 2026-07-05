@@ -1225,6 +1225,72 @@ string CodeGenerator::generateAstDump(const Program& program) {
     return out.str();
 }
 
+string CodeGenerator::generateAstJson(const Program& program) {
+    ostringstream out;
+    out << "{\n";
+    out << "  \"kind\": \"Program\",\n";
+    out << "  \"structs\": [";
+    for (size_t i = 0; i < program.structs.size(); i++) {
+        const auto& structure = program.structs[i];
+        if (i > 0) {
+            out << ",";
+        }
+        out << "\n    {";
+        out << "\"kind\": \"Struct\", ";
+        out << "\"name\": \"" << jsonEscape(structure->name) << "\", ";
+        out << "\"location\": " << jsonLocation(structure->location) << ", ";
+        out << "\"fields\": [";
+        for (size_t j = 0; j < structure->fields.size(); j++) {
+            const auto& field = structure->fields[j];
+            if (j > 0) {
+                out << ", ";
+            }
+            out << "{\"name\": \"" << jsonEscape(field.name)
+                << "\", \"type\": " << jsonType(field.type)
+                << ", \"location\": " << jsonLocation(field.location) << "}";
+        }
+        out << "]}";
+    }
+    if (!program.structs.empty()) {
+        out << "\n  ";
+    }
+    out << "],\n";
+
+    out << "  \"functions\": [";
+    for (size_t i = 0; i < program.functions.size(); i++) {
+        const auto& function = program.functions[i];
+        if (i > 0) {
+            out << ",";
+        }
+        out << "\n    {";
+        out << "\"kind\": \"Function\", ";
+        out << "\"name\": \"" << jsonEscape(function->name) << "\", ";
+        out << "\"location\": " << jsonLocation(function->location) << ", ";
+        out << "\"returnType\": " << jsonType(function->returnType) << ", ";
+        out << "\"params\": [";
+        for (size_t j = 0; j < function->params.size(); j++) {
+            const auto& param = function->params[j];
+            if (j > 0) {
+                out << ", ";
+            }
+            out << "{\"name\": \"" << jsonEscape(param.name)
+                << "\", \"type\": " << jsonType(param.type)
+                << ", \"location\": " << jsonLocation(param.location) << "}";
+        }
+        out << "], \"body\": ";
+        jsonStatements(function->body, out, 4);
+        out << "}";
+    }
+    if (!program.functions.empty()) {
+        out << "\n  ";
+    }
+    out << "],\n";
+    out << "  \"main\": ";
+    jsonStatements(program.mainStatements, out, 2);
+    out << "\n}\n";
+    return out.str();
+}
+
 string CodeGenerator::binaryOpName(BinaryOp op) const {
     switch (op) {
     case BinaryOp::Add:
@@ -1418,4 +1484,252 @@ void CodeGenerator::dumpExpr(const Expr& expression, ostringstream& out,
 
 string CodeGenerator::indent(int count) const {
     return string(static_cast<size_t>(count), ' ');
+}
+
+void CodeGenerator::jsonStatements(const vector<unique_ptr<Stmt>>& statements,
+    ostringstream& out, int depth) const {
+    out << "[";
+    for (size_t i = 0; i < statements.size(); i++) {
+        if (i > 0) {
+            out << ",";
+        }
+        out << "\n" << indent(depth + 2);
+        jsonStatement(*statements[i], out, depth + 2);
+    }
+    if (!statements.empty()) {
+        out << "\n" << indent(depth);
+    }
+    out << "]";
+}
+
+void CodeGenerator::jsonStatement(const Stmt& statement, ostringstream& out,
+    int depth) const {
+    out << "{";
+    out << "\"location\": " << jsonLocation(statement.location) << ", ";
+    if (auto* varDecl = dynamic_cast<const VarDeclStmt*>(&statement)) {
+        out << "\"kind\": \"" << (varDecl->isConst ? "ConstDecl" : "VarDecl")
+            << "\", \"name\": \"" << jsonEscape(varDecl->name)
+            << "\", \"type\": " << jsonType(varDecl->type);
+        if (varDecl->initializer) {
+            out << ", \"initializer\": ";
+            jsonExpr(*varDecl->initializer, out, depth + 2);
+        }
+    }
+    else if (auto* assignment = dynamic_cast<const AssignmentStmt*>(&statement)) {
+        out << "\"kind\": \"Assignment\", \"name\": \""
+            << jsonEscape(assignment->name) << "\", \"value\": ";
+        jsonExpr(*assignment->value, out, depth + 2);
+        if (assignment->index) {
+            out << ", \"index\": ";
+            jsonExpr(*assignment->index, out, depth + 2);
+        }
+    }
+    else if (auto* fieldAssignment =
+        dynamic_cast<const FieldAssignmentStmt*>(&statement)) {
+        out << "\"kind\": \"FieldAssignment\", \"object\": \""
+            << jsonEscape(fieldAssignment->object) << "\", \"field\": \""
+            << jsonEscape(fieldAssignment->field) << "\", \"value\": ";
+        jsonExpr(*fieldAssignment->value, out, depth + 2);
+    }
+    else if (auto* print = dynamic_cast<const PrintStmt*>(&statement)) {
+        out << "\"kind\": \"Print\", \"expression\": ";
+        jsonExpr(*print->expression, out, depth + 2);
+    }
+    else if (auto* input = dynamic_cast<const InputStmt*>(&statement)) {
+        out << "\"kind\": \"Input\", \"name\": \"" << jsonEscape(input->name)
+            << "\"";
+        if (input->index) {
+            out << ", \"index\": ";
+            jsonExpr(*input->index, out, depth + 2);
+        }
+    }
+    else if (auto* expression = dynamic_cast<const ExpressionStmt*>(&statement)) {
+        out << "\"kind\": \"ExpressionStmt\", \"expression\": ";
+        jsonExpr(*expression->expression, out, depth + 2);
+    }
+    else if (auto* ifStmt = dynamic_cast<const IfStmt*>(&statement)) {
+        out << "\"kind\": \"If\", \"branches\": [";
+        for (size_t i = 0; i < ifStmt->branches.size(); i++) {
+            if (i > 0) {
+                out << ", ";
+            }
+            out << "{\"condition\": ";
+            jsonExpr(*ifStmt->branches[i].condition, out, depth + 2);
+            out << ", \"body\": ";
+            jsonStatements(ifStmt->branches[i].body, out, depth + 2);
+            out << "}";
+        }
+        out << "], \"elseBody\": ";
+        jsonStatements(ifStmt->elseBody, out, depth + 2);
+    }
+    else if (auto* whileStmt = dynamic_cast<const WhileStmt*>(&statement)) {
+        out << "\"kind\": \"While\", \"condition\": ";
+        jsonExpr(*whileStmt->condition, out, depth + 2);
+        out << ", \"body\": ";
+        jsonStatements(whileStmt->body, out, depth + 2);
+    }
+    else if (auto* repeatStmt = dynamic_cast<const RepeatStmt*>(&statement)) {
+        out << "\"kind\": \"Repeat\", \"iterator\": \""
+            << jsonEscape(repeatStmt->iterator) << "\", \"start\": ";
+        jsonExpr(*repeatStmt->start, out, depth + 2);
+        out << ", \"end\": ";
+        jsonExpr(*repeatStmt->end, out, depth + 2);
+        out << ", \"body\": ";
+        jsonStatements(repeatStmt->body, out, depth + 2);
+    }
+    else if (dynamic_cast<const BreakStmt*>(&statement)) {
+        out << "\"kind\": \"Break\"";
+    }
+    else if (dynamic_cast<const ContinueStmt*>(&statement)) {
+        out << "\"kind\": \"Continue\"";
+    }
+    else if (auto* returnStmt = dynamic_cast<const ReturnStmt*>(&statement)) {
+        out << "\"kind\": \"Return\"";
+        if (returnStmt->value) {
+            out << ", \"value\": ";
+            jsonExpr(*returnStmt->value, out, depth + 2);
+        }
+    }
+    else if (auto* pointerAssignment =
+        dynamic_cast<const PointerAssignmentStmt*>(&statement)) {
+        out << "\"kind\": \"PointerAssignment\", \"pointer\": ";
+        jsonExpr(*pointerAssignment->pointer, out, depth + 2);
+        out << ", \"value\": ";
+        jsonExpr(*pointerAssignment->value, out, depth + 2);
+    }
+    out << "}";
+}
+
+void CodeGenerator::jsonExpr(const Expr& expression, ostringstream& out,
+    int depth) const {
+    out << "{";
+    out << "\"location\": " << jsonLocation(expression.location) << ", ";
+    if (auto* literal = dynamic_cast<const IntLiteralExpr*>(&expression)) {
+        out << "\"kind\": \"IntLiteral\", \"value\": " << literal->value;
+    }
+    else if (auto* literal = dynamic_cast<const FloatLiteralExpr*>(&expression)) {
+        out << "\"kind\": \"FloatLiteral\", \"value\": " << literal->value;
+    }
+    else if (auto* literal = dynamic_cast<const StringLiteralExpr*>(&expression)) {
+        out << "\"kind\": \"StringLiteral\", \"value\": \""
+            << jsonEscape(literal->value) << "\"";
+    }
+    else if (auto* literal = dynamic_cast<const CharLiteralExpr*>(&expression)) {
+        out << "\"kind\": \"CharLiteral\", \"value\": " << literal->value;
+    }
+    else if (auto* literal = dynamic_cast<const BoolLiteralExpr*>(&expression)) {
+        out << "\"kind\": \"BoolLiteral\", \"value\": "
+            << (literal->value ? "true" : "false");
+    }
+    else if (auto* variable = dynamic_cast<const VariableExpr*>(&expression)) {
+        out << "\"kind\": \"Variable\", \"name\": \""
+            << jsonEscape(variable->name) << "\"";
+    }
+    else if (auto* arrayAccess = dynamic_cast<const ArrayAccessExpr*>(&expression)) {
+        out << "\"kind\": \"ArrayAccess\", \"name\": \""
+            << jsonEscape(arrayAccess->name) << "\", \"index\": ";
+        jsonExpr(*arrayAccess->index, out, depth + 2);
+    }
+    else if (auto* fieldAccess = dynamic_cast<const FieldAccessExpr*>(&expression)) {
+        out << "\"kind\": \"FieldAccess\", \"object\": \""
+            << jsonEscape(fieldAccess->object) << "\", \"field\": \""
+            << jsonEscape(fieldAccess->field) << "\"";
+    }
+    else if (auto* arrayLiteral = dynamic_cast<const ArrayLiteralExpr*>(&expression)) {
+        out << "\"kind\": \"ArrayLiteral\", \"elements\": [";
+        for (size_t i = 0; i < arrayLiteral->elements.size(); i++) {
+            if (i > 0) {
+                out << ", ";
+            }
+            jsonExpr(*arrayLiteral->elements[i], out, depth + 2);
+        }
+        out << "]";
+    }
+    else if (auto* address = dynamic_cast<const AddressExpr*>(&expression)) {
+        out << "\"kind\": \"Address\", \"name\": \""
+            << jsonEscape(address->name) << "\"";
+        if (address->index) {
+            out << ", \"index\": ";
+            jsonExpr(*address->index, out, depth + 2);
+        }
+    }
+    else if (auto* deref = dynamic_cast<const DereferenceExpr*>(&expression)) {
+        out << "\"kind\": \"Dereference\", \"pointer\": ";
+        jsonExpr(*deref->pointer, out, depth + 2);
+    }
+    else if (auto* unary = dynamic_cast<const UnaryExpr*>(&expression)) {
+        out << "\"kind\": \"Unary\", \"op\": \"" << unaryOpName(unary->op)
+            << "\", \"operand\": ";
+        jsonExpr(*unary->operand, out, depth + 2);
+    }
+    else if (auto* binary = dynamic_cast<const BinaryExpr*>(&expression)) {
+        out << "\"kind\": \"Binary\", \"op\": \"" << binaryOpName(binary->op)
+            << "\", \"left\": ";
+        jsonExpr(*binary->left, out, depth + 2);
+        out << ", \"right\": ";
+        jsonExpr(*binary->right, out, depth + 2);
+    }
+    else if (auto* call = dynamic_cast<const CallExpr*>(&expression)) {
+        out << "\"kind\": \"Call\", \"name\": \"" << jsonEscape(call->name)
+            << "\", \"arguments\": [";
+        for (size_t i = 0; i < call->arguments.size(); i++) {
+            if (i > 0) {
+                out << ", ";
+            }
+            jsonExpr(*call->arguments[i], out, depth + 2);
+        }
+        out << "]";
+    }
+    out << "}";
+}
+
+string CodeGenerator::jsonEscape(const string& value) const {
+    ostringstream out;
+    for (char ch : value) {
+        switch (ch) {
+        case '\\':
+            out << "\\\\";
+            break;
+        case '"':
+            out << "\\\"";
+            break;
+        case '\n':
+            out << "\\n";
+            break;
+        case '\r':
+            out << "\\r";
+            break;
+        case '\t':
+            out << "\\t";
+            break;
+        default:
+            out << ch;
+            break;
+        }
+    }
+    return out.str();
+}
+
+string CodeGenerator::jsonLocation(SourceLocation location) const {
+    ostringstream out;
+    out << "{\"line\": " << location.line << ", \"column\": "
+        << location.column << "}";
+    return out.str();
+}
+
+string CodeGenerator::jsonType(const TypeName& type) const {
+    ostringstream out;
+    out << "{\"display\": \"" << jsonEscape(type.display()) << "\", ";
+    out << "\"base\": \"" << jsonEscape(valueTypeName(type.base)) << "\", ";
+    out << "\"isArray\": " << (type.isArray ? "true" : "false") << ", ";
+    out << "\"arraySize\": " << type.arraySize;
+    if (type.base == ValueType::Struct) {
+        out << ", \"structName\": \"" << jsonEscape(type.structName) << "\"";
+    }
+    if (type.base == ValueType::Pointer) {
+        out << ", \"pointerTarget\": \""
+            << jsonEscape(valueTypeName(type.pointerTarget)) << "\"";
+    }
+    out << "}";
+    return out.str();
 }

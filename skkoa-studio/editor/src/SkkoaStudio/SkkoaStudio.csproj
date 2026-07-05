@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Platforms>AnyCPU;x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon>..\..\assets\icons\skkoa.ico</ApplicationIcon>
+    <AssemblyName>SkkoaStudio</AssemblyName>
+    <RootNamespace>SkkoaStudio</RootNamespace>
+    <Product>SKKOA Studio</Product>
+    <Company>Team ToyoTech</Company>
+    <AssemblyTitle>SKKOA; LTW language IDE</AssemblyTitle>
+    <Description>SKKOA; LTW language IDE</Description>
+    <Version>0.1.0</Version>
+    <FileVersion>0.1.0.0</FileVersion>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+    <Copyright>Copyright © Team ToyoTech</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Scintilla.NET.WinForms" Version="1.0.11.5320" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkkoaStudio.Core\SkkoaStudio.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\tools\skkoa\**\*">
+      <Link>tools\skkoa\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Include="..\..\assets\icons\*.ico">
+      <Link>assets\icons\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Include="..\..\assets\themes\*.json">
+      <Link>assets\themes\%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+  </ItemGroup>
+</Project>
