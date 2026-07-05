@@ -3,7 +3,13 @@ from __future__ import annotations
 import base64
 from pathlib import Path
 
-from PIL import Image, ImageDraw
+try:
+    from PIL import Image, ImageDraw
+except ModuleNotFoundError as exc:
+    raise SystemExit(
+        "Pillow is required to generate SKKOA Studio icons. "
+        "Install it with: python -m pip install -r skkoa-studio/installer/scripts/requirements.txt"
+    ) from exc
 
 
 ROOT = Path(__file__).resolve().parents[3]

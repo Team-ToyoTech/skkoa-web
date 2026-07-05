@@ -40,7 +40,14 @@ skkoa-studio/
 
 ## Build Editor
 
+Required build tools:
+
+- .NET 8 SDK
+- Python 3 with `skkoa-studio/installer/scripts/requirements.txt`
+- MinGW-w64/MSYS2 `g++`
+
 ```powershell
+python -m pip install -r .\skkoa-studio\installer\scripts\requirements.txt
 .\skkoa-studio\build-editor.ps1
 ```
 
