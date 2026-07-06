@@ -124,12 +124,12 @@ namespace SkkoaInstaller
             };
             Label subtitle = new Label
             {
-                Text = "Language to Write 컴파일러와 실행 도구를 Windows에 설치합니다.",
+                Text = "Starter Kit with Korean Oriented Architecture;\r\nLanguage to Write 컴파일러와 실행 도구를 Windows에 설치합니다.",
                 AutoSize = true,
                 Margin = new Padding(0, 0, 0, 16)
             };
 
-            Panel header = new Panel { Dock = DockStyle.Top, Height = 64 };
+            Panel header = new Panel { Dock = DockStyle.Top, Height = 88 };
             title.Location = new Point(0, 0);
             subtitle.Location = new Point(1, 36);
             header.Controls.Add(title);

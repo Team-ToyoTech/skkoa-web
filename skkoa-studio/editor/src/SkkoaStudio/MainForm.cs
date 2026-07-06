@@ -2335,7 +2335,7 @@ public partial class MainForm : Form
         {
             Text = "About SKKOA Studio",
             StartPosition = FormStartPosition.CenterParent,
-            Size = new Size(420, 260),
+            Size = new Size(560, 280),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false,
@@ -2360,11 +2360,12 @@ public partial class MainForm : Form
         };
         Label text = new()
         {
-            Text = "SKKOA; LTW language IDE\r\nVersion 0.1.0\r\nTeam ToyoTech",
+            Text = "SKKOA; LTW IDE\r\nStarter Kit with Korean Oriented Architecture; Language to Write\r\nVersion 0.1.0\r\nTeam ToyoTech",
             Location = new Point(111, 66),
-            AutoSize = true
+            AutoSize = true,
+            MaximumSize = new Size(400, 0)
         };
-        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(294, 180), Width = 96 };
+        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(414, 196), Width = 96 };
         StyleButton(ok, ThemeSurfaceAlt(), ThemeBorder(), ThemeText());
         form.Controls.AddRange([icon, title, text, ok]);
         form.AcceptButton = ok;

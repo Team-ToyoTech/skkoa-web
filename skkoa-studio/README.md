@@ -1,6 +1,6 @@
 # SKKOA Studio
 
-SKKOA Studio is the Windows desktop IDE for SKKOA; LTW. It includes a Scintilla-based editor, bundled compiler integration, diagnostics, native run support, a minimal SKKOA step debugger, and a Windows installer.
+SKKOA Studio is the Windows desktop IDE for SKKOA; LTW, short for Starter Kit with Korean Oriented Architecture; Language to Write. It includes a Scintilla-based editor, bundled compiler integration, diagnostics, native run support, a minimal SKKOA step debugger, and a Windows installer.
 
 ## Structure
 

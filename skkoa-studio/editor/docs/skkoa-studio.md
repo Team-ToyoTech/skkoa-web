@@ -3,6 +3,7 @@
 ## Repository Analysis
 
 - `compiler/` contains a C++17 CLI compiler. It lexes, parses, performs semantic analysis, emits NASM x86-64 assembly, assembles with NASM, and links with GCC/CC.
+- SKKOA; LTW stands for Starter Kit with Korean Oriented Architecture; Language to Write.
 - The language uses Korean keywords such as `시작`, `끝`, `변수`, `만약`, `동안`, `반복`, `함수`, and `구조체`.
 - `가져오기 "file.koa"` is expanded before lexing. It is not a parser-level module node.
 - Standard functions include `길이`, `비교`, `부분문자열`, `배열길이`, `주소`, `값`, `할당`, `해제`.

@@ -1,6 +1,6 @@
 # 소개
 
-SKKOA; LTW는 한국어 키워드로 코드를 읽고 쓰는 언어입니다. 영어 문법을 먼저 외우기보다, 프로그램이 어떤 순서로 움직이는지 익히는 데 초점을 둡니다.
+SKKOA; LTW는 Starter Kit with Korean Oriented Architecture; Language to Write를 뜻합니다. 한국어 키워드로 코드를 읽고 쓰는 언어이며, 영어 문법을 먼저 외우기보다 프로그램이 어떤 순서로 움직이는지 익히는 데 초점을 둡니다.
 
 ```koa
 시작

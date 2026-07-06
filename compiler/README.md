@@ -1,6 +1,6 @@
 # SKKOA; LTW Compiler
 
-SKKOA; LTW는 **Language to Write**를 뜻하며, 한국어 기반 명령어와 직관적인 구조를 사용하는 교육용 프로그래밍 언어이다.
+SKKOA; LTW는 **Starter Kit with Korean Oriented Architecture; Language to Write**를 뜻하며, 한국어 기반 명령어와 직관적인 구조를 사용하는 교육용 프로그래밍 언어이다.
 
 이 컴파일러는 `.koa` 파일을 직접 인터프리트하지 않고 다음 단계를 거친다.
 

@@ -1,6 +1,6 @@
 # SKKOA; LTW 문서
 
-SKKOA; LTW는 한국어 문법으로 배우는 교육용 프로그래밍 언어입니다. LTW는 Language to Write를 뜻합니다.
+SKKOA; LTW는 한국어 문법으로 배우는 교육용 프로그래밍 언어입니다. SKKOA; LTW는 Starter Kit with Korean Oriented Architecture; Language to Write를 뜻합니다.
 
 처음에는 아래 모양만 기억하면 됩니다.
 

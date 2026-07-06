@@ -14,8 +14,8 @@
     <RootNamespace>SkkoaStudio</RootNamespace>
     <Product>SKKOA Studio</Product>
     <Company>Team ToyoTech</Company>
-    <AssemblyTitle>SKKOA; LTW language IDE</AssemblyTitle>
-    <Description>SKKOA; LTW language IDE</Description>
+    <AssemblyTitle>SKKOA; LTW IDE</AssemblyTitle>
+    <Description>IDE for SKKOA; LTW, Starter Kit with Korean Oriented Architecture; Language to Write</Description>
     <Version>0.1.0</Version>
     <FileVersion>0.1.0.0</FileVersion>
     <AssemblyVersion>0.1.0.0</AssemblyVersion>
