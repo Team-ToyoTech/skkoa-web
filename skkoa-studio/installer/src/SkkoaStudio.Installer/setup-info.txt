@@ -1,7 +1,12 @@
 SKKOA Studio installs as a Windows desktop application.
 
 The installer can register Start Menu shortcuts, optional desktop shortcuts,
-.koa and .skkoaproj file associations, and the bundled SKKOA compiler path.
+.koa and .skkoaproj file associations, and the bundled SKKOA compiler,
+NASM, and GCC toolchain paths.
+
+The editor install includes the SKKOA compiler and the assembler/linker
+toolchain needed for native compile/run, so users do not need a separate
+post-install toolchain download.
 
 The installer defaults to a current-user installation so setup can run without
 administrator rights. Run the installer as administrator only when you need to

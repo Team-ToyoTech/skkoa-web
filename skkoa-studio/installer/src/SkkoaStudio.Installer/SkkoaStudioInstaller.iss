@@ -48,7 +48,7 @@ Name: "startmenu"; Description: "Create Start Menu shortcuts"; GroupDescription:
 Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription: "Shortcuts:"
 Name: "associatekoa"; Description: "Associate .koa files with SKKOA Studio"; GroupDescription: "File associations:"; Flags: checkedonce
 Name: "associateskkoaproj"; Description: "Associate .skkoaproj files with SKKOA Studio"; GroupDescription: "File associations:"; Flags: checkedonce
-Name: "addpath"; Description: "Add bundled SKKOA compiler to PATH"; GroupDescription: "Command line:"; Check: NeedsAddPath
+Name: "addpath"; Description: "Add bundled SKKOA compiler, NASM, and GCC to PATH"; GroupDescription: "Command line:"; Check: NeedsAddPath
 Name: "resetsettings"; Description: "Reset existing SKKOA Studio user settings"; GroupDescription: "Settings:"
 Name: "launchafterinstall"; Description: "Launch SKKOA Studio after setup"; GroupDescription: "Finish:"; Flags: checkedonce
 
@@ -297,41 +297,66 @@ function NeedsAddPath(): Boolean;
 var
   CurrentPath: string;
   CompilerPath: string;
+  MingwPath: string;
+  UsrPath: string;
 begin
   CompilerPath := ExpandConstant('{app}\tools\skkoa');
+  MingwPath := ExpandConstant('{app}\tools\skkoa\toolchain\msys64\mingw64\bin');
+  UsrPath := ExpandConstant('{app}\tools\skkoa\toolchain\msys64\usr\bin');
   if not QueryEnvironmentPath(CurrentPath) then
     CurrentPath := '';
-  Result := not PathContainsEntry(CurrentPath, CompilerPath);
+  Result :=
+    not PathContainsEntry(CurrentPath, CompilerPath) or
+    not PathContainsEntry(CurrentPath, MingwPath) or
+    not PathContainsEntry(CurrentPath, UsrPath);
+end;
+
+function AddPathEntry(CurrentPath: string; Entry: string): string;
+begin
+  Result := CurrentPath;
+  if not PathContainsEntry(Result, Entry) then begin
+    if Trim(Result) = '' then
+      Result := Entry
+    else
+      Result := Result + ';' + Entry;
+  end;
 end;
 
 function AddCompilerToUserPath(): Boolean;
 var
   CurrentPath: string;
   CompilerPath: string;
+  MingwPath: string;
+  UsrPath: string;
 begin
   Result := True;
   CompilerPath := ExpandConstant('{app}\tools\skkoa');
+  MingwPath := ExpandConstant('{app}\tools\skkoa\toolchain\msys64\mingw64\bin');
+  UsrPath := ExpandConstant('{app}\tools\skkoa\toolchain\msys64\usr\bin');
   if not QueryEnvironmentPath(CurrentPath) then
     CurrentPath := '';
-  if not PathContainsEntry(CurrentPath, CompilerPath) then begin
-    if Trim(CurrentPath) = '' then
-      CurrentPath := CompilerPath
-    else
-      CurrentPath := CurrentPath + ';' + CompilerPath;
-    Result := WriteEnvironmentPath(CurrentPath);
-  end;
+  CurrentPath := AddPathEntry(CurrentPath, CompilerPath);
+  CurrentPath := AddPathEntry(CurrentPath, MingwPath);
+  CurrentPath := AddPathEntry(CurrentPath, UsrPath);
+  Result := WriteEnvironmentPath(CurrentPath);
 end;
 
 function RemoveCompilerFromUserPath(): Boolean;
 var
   CurrentPath: string;
   CompilerPath: string;
+  MingwPath: string;
+  UsrPath: string;
   NewPath: string;
 begin
   Result := True;
   CompilerPath := ExpandConstant('{app}\tools\skkoa');
+  MingwPath := ExpandConstant('{app}\tools\skkoa\toolchain\msys64\mingw64\bin');
+  UsrPath := ExpandConstant('{app}\tools\skkoa\toolchain\msys64\usr\bin');
   if QueryEnvironmentPath(CurrentPath) then begin
     NewPath := RemovePathEntry(CurrentPath, CompilerPath);
+    NewPath := RemovePathEntry(NewPath, MingwPath);
+    NewPath := RemovePathEntry(NewPath, UsrPath);
     if NewPath <> CurrentPath then
       Result := WriteEnvironmentPath(NewPath);
   end;
@@ -421,6 +446,21 @@ begin
 
   if not FileExists(ExpandConstant('{app}\tools\skkoa\skkoa.exe')) then
     MsgBox('SKKOA Studio was installed, but the bundled compiler is missing. Compile and Run will not work until the installer artifact is rebuilt.', mbError, MB_OK);
+
+  if not FileExists(ExpandConstant('{app}\tools\skkoa\skkoa.cmd')) then
+    MsgBox('SKKOA Studio was installed, but the bundled compiler launcher is missing. Command-line use may not work until the installer artifact is rebuilt.', mbError, MB_OK);
+
+  if not FileExists(ExpandConstant('{app}\tools\skkoa\toolchain\msys64\mingw64\bin\gcc.exe')) then
+    MsgBox('SKKOA Studio was installed, but bundled GCC is missing. Compile and Run will not work until the installer artifact is rebuilt.', mbError, MB_OK);
+
+  if not FileExists(ExpandConstant('{app}\tools\skkoa\toolchain\msys64\mingw64\bin\g++.exe')) then
+    MsgBox('SKKOA Studio was installed, but bundled G++ is missing. Compile and Run will not work until the installer artifact is rebuilt.', mbError, MB_OK);
+
+  if not FileExists(ExpandConstant('{app}\tools\skkoa\toolchain\msys64\mingw64\bin\nasm.exe')) then
+    MsgBox('SKKOA Studio was installed, but bundled NASM is missing. Compile and Run will not work until the installer artifact is rebuilt.', mbError, MB_OK);
+
+  if not FileExists(ExpandConstant('{app}\tools\skkoa\toolchain\msys64\usr\bin\bash.exe')) then
+    MsgBox('SKKOA Studio was installed, but bundled MSYS2 runtime tools are missing. Compile and Run may not work until the installer artifact is rebuilt.', mbError, MB_OK);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
@@ -428,7 +468,7 @@ begin
   if CurStep = ssPostInstall then begin
     ValidateInstalledFiles();
     if WizardIsTaskSelected('addpath') and not AddCompilerToUserPath() then
-      MsgBox('SKKOA Studio was installed, but the compiler PATH entry could not be updated. You can still use the IDE because it uses the bundled compiler path internally.', mbError, MB_OK);
+      MsgBox('SKKOA Studio was installed, but the compiler/toolchain PATH entries could not be updated. You can still use the IDE because it uses the bundled toolchain internally.', mbError, MB_OK);
   end;
 end;
 
@@ -436,6 +476,6 @@ procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
 begin
   if CurUninstallStep = usPostUninstall then begin
     if not RemoveCompilerFromUserPath() then
-      Log('Could not remove SKKOA compiler path from the environment.');
+      Log('Could not remove SKKOA compiler/toolchain paths from the environment.');
   end;
 end;

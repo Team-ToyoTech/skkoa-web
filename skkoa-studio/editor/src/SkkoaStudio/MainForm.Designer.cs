@@ -12,6 +12,13 @@ partial class MainForm
     private TabControl editorTabs = null!;
     private Panel editorTabHeaderFill = null!;
     private TabControl bottomTabs = null!;
+    private Panel bottomTabHeaderFill = null!;
+    private ToolStrip debugToolStrip = null!;
+    private ToolStripButton debugContinueButton = null!;
+    private ToolStripButton debugStepButton = null!;
+    private ToolStripButton debugStepOverButton = null!;
+    private ToolStripButton debugStepOutButton = null!;
+    private ToolStripButton debugStopButton = null!;
     private DataGridView problemsGrid = null!;
     private TextBox outputBox = null!;
     private TextBox consoleBox = null!;
@@ -50,6 +57,7 @@ partial class MainForm
         editorTabs = new DarkTabControl();
         editorTabHeaderFill = new Panel();
         bottomTabs = new DarkTabControl();
+        bottomTabHeaderFill = new Panel();
         problemsGrid = new DataGridView();
         outputBox = new TextBox();
         consoleBox = new TextBox();
@@ -80,6 +88,7 @@ partial class MainForm
         menuStrip.Dock = DockStyle.Top;
         menuStrip.BackColor = ColorTranslator.FromHtml("#111111");
         menuStrip.ForeColor = ColorTranslator.FromHtml("#f2f2f2");
+        menuStrip.Font = new Font("Segoe UI", 10.5f);
 
         toolStrip.Items.AddRange(new ToolStripItem[]
         {
@@ -99,27 +108,32 @@ partial class MainForm
         toolStrip.BackColor = ColorTranslator.FromHtml("#111111");
         toolStrip.ForeColor = ColorTranslator.FromHtml("#f2f2f2");
         toolStrip.GripStyle = ToolStripGripStyle.Hidden;
-        toolStrip.ImageScalingSize = new Size(20, 20);
-        toolStrip.Padding = new Padding(8, 4, 8, 4);
+        toolStrip.ImageScalingSize = new Size(24, 24);
+        toolStrip.Font = new Font("Segoe UI", 10.5f);
+        toolStrip.Padding = new Padding(8, 5, 8, 5);
 
         mainSplit.Dock = DockStyle.Fill;
         mainSplit.BackColor = ColorTranslator.FromHtml("#33333a");
         mainSplit.FixedPanel = FixedPanel.Panel1;
+        mainSplit.Paint += SplitContainer_Paint;
         mainSplit.Panel1.Controls.Add(projectTree);
         mainSplit.Panel2.Controls.Add(editorOutputSplit);
 
         projectTree.Dock = DockStyle.Fill;
         projectTree.BackColor = ColorTranslator.FromHtml("#15151a");
         projectTree.ForeColor = ColorTranslator.FromHtml("#f2f2f2");
+        projectTree.BorderStyle = BorderStyle.None;
         projectTree.HideSelection = false;
         projectTree.NodeMouseDoubleClick += ProjectTree_NodeMouseDoubleClick;
 
         editorOutputSplit.Dock = DockStyle.Fill;
         editorOutputSplit.BackColor = ColorTranslator.FromHtml("#33333a");
         editorOutputSplit.Orientation = Orientation.Horizontal;
+        editorOutputSplit.Paint += SplitContainer_Paint;
         editorOutputSplit.Panel1.Controls.Add(editorTabs);
         editorOutputSplit.Panel1.Controls.Add(editorTabHeaderFill);
         editorOutputSplit.Panel2.Controls.Add(bottomTabs);
+        editorOutputSplit.Panel2.Controls.Add(bottomTabHeaderFill);
 
         editorTabs.Dock = DockStyle.Fill;
         editorTabs.Appearance = TabAppearance.FlatButtons;
@@ -143,6 +157,11 @@ partial class MainForm
         bottomTabs.TabPages.Add(BuildConsolePage());
         bottomTabs.TabPages.Add(BuildDebugPage());
 
+        bottomTabHeaderFill.BackColor = ColorTranslator.FromHtml("#111111");
+        bottomTabHeaderFill.Height = 35;
+        bottomTabHeaderFill.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        bottomTabHeaderFill.Visible = false;
+
         completionList.Visible = false;
         completionList.BackColor = ColorTranslator.FromHtml("#1b1b1f");
         completionList.ForeColor = ColorTranslator.FromHtml("#f2f2f2");
@@ -164,6 +183,7 @@ partial class MainForm
         statusStrip.Dock = DockStyle.Bottom;
         statusStrip.BackColor = ColorTranslator.FromHtml("#111111");
         statusStrip.ForeColor = ColorTranslator.FromHtml("#f2f2f2");
+        statusStrip.Font = new Font("Segoe UI", 9.5f);
 
         Controls.Add(mainSplit);
         Controls.Add(statusStrip);
@@ -298,8 +318,8 @@ partial class MainForm
         box.Dock = DockStyle.Fill;
         box.Multiline = true;
         box.ReadOnly = true;
-        box.ScrollBars = ScrollBars.Both;
-        box.WordWrap = false;
+        box.ScrollBars = ScrollBars.Vertical;
+        box.WordWrap = true;
         box.Font = new Font("Consolas", 10);
         page.Controls.Add(box);
         return page;
@@ -310,13 +330,13 @@ partial class MainForm
         TabPage page = new("Console") { UseVisualStyleBackColor = false };
         TableLayoutPanel layout = new() { Dock = DockStyle.Fill, ColumnCount = 2, RowCount = 2 };
         layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 36));
         layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 90));
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 108));
         consoleBox.Multiline = true;
         consoleBox.ReadOnly = true;
-        consoleBox.ScrollBars = ScrollBars.Both;
-        consoleBox.WordWrap = false;
+        consoleBox.ScrollBars = ScrollBars.Vertical;
+        consoleBox.WordWrap = true;
         consoleBox.Font = new Font("Consolas", 10);
         consoleBox.Dock = DockStyle.Fill;
         consoleInputBox.Dock = DockStyle.Fill;
@@ -335,13 +355,48 @@ partial class MainForm
     private TabPage BuildDebugPage()
     {
         TabPage page = new("Debug") { UseVisualStyleBackColor = false };
+        TableLayoutPanel layout = new()
+        {
+            Dock = DockStyle.Fill,
+            ColumnCount = 1,
+            RowCount = 2
+        };
+        layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
+        layout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+        layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+
+        debugToolStrip = new ToolStrip
+        {
+            Dock = DockStyle.Fill,
+            GripStyle = ToolStripGripStyle.Hidden,
+            ImageScalingSize = new Size(32, 32),
+            Font = new Font("Segoe UI", 10f),
+            Padding = new Padding(8, 5, 8, 5),
+            Visible = false
+        };
+        debugContinueButton = DebugToolButton("Continue", (_, _) => ContinueDebugging());
+        debugStepButton = DebugToolButton("Step", (_, _) => StepIntoDebug());
+        debugStepOverButton = DebugToolButton("Step Over", (_, _) => StepOverDebug());
+        debugStepOutButton = DebugToolButton("Step Out", (_, _) => StepOutDebug());
+        debugStopButton = DebugToolButton("Stop", (_, _) => StopDebugging());
+        debugToolStrip.Items.AddRange(new ToolStripItem[]
+        {
+            debugContinueButton,
+            debugStepButton,
+            debugStepOverButton,
+            debugStepOutButton,
+            new ToolStripSeparator(),
+            debugStopButton
+        });
+
         SplitContainer split = new() { Dock = DockStyle.Fill };
+        split.Paint += SplitContainer_Paint;
         ConfigureNestedSplit(split, desiredDistance: 360, panel1MinSize: 140, panel2MinSize: 180);
         debugBox.Dock = DockStyle.Fill;
         debugBox.Multiline = true;
         debugBox.ReadOnly = true;
-        debugBox.ScrollBars = ScrollBars.Both;
-        debugBox.WordWrap = false;
+        debugBox.ScrollBars = ScrollBars.Vertical;
+        debugBox.WordWrap = true;
         debugBox.Font = new Font("Consolas", 10);
         watchList.Dock = DockStyle.Fill;
         watchList.View = View.Details;
@@ -349,7 +404,9 @@ partial class MainForm
         watchList.Columns.Add("Value", 260);
         split.Panel1.Controls.Add(watchList);
         split.Panel2.Controls.Add(debugBox);
-        page.Controls.Add(split);
+        layout.Controls.Add(debugToolStrip, 0, 0);
+        layout.Controls.Add(split, 0, 1);
+        page.Controls.Add(layout);
         return page;
     }
 
@@ -368,11 +425,31 @@ partial class MainForm
     {
         ToolStripButton button = new(text)
         {
-            DisplayStyle = ToolStripItemDisplayStyle.Image,
-            Image = CreateToolbarIcon(text),
+            DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
+            Image = CreateToolbarIcon(text, 24),
+            TextImageRelation = TextImageRelation.ImageBeforeText,
             ToolTipText = text,
             AutoToolTip = true,
+            AutoSize = true,
+            Padding = new Padding(6, 2, 6, 2),
             Margin = new Padding(3, 1, 3, 1)
+        };
+        button.Click += handler;
+        return button;
+    }
+
+    private static ToolStripButton DebugToolButton(string text, EventHandler handler)
+    {
+        ToolStripButton button = new(text)
+        {
+            DisplayStyle = ToolStripItemDisplayStyle.ImageAndText,
+            Image = CreateToolbarIcon(text, 32),
+            TextImageRelation = TextImageRelation.ImageBeforeText,
+            ToolTipText = text,
+            AutoToolTip = true,
+            AutoSize = true,
+            Padding = new Padding(8, 2, 8, 2),
+            Margin = new Padding(4, 1, 4, 1)
         };
         button.Click += handler;
         return button;

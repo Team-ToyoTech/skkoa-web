@@ -99,6 +99,16 @@ function escapeHtml(value) {
         .replace(/>/g, "&gt;");
 }
 
+function byId(id) {
+    return document.getElementById(id);
+}
+
+function addEvent(idOrElement, type, handler, options) {
+    const element =
+        typeof idOrElement === "string" ? byId(idOrElement) : idOrElement;
+    if (element) element.addEventListener(type, handler, options);
+}
+
 let pendingInputResolver = null;
 let consoleInputBuffer = "";
 
@@ -147,12 +157,30 @@ function updateSyntaxPreview() {
 }
 
 function stripLineComment(line) {
-    const hash = line.indexOf("#");
-    const slash = line.indexOf("//");
-    let cut = -1;
-    if (hash >= 0) cut = hash;
-    if (slash >= 0 && (cut < 0 || slash < cut)) cut = slash;
-    return cut >= 0 ? line.slice(0, cut) : line;
+    let quote = null;
+    let escaped = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (escaped) {
+            escaped = false;
+            continue;
+        }
+        if (quote) {
+            if (ch === "\\") {
+                escaped = true;
+            } else if (ch === quote) {
+                quote = null;
+            }
+            continue;
+        }
+        if (ch === '"' || ch === "'") {
+            quote = ch;
+            continue;
+        }
+        if (ch === "#") return line.slice(0, i);
+        if (ch === "/" && line[i + 1] === "/") return line.slice(0, i);
+    }
+    return line;
 }
 
 function normalizeLines(code) {
@@ -163,6 +191,19 @@ function normalizeLines(code) {
         .filter(Boolean);
 }
 
+function normalizeImportPath(path) {
+    const normalized = String(path || "").trim().replace(/\\/g, "/");
+    if (
+        !normalized ||
+        normalized.startsWith("/") ||
+        /^[a-z][a-z0-9+.-]*:/i.test(normalized) ||
+        normalized.split("/").includes("..")
+    ) {
+        throw new Error(`허용되지 않는 가져오기 경로입니다: ${path}`);
+    }
+    return normalized.endsWith(".koa") ? normalized : `${normalized}.koa`;
+}
+
 function encodeImportPath(path) {
     return path
         .split("/")
@@ -171,19 +212,22 @@ function encodeImportPath(path) {
 }
 
 async function fetchImportSource(path) {
-    const normalized = path.endsWith(".koa") ? path : `${path}.koa`;
+    const normalized = normalizeImportPath(path);
     const encoded = encodeImportPath(normalized);
     const candidates = [`lib/${encoded}`, `examples/${encoded}`];
 
     for (const candidate of candidates) {
-        const response = await fetch(candidate);
-        if (response.ok) return response.text();
+        try {
+            const response = await fetch(candidate);
+            if (response.ok) return response.text();
+        } catch {
+        }
     }
 
     throw new Error(`가져오기 파일을 찾을 수 없습니다: ${normalized}`);
 }
 
-async function expandImports(code, seen = new Set()) {
+async function expandImports(code, seen = new Set(), active = new Set()) {
     const lines = code.split(/\r?\n/);
     const expanded = [];
 
@@ -196,14 +240,20 @@ async function expandImports(code, seen = new Set()) {
             continue;
         }
 
-        const importPath = match[1].endsWith(".koa")
-            ? match[1]
-            : `${match[1]}.koa`;
+        const importPath = normalizeImportPath(match[1]);
         if (seen.has(importPath)) continue;
+        if (active.has(importPath)) {
+            throw new Error(`순환 가져오기를 발견했습니다: ${importPath}`);
+        }
 
         seen.add(importPath);
-        const source = await fetchImportSource(importPath);
-        expanded.push(await expandImports(source, seen));
+        active.add(importPath);
+        try {
+            const source = await fetchImportSource(importPath);
+            expanded.push(await expandImports(source, seen, active));
+        } finally {
+            active.delete(importPath);
+        }
     }
 
     return expanded.join("\n");
@@ -564,8 +614,11 @@ function parseSimInputValue(rawValue, type) {
 }
 
 function readConsoleInput(promptText, mode = "token") {
-    const input = document.getElementById("consoleInput");
-    const button = document.getElementById("consoleSubmit");
+    const input = byId("consoleInput");
+    const button = byId("consoleSubmit");
+    if (!input || !button) {
+        throw new Error("콘솔 입력 UI를 찾을 수 없습니다.");
+    }
     appendConsole(`${promptText}> `);
 
     if (input.value) {
@@ -733,8 +786,10 @@ async function executeBlock(lines, start, end, env, output) {
 }
 
 async function runSimulation() {
-    const outputEl = document.getElementById("runOutput");
-    const code = document.querySelector(".code-input").value;
+    const outputEl = byId("runOutput");
+    const inputEl = document.querySelector(".code-input");
+    if (!outputEl || !inputEl) return;
+    const code = inputEl.value;
     try {
         outputEl.textContent = "";
         pendingInputResolver = null;
@@ -804,11 +859,14 @@ async function runSimulation() {
     updateSyntaxPreview();
 }
 
-document.getElementById("runButton").addEventListener("click", runSimulation);
+addEvent("runButton", "click", runSimulation);
 
-document.getElementById("saveButton").addEventListener("click", function () {
-    const code = document.querySelector(".code-input").value;
-    let filename = document.getElementById("filenameInput").value.trim();
+addEvent("saveButton", "click", function () {
+    const inputEl = document.querySelector(".code-input");
+    const filenameEl = byId("filenameInput");
+    if (!inputEl || !filenameEl) return;
+    const code = inputEl.value;
+    let filename = filenameEl.value.trim();
     filename = filename.replace(/\.[^/.]+$/, "");
     filename += ".koa";
 
@@ -826,12 +884,12 @@ document.getElementById("saveButton").addEventListener("click", function () {
     }, 0);
 });
 
-document.getElementById("stopButton").addEventListener("click", function () {
-    const output = document.getElementById("runOutput");
+addEvent("stopButton", "click", function () {
+    const output = byId("runOutput");
     if (output) output.textContent = "시뮬레이션이 중지되었습니다.";
 });
 
-document.getElementById("githubButton").addEventListener("click", function () {
+addEvent("githubButton", "click", function () {
     window.open("https://github.com/team-toyotech/", "_blank");
 });
 
@@ -853,10 +911,12 @@ function setActiveTab(id) {
     activeTabId = id;
     const tab = tabs.find((t) => t.id === id);
     if (tab) {
-        document.querySelector(".code-input").value = tab.content;
+        const inputEl = document.querySelector(".code-input");
+        if (inputEl) inputEl.value = tab.content;
         let fname = tab.filename.replace(/\.[^/.]+$/, "");
         if (!fname.endsWith(".koa")) fname += ".koa";
-        document.getElementById("filenameInput").value = fname;
+        const filenameEl = byId("filenameInput");
+        if (filenameEl) filenameEl.value = fname;
         updateSyntaxPreview();
         updateLineNumbers();
     }
@@ -864,9 +924,10 @@ function setActiveTab(id) {
 }
 
 function renderTabs() {
-    const tabBar = document.getElementById("tabBar");
+    const tabBar = byId("tabBar");
+    if (!tabBar) return;
     tabBar.innerHTML = "";
-    const linenumDiv = document.getElementById("editorLinenum");
+    const linenumDiv = byId("editorLinenum");
     if (linenumDiv) {
         const linenumRect = linenumDiv.getBoundingClientRect();
         tabBar.style.marginLeft = linenumRect.width + "px";
@@ -918,8 +979,8 @@ function renderTabs() {
                             num++;
                         }
                         tab.filename = finalName + ".koa";
-                        document.getElementById("filenameInput").value =
-                            finalName + ".koa";
+                        const filenameEl = byId("filenameInput");
+                        if (filenameEl) filenameEl.value = finalName + ".koa";
                         renderTabs();
                     } else if (ev.key === "Escape") {
                         renderTabs();
@@ -1060,43 +1121,47 @@ function openExamplePicker() {
 }
 
 const codeInput = document.querySelector(".code-input");
-codeInput.addEventListener("input", () => {
-    const tab = tabs.find((t) => t.id === activeTabId);
-    if (tab) tab.content = codeInput.value;
-    updateLineNumbers();
-    updateSyntaxPreview();
-    isDirty = true;
-});
-codeInput.addEventListener("scroll", function () {
-    const linenumLayer = document.getElementById("editorLinenum");
-    const highlight = document.getElementById("codeHighlight");
-    if (linenumLayer) linenumLayer.scrollTop = codeInput.scrollTop;
-    if (highlight) {
-        highlight.scrollTop = codeInput.scrollTop;
-        highlight.scrollLeft = codeInput.scrollLeft;
-    }
-});
-codeInput.addEventListener("click", updateLineNumbers);
-codeInput.addEventListener("keyup", updateLineNumbers);
-codeInput.addEventListener("select", updateLineNumbers);
-filenameInput.addEventListener("input", () => {
-    const tab = tabs.find((t) => t.id === activeTabId);
-    if (tab) {
-        let fname = filenameInput.value.trim().replace(/\.[^/.]+$/, "");
-        if (!fname.endsWith(".koa")) fname += ".koa";
-        tab.filename = fname;
-        document.getElementById("filenameInput").value = fname;
-    }
-    renderTabs();
-    isDirty = true;
-});
+const filenameInput = byId("filenameInput");
+if (codeInput) {
+    codeInput.addEventListener("input", () => {
+        const tab = tabs.find((t) => t.id === activeTabId);
+        if (tab) tab.content = codeInput.value;
+        updateLineNumbers();
+        updateSyntaxPreview();
+        isDirty = true;
+    });
+    codeInput.addEventListener("scroll", function () {
+        const linenumLayer = byId("editorLinenum");
+        const highlight = byId("codeHighlight");
+        if (linenumLayer) linenumLayer.scrollTop = codeInput.scrollTop;
+        if (highlight) {
+            highlight.scrollTop = codeInput.scrollTop;
+            highlight.scrollLeft = codeInput.scrollLeft;
+        }
+    });
+    codeInput.addEventListener("click", updateLineNumbers);
+    codeInput.addEventListener("keyup", updateLineNumbers);
+    codeInput.addEventListener("select", updateLineNumbers);
+}
+if (filenameInput) {
+    filenameInput.addEventListener("input", () => {
+        const tab = tabs.find((t) => t.id === activeTabId);
+        if (tab) {
+            let fname = filenameInput.value.trim().replace(/\.[^/.]+$/, "");
+            if (!fname.endsWith(".koa")) fname += ".koa";
+            tab.filename = fname;
+            filenameInput.value = fname;
+        }
+        renderTabs();
+        isDirty = true;
+    });
+}
 
-const openFileMenu = document.getElementById("openFileMenu");
-openFileMenu.addEventListener("click", openFileHandler);
+const openFileMenu = byId("openFileMenu");
+addEvent(openFileMenu, "click", openFileHandler);
 
-const openFileToolbarBtn = document.getElementById("openFileToolbarBtn");
-if (openFileToolbarBtn)
-    openFileToolbarBtn.addEventListener("click", openFileHandler);
+const openFileToolbarBtn = byId("openFileToolbarBtn");
+addEvent(openFileToolbarBtn, "click", openFileHandler);
 
 function openFileHandler() {
     const input = document.createElement("input");
@@ -1119,8 +1184,8 @@ function openFileHandler() {
     setTimeout(() => document.body.removeChild(input), 1000);
 }
 
-const newFileMenu = document.getElementById("newFileMenu");
-newFileMenu.addEventListener("click", function () {
+const newFileMenu = byId("newFileMenu");
+addEvent(newFileMenu, "click", function () {
     let untitledNum = 1;
     let name;
     do {
@@ -1130,8 +1195,8 @@ newFileMenu.addEventListener("click", function () {
     createTab(name, "");
 });
 
-const tabAddBtn = document.getElementById("tabAddBtn");
-tabAddBtn.addEventListener("click", function () {
+const tabAddBtn = byId("tabAddBtn");
+addEvent(tabAddBtn, "click", function () {
     let untitledNum = 1;
     let name;
     do {
@@ -1141,9 +1206,10 @@ tabAddBtn.addEventListener("click", function () {
     createTab(name, "");
 });
 
-document.getElementById("menuToggleBtn").addEventListener("click", function () {
+addEvent("menuToggleBtn", "click", function () {
     const sideMenu = document.querySelector(".side-menu");
     const editorArea = document.querySelector(".editor-area");
+    if (!sideMenu || !editorArea) return;
     sideMenu.classList.toggle("open");
     if (sideMenu.classList.contains("open")) {
         editorArea.style.marginLeft = "210px";
@@ -1152,9 +1218,9 @@ document.getElementById("menuToggleBtn").addEventListener("click", function () {
     }
 });
 
-const settingsMenu = document.getElementById("settingsMenu");
-const settingsModal = document.getElementById("settingsModal");
-let settingsCloseBtn = document.getElementById("settingsCloseBtn");
+const settingsMenu = byId("settingsMenu");
+const settingsModal = byId("settingsModal");
+let settingsCloseBtn = byId("settingsCloseBtn");
 if (settingsCloseBtn) settingsCloseBtn.remove();
 
 const closeX = document.createElement("button");
@@ -1170,15 +1236,15 @@ closeX.style.fontSize = "2rem";
 closeX.style.cursor = "pointer";
 closeX.style.zIndex = "10";
 closeX.id = "settingsModalCloseX";
-settingsModal.appendChild(closeX);
+if (settingsModal) settingsModal.appendChild(closeX);
 closeX.addEventListener("click", function () {
-    settingsModal.style.display = "none";
+    if (settingsModal) settingsModal.style.display = "none";
 });
 
 const bgRadios = document.getElementsByName("bgcolor");
 const fontRadios = document.getElementsByName("fontsize");
-const fontsizeInput = document.getElementById("fontsizeInput");
-const fontsizeToggleBtn = document.getElementById("fontsizeToggleBtn");
+const fontsizeInput = byId("fontsizeInput");
+const fontsizeToggleBtn = byId("fontsizeToggleBtn");
 let tabSize = 4;
 
 function indentUnit() {
@@ -1244,8 +1310,8 @@ function syncEditorAfterProgrammaticEdit(textarea) {
     isDirty = true;
 }
 
-const tabsizeInput = document.getElementById("tabsizeInput");
-const tabsizeToggleBtn = document.getElementById("tabsizeToggleBtn");
+const tabsizeInput = byId("tabsizeInput");
+const tabsizeToggleBtn = byId("tabsizeToggleBtn");
 if (tabsizeInput) {
     tabsizeInput.value = tabSize;
     function applyTabSize() {
@@ -1262,7 +1328,8 @@ if (tabsizeInput) {
     });
 }
 
-settingsMenu.addEventListener("click", function () {
+addEvent(settingsMenu, "click", function () {
+    if (!settingsModal || !fontsizeInput) return;
     settingsModal.style.display = "flex";
     const body = document.body;
     let val = "default";
@@ -1276,7 +1343,7 @@ settingsMenu.addEventListener("click", function () {
         curFont = window.getComputedStyle(codeInput).fontSize.replace("px", "");
     fontsizeInput.value = curFont;
 });
-settingsModal.addEventListener("click", function (e) {
+addEvent(settingsModal, "click", function (e) {
     if (e.target === settingsModal) settingsModal.style.display = "none";
 });
 
@@ -1295,15 +1362,16 @@ for (const radio of fontRadios) {
     });
 }
 
-fontsizeToggleBtn.addEventListener("click", function () {
+addEvent(fontsizeToggleBtn, "click", function () {
+    if (!fontsizeInput) return;
     let size = parseInt(fontsizeInput.value, 10);
     if (isNaN(size) || size < 10) size = 10;
     if (size > 32) size = 32;
     fontsizeInput.value = size;
     applyEditorFontSize(size);
 });
-fontsizeInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter") fontsizeToggleBtn.click();
+addEvent(fontsizeInput, "keydown", function (e) {
+    if (e.key === "Enter" && fontsizeToggleBtn) fontsizeToggleBtn.click();
 });
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -1318,7 +1386,7 @@ window.addEventListener("beforeunload", function (e) {
     }
 });
 
-codeInput.addEventListener("keydown", function (e) {
+addEvent(codeInput, "keydown", function (e) {
     if (e.key === "Tab") {
         e.preventDefault();
         const start = this.selectionStart;
@@ -1377,51 +1445,42 @@ codeInput.addEventListener("keydown", function (e) {
 });
 
 function submitConsoleInput() {
-    const input = document.getElementById("consoleInput");
+    const input = byId("consoleInput");
     if (!pendingInputResolver || !input) return;
     const value = input.value;
     input.value = "";
     pendingInputResolver(value);
 }
 
-document
-    .getElementById("consoleSubmit")
-    .addEventListener("click", submitConsoleInput);
-document
-    .getElementById("consoleInput")
-    .addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            submitConsoleInput();
-        }
-    });
-
-document
-    .getElementById("settingsToolbarBtn")
-    .addEventListener("click", function () {
-        document.getElementById("settingsModal").style.display = "flex";
-    });
-
-document.getElementById("runMenu").addEventListener("click", runSimulation);
-document.getElementById("stopMenu").addEventListener("click", function () {
-    document.getElementById("stopButton").click();
+addEvent("consoleSubmit", "click", submitConsoleInput);
+addEvent("consoleInput", "keydown", function (e) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        submitConsoleInput();
+    }
 });
-document.getElementById("saveMenu").addEventListener("click", function () {
-    document.getElementById("saveButton").click();
+
+addEvent("settingsToolbarBtn", "click", function () {
+    const modal = byId("settingsModal");
+    if (modal) modal.style.display = "flex";
 });
-document.getElementById("downloadMenu").addEventListener("click", function () {
+
+addEvent("runMenu", "click", runSimulation);
+addEvent("stopMenu", "click", function () {
+    byId("stopButton")?.click();
+});
+addEvent("saveMenu", "click", function () {
+    byId("saveButton")?.click();
+});
+addEvent("downloadMenu", "click", function () {
     openCompilerDownloadPage();
 });
-document
-    .getElementById("examplesMenu")
-    .addEventListener("click", openExamplePicker);
-document
-    .getElementById("exampleSelect")
-    .addEventListener("change", function () {
-        const filename = this.value;
-        this.value = "";
-        loadExample(filename);
-    });
-document.getElementById("studyMenu").addEventListener("click", function () {
+addEvent("examplesMenu", "click", openExamplePicker);
+addEvent("exampleSelect", "change", function () {
+    const filename = this.value;
+    this.value = "";
+    loadExample(filename);
+});
+addEvent("studyMenu", "click", function () {
     window.open("/docs/", "_blank");
 });

@@ -27,7 +27,7 @@ MSI output is not generated in this implementation.
 - Create desktop shortcut
 - Associate `.koa`
 - Associate `.skkoaproj`
-- Add bundled `tools\skkoa` compiler folder to the user PATH
+- Add bundled `tools\skkoa`, NASM, and GCC folders to the user PATH
 - Reset existing `%APPDATA%\SKKOA Studio\settings.json`
 - Launch SKKOA Studio after setup
 
@@ -40,6 +40,8 @@ The default location is:
 ```
 
 The installer allows choosing another directory. Current-user installs do not require administrator rights. The Inno Setup privileges override dialog is intentionally disabled because it appears before theme code can run and would show a bright system dialog. Run the installer as administrator when a protected machine-wide location is required.
+
+The installer payload includes `tools\skkoa\skkoa.exe`, the standard `.koa` modules, and the bundled MSYS2 NASM/GCC toolchain under `tools\skkoa\toolchain\msys64`. Native compile/run works after setup without a separate toolchain download.
 
 ## Administrator Rights
 
@@ -60,7 +62,7 @@ Inno Setup registers `SKKOA Studio` with a fixed `AppId`, `AppName`, version, pu
 
 ## Uninstall
 
-The generated uninstaller removes installed files, shortcuts, registered ProgIDs, and the PATH entry added by the installer.
+The generated uninstaller removes installed files, shortcuts, registered ProgIDs, and the compiler/toolchain PATH entries added by the installer.
 
 ## Icons
 

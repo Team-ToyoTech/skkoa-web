@@ -143,8 +143,8 @@ internal sealed class DarkTabControl : TabControl
         bool selected = index == SelectedIndex;
         Color tabBack = selected
             ? (DarkTheme ? ColorTranslator.FromHtml("#24242a") : Color.White)
-            : (DarkTheme ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#f0f0f5"));
-        Color text = DarkTheme ? ColorTranslator.FromHtml("#f2f2f2") : Color.Black;
+            : (DarkTheme ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#eef1f7"));
+        Color text = DarkTheme ? ColorTranslator.FromHtml("#f2f2f2") : ColorTranslator.FromHtml("#202026");
 
         using SolidBrush backBrush = new(tabBack);
         graphics.FillRectangle(backBrush, bounds);

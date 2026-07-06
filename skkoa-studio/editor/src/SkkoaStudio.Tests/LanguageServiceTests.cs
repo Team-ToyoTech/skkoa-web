@@ -39,6 +39,25 @@ public sealed class LanguageServiceTests
     }
 
     [Fact]
+    public void Syntax_highlighter_colors_all_command_keyword_groups()
+    {
+        SkkoaSyntaxHighlighter highlighter = new();
+        string source = "시작\n변수 x: 정수 = 1\n만약 참 이면\n출력 x\n아니면\n동안 거짓\n계속\n끝\n함수 foo()\n반환 없음\n끝\n가져오기 stack\n그리고 또는 아님\n끝";
+
+        IReadOnlyList<SkkoaHighlightSpan> spans = highlighter.GetSpans(source);
+        HashSet<SkkoaHighlightStyle> styles = spans.Select(span => span.Style).ToHashSet();
+
+        Assert.Contains(SkkoaHighlightStyle.BlockKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.DeclarationKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.ConditionalKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.LoopKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.IoKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.FunctionKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.ImportKeyword, styles);
+        Assert.Contains(SkkoaHighlightStyle.LogicalKeyword, styles);
+    }
+
+    [Fact]
     public void Completion_returns_keyword_and_snippet_candidates()
     {
         SkkoaCompletionProvider provider = new();
@@ -110,6 +129,31 @@ public sealed class LanguageServiceTests
         Assert.Equal(1, diagnostics[0].Line);
         Assert.Equal(1, diagnostics[0].Column);
         Assert.Equal(1, diagnostics[0].Length);
+    }
+
+    [Fact]
+    public void Compiler_locator_prefers_bundled_toolchain_paths()
+    {
+        string dir = Path.Combine(Path.GetTempPath(), "skkoa-locator-test-" + Guid.NewGuid().ToString("N"));
+        string msysRoot = Path.Combine(dir, "tools", "skkoa", "toolchain", "msys64");
+        string mingwBin = Path.Combine(msysRoot, "mingw64", "bin");
+        string usrBin = Path.Combine(msysRoot, "usr", "bin");
+        Directory.CreateDirectory(mingwBin);
+        Directory.CreateDirectory(usrBin);
+        try
+        {
+            SkkoaCompilerLocator locator = new(dir);
+
+            string[] paths = locator.FindToolchainPathEntries();
+
+            Assert.True(paths.Length >= 2);
+            Assert.Equal(Path.GetFullPath(mingwBin), paths[0]);
+            Assert.Equal(Path.GetFullPath(usrBin), paths[1]);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
     }
 
     [Fact]

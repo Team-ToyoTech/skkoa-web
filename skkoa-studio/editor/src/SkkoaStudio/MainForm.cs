@@ -42,6 +42,13 @@ public partial class MainForm : Form
     private readonly ToolTip diagnosticsToolTip = new();
     private readonly HashSet<string> reportedEditorErrors = [];
 
+    private bool watchListDrawingConfigured;
+    private Color watchListSurfaceColor = ColorTranslator.FromHtml("#1b1b1f");
+    private Color watchListHeaderColor = ColorTranslator.FromHtml("#24242a");
+    private Color watchListBorderColor = ColorTranslator.FromHtml("#33333a");
+    private Color watchListTextColor = ColorTranslator.FromHtml("#f2f2f2");
+    private Color watchListAccentColor = ColorTranslator.FromHtml("#a259ff");
+
     private SkkoaStudioSettings settings;
     private SkkoaProject? currentProject;
     private SkkoaRunningProcess? runningProcess;
@@ -79,6 +86,12 @@ public partial class MainForm : Form
         Shown += (_, _) => ScheduleEditorTabHeaderFillUpdate();
         bottomTabs.DrawMode = System.Windows.Forms.TabDrawMode.OwnerDrawFixed;
         bottomTabs.DrawItem += BottomTabs_DrawItem;
+        bottomTabs.ControlAdded += (_, _) => ScheduleBottomTabHeaderFillUpdate();
+        bottomTabs.ControlRemoved += (_, _) => ScheduleBottomTabHeaderFillUpdate();
+        bottomTabs.SizeChanged += (_, _) => UpdateBottomTabHeaderFill();
+        bottomTabs.SelectedIndexChanged += (_, _) => ScheduleBottomTabHeaderFillUpdate();
+        editorOutputSplit.Panel2.SizeChanged += (_, _) => UpdateBottomTabHeaderFill();
+        Shown += (_, _) => ScheduleBottomTabHeaderFillUpdate();
         diagnosticsTimer.Interval = 420;
         diagnosticsTimer.Tick += async (_, _) => await RunDiagnosticsForActiveEditorAsync();
 
@@ -121,6 +134,20 @@ public partial class MainForm : Form
     {
         split.HandleCreated += (_, _) => SetSplitterDistanceSafe(split, desiredDistance, panel1MinSize, panel2MinSize);
         split.SizeChanged += (_, _) => SetSplitterDistanceSafe(split, split.SplitterDistance, panel1MinSize, panel2MinSize);
+    }
+
+    private void SplitContainer_Paint(object? sender, PaintEventArgs e)
+    {
+        if (sender is not SplitContainer split || split.Panel1Collapsed || split.Panel2Collapsed)
+        {
+            return;
+        }
+
+        Rectangle splitterBounds = split.Orientation == Orientation.Vertical
+            ? new Rectangle(split.SplitterDistance, 0, split.SplitterWidth, split.Height)
+            : new Rectangle(0, split.SplitterDistance, split.Width, split.SplitterWidth);
+        using SolidBrush brush = new(ThemeBorder());
+        e.Graphics.FillRectangle(brush, splitterBounds);
     }
 
     private static void SetSplitterDistanceSafe(SplitContainer split, int desiredDistance, int panel1MinSize, int panel2MinSize)
@@ -371,6 +398,7 @@ public partial class MainForm : Form
             editor = new Scintilla
             {
                 Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.None,
                 Text = document.Text
             };
         }
@@ -480,10 +508,10 @@ public partial class MainForm : Form
     private void ApplyEditorTheme(Scintilla editor)
     {
         bool dark = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase);
-        Color back = dark ? ColorTranslator.FromHtml("#15151a") : Color.White;
-        Color fore = dark ? ColorTranslator.FromHtml("#eeeeee") : Color.FromArgb(30, 30, 30);
-        Color margin = dark ? ColorTranslator.FromHtml("#1b1b1f") : Color.FromArgb(245, 245, 245);
-        Color currentLine = dark ? ColorTranslator.FromHtml("#22222a") : Color.FromArgb(232, 242, 255);
+        Color back = ThemeEditorBackground();
+        Color fore = ThemeEditorText();
+        Color margin = dark ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#eef1f7");
+        Color currentLine = dark ? ColorTranslator.FromHtml("#22222a") : ColorTranslator.FromHtml("#edf1ff");
 
         TryEditorAction("editor theme", () =>
         {
@@ -498,29 +526,37 @@ public partial class MainForm : Form
             }
             editor.StyleClearAll();
 
-            SetStyle(editor, SkkoaHighlightStyle.Keyword, Color.FromArgb(86, 156, 214), bold: true);
-            SetStyle(editor, SkkoaHighlightStyle.Type, Color.FromArgb(78, 201, 176), bold: true);
-            SetStyle(editor, SkkoaHighlightStyle.Literal, Color.FromArgb(181, 206, 168));
-            SetStyle(editor, SkkoaHighlightStyle.StandardFunction, Color.FromArgb(220, 220, 170));
+            SetStyle(editor, SkkoaHighlightStyle.Keyword, dark ? Color.FromArgb(86, 156, 214) : Color.FromArgb(0, 73, 135), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.BlockKeyword, dark ? Color.FromArgb(215, 186, 125) : Color.FromArgb(118, 79, 0), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.DeclarationKeyword, dark ? Color.FromArgb(78, 201, 176) : Color.FromArgb(15, 111, 104), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.ConditionalKeyword, dark ? Color.FromArgb(197, 134, 192) : Color.FromArgb(126, 55, 130), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.LoopKeyword, dark ? Color.FromArgb(206, 145, 120) : Color.FromArgb(159, 76, 0), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.IoKeyword, dark ? Color.FromArgb(79, 193, 255) : Color.FromArgb(0, 95, 153), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.FunctionKeyword, dark ? Color.FromArgb(220, 220, 170) : Color.FromArgb(121, 94, 38), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.ImportKeyword, dark ? Color.FromArgb(181, 206, 168) : Color.FromArgb(76, 109, 28), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.LogicalKeyword, dark ? Color.FromArgb(156, 220, 254) : Color.FromArgb(45, 92, 156), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.Type, dark ? Color.FromArgb(78, 201, 176) : Color.FromArgb(38, 127, 153), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.Literal, dark ? Color.FromArgb(181, 206, 168) : Color.FromArgb(9, 134, 88));
+            SetStyle(editor, SkkoaHighlightStyle.StandardFunction, dark ? Color.FromArgb(255, 207, 110) : Color.FromArgb(121, 94, 38));
             SetStyle(editor, SkkoaHighlightStyle.String, dark ? Color.FromArgb(206, 145, 120) : Color.FromArgb(163, 21, 21));
             SetStyle(editor, SkkoaHighlightStyle.Character, dark ? Color.FromArgb(206, 145, 120) : Color.FromArgb(163, 21, 21));
-            SetStyle(editor, SkkoaHighlightStyle.Number, Color.FromArgb(181, 206, 168));
+            SetStyle(editor, SkkoaHighlightStyle.Number, dark ? Color.FromArgb(181, 206, 168) : Color.FromArgb(9, 134, 88));
             SetStyle(editor, SkkoaHighlightStyle.Comment, dark ? Color.FromArgb(106, 153, 85) : Color.FromArgb(0, 128, 0));
-            SetStyle(editor, SkkoaHighlightStyle.Operator, Color.FromArgb(197, 134, 192));
-            SetStyle(editor, SkkoaHighlightStyle.Brace, Color.FromArgb(215, 186, 125));
-            SetStyle(editor, SkkoaHighlightStyle.FunctionName, Color.FromArgb(220, 220, 170));
-            SetStyle(editor, SkkoaHighlightStyle.StructName, Color.FromArgb(78, 201, 176), bold: true);
+            SetStyle(editor, SkkoaHighlightStyle.Operator, dark ? Color.FromArgb(197, 134, 192) : Color.FromArgb(0, 0, 128));
+            SetStyle(editor, SkkoaHighlightStyle.Brace, dark ? Color.FromArgb(215, 186, 125) : Color.FromArgb(121, 94, 38));
+            SetStyle(editor, SkkoaHighlightStyle.FunctionName, dark ? Color.FromArgb(220, 220, 170) : Color.FromArgb(121, 94, 38));
+            SetStyle(editor, SkkoaHighlightStyle.StructName, dark ? Color.FromArgb(78, 201, 176) : Color.FromArgb(38, 127, 153), bold: true);
             SetStyle(editor, SkkoaHighlightStyle.VariableName, fore);
 
             editor.CaretForeColor = dark ? Color.White : Color.Black;
             editor.CaretLineBackColor = currentLine;
-            editor.SetSelectionBackColor(true, dark ? ColorTranslator.FromHtml("#3a2f4f") : Color.FromArgb(180, 210, 255));
+            editor.SetSelectionBackColor(true, dark ? ColorTranslator.FromHtml("#3a2f4f") : ColorTranslator.FromHtml("#d8c7ff"));
             editor.BackColor = back;
             editor.ForeColor = fore;
 
             dynamic lineStyle = editor.Styles[33];
             lineStyle.BackColor = margin;
-            lineStyle.ForeColor = dark ? Color.FromArgb(135, 140, 150) : Color.FromArgb(95, 95, 95);
+            lineStyle.ForeColor = dark ? Color.FromArgb(135, 140, 150) : Color.FromArgb(102, 102, 116);
         });
         ApplyHighlight(editor);
     }
@@ -741,7 +777,7 @@ public partial class MainForm : Form
             if (missing.Count > 0)
             {
                 AppendOutput("누락된 빌드 도구: " + string.Join(", ", missing) + Environment.NewLine);
-                AppendOutput("Tools > Install/Repair Toolchain을 실행하면 Studio 전용 MSYS2/NASM/GCC를 설치할 수 있습니다." + Environment.NewLine);
+                AppendOutput("설치된 Studio 번들 도구가 누락되었습니다. Tools > Install/Repair Toolchain으로 복구할 수 있습니다." + Environment.NewLine);
             }
 
             SkkoaCompileResult result = await compilerService.CompileAsync(new SkkoaCompileOptions
@@ -936,6 +972,7 @@ public partial class MainForm : Form
         UpdateDebugUi(debugSession.Stop());
         debugSession = null;
         ClearCurrentLineMarkers();
+        UpdateDebugToolbarState(null);
     }
 
     private void UpdateDebugUi(SkkoaDebugSnapshot snapshot)
@@ -961,6 +998,27 @@ public partial class MainForm : Form
             MarkCurrentLine(snapshot.CurrentLine.Value);
         }
         buildStatus.Text = "Debug " + snapshot.State;
+        UpdateDebugToolbarState(snapshot.State);
+    }
+
+    private void UpdateDebugToolbarState(SkkoaDebugState? snapshotState)
+    {
+        if (debugToolStrip == null)
+        {
+            return;
+        }
+
+        SkkoaDebugState? state = snapshotState ?? debugSession?.State;
+        bool active = debugSession != null;
+        bool canStep = active && state == SkkoaDebugState.Paused;
+
+        debugToolStrip.Visible = active;
+        debugToolStrip.Enabled = active;
+        debugContinueButton.Enabled = canStep;
+        debugStepButton.Enabled = canStep;
+        debugStepOverButton.Enabled = canStep;
+        debugStepOutButton.Enabled = canStep;
+        debugStopButton.Enabled = active;
     }
 
     private void MarkCurrentLine(int oneBasedLine)
@@ -1675,17 +1733,18 @@ public partial class MainForm : Form
     {
         bool dark = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase);
         Color primary = PrimaryColor();
-        Color background = dark ? ColorTranslator.FromHtml("#111111") : SystemColors.Control;
-        Color surface = dark ? ColorTranslator.FromHtml("#1b1b1f") : Color.White;
-        Color surfaceAlt = dark ? ColorTranslator.FromHtml("#24242a") : ColorTranslator.FromHtml("#f0f0f5");
-        Color border = dark ? ColorTranslator.FromHtml("#33333a") : SystemColors.ControlDark;
-        Color text = dark ? ColorTranslator.FromHtml("#f2f2f2") : SystemColors.ControlText;
-        Color mutedText = dark ? ColorTranslator.FromHtml("#a9a9b3") : Color.FromArgb(90, 90, 90);
+        Color background = ThemeBackground();
+        Color surface = ThemeSurface();
+        Color surfaceAlt = ThemeSurfaceAlt();
+        Color border = ThemeBorder();
+        Color text = ThemeText();
+        Color mutedText = ThemeMutedText();
 
         BackColor = background;
         ForeColor = text;
-        menuStrip.Renderer = new PrimaryToolStripRenderer(primary, dark);
-        toolStrip.Renderer = new PrimaryToolStripRenderer(primary, dark);
+        ApplyToolStripTheme(menuStrip, background, text, primary, dark);
+        ApplyToolStripTheme(toolStrip, background, text, primary, dark);
+        ApplyToolStripTheme(debugToolStrip, surface, text, primary, dark);
 
         menuStrip.BackColor = background;
         menuStrip.ForeColor = text;
@@ -1697,7 +1756,7 @@ public partial class MainForm : Form
         {
             item.ForeColor = mutedText;
         }
-        ApplyMenuItemColors(menuStrip.Items, text);
+        ApplyMenuItemColors(menuStrip.Items, surface, surfaceAlt, text);
 
         mainSplit.BackColor = border;
         mainSplit.Panel1.BackColor = background;
@@ -1716,17 +1775,17 @@ public partial class MainForm : Form
         ApplyTabTheme(editorTabs, background, surface, text);
         ApplyTabTheme(bottomTabs, background, dark ? background : surface, text);
 
-        outputBox.BackColor = consoleBox.BackColor = debugBox.BackColor = consoleInputBox.BackColor = dark ? background : surface;
+        outputBox.BackColor = consoleBox.BackColor = debugBox.BackColor = consoleInputBox.BackColor = ThemeEditorBackground();
         outputBox.ForeColor = consoleBox.ForeColor = debugBox.ForeColor = consoleInputBox.ForeColor = text;
-        consoleSendButton.BackColor = surfaceAlt;
-        consoleSendButton.ForeColor = text;
-        consoleSendButton.FlatStyle = FlatStyle.Flat;
-        consoleSendButton.FlatAppearance.BorderColor = border;
+        outputBox.BorderStyle = consoleBox.BorderStyle = debugBox.BorderStyle = consoleInputBox.BorderStyle = BorderStyle.FixedSingle;
+        StyleButton(consoleSendButton, surfaceAlt, border, text);
 
         watchList.BackColor = surface;
         watchList.ForeColor = text;
         watchList.BorderStyle = BorderStyle.None;
+        ConfigureWatchListDrawing(surface, surfaceAlt, border, text, primary);
         StyleProblemsGrid(background, surface, surfaceAlt, border, text, primary);
+        UpdateDebugToolbarState(debugSession?.State);
         foreach (TabPage page in editorTabs.TabPages)
         {
             if (page.Tag is EditorTabState state)
@@ -1740,14 +1799,38 @@ public partial class MainForm : Form
         UpdateStatus();
     }
 
-    private static void ApplyMenuItemColors(ToolStripItemCollection items, Color text)
+    private static void ApplyToolStripTheme(ToolStrip strip, Color background, Color text, Color primary, bool dark)
+    {
+        strip.Renderer = new PrimaryToolStripRenderer(primary, dark);
+        strip.BackColor = background;
+        strip.ForeColor = text;
+        foreach (ToolStripItem item in strip.Items)
+        {
+            item.ForeColor = text;
+            item.BackColor = background;
+        }
+    }
+
+    private static void ApplyMenuItemColors(ToolStripItemCollection items, Color surface, Color surfaceAlt, Color text)
     {
         foreach (ToolStripItem item in items)
         {
             item.ForeColor = text;
+            item.BackColor = surface;
             if (item is ToolStripMenuItem menuItem)
             {
-                ApplyMenuItemColors(menuItem.DropDownItems, text);
+                menuItem.DropDown.BackColor = surface;
+                menuItem.DropDown.ForeColor = text;
+                menuItem.DropDown.Padding = Padding.Empty;
+                foreach (ToolStripItem child in menuItem.DropDownItems)
+                {
+                    child.BackColor = surface;
+                }
+                ApplyMenuItemColors(menuItem.DropDownItems, surface, surfaceAlt, text);
+            }
+            else if (item is ToolStripSeparator separator)
+            {
+                separator.BackColor = surfaceAlt;
             }
         }
     }
@@ -1772,6 +1855,10 @@ public partial class MainForm : Form
         if (ReferenceEquals(tabs, editorTabs))
         {
             UpdateEditorTabHeaderFill();
+        }
+        if (ReferenceEquals(tabs, bottomTabs))
+        {
+            UpdateBottomTabHeaderFill();
         }
     }
 
@@ -1833,6 +1920,10 @@ public partial class MainForm : Form
             int x = 5;
             int y = 3;
             int buttonHeight = Math.Max(24, height - 6);
+            bool dark = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase);
+            Color selectedBack = dark ? ColorTranslator.FromHtml("#24242a") : Color.White;
+            Color tabBack = dark ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#eef1f7");
+            Color tabText = ThemeText();
             for (int i = 0; i < editorTabs.TabPages.Count; i++)
             {
                 int tabIndex = i;
@@ -1841,8 +1932,8 @@ public partial class MainForm : Form
                 Label tab = new()
                 {
                     AutoEllipsis = true,
-                    BackColor = selected ? ColorTranslator.FromHtml("#24242a") : ColorTranslator.FromHtml("#1b1b1f"),
-                    ForeColor = ThemeText(),
+                    BackColor = selected ? selectedBack : tabBack,
+                    ForeColor = tabText,
                     Font = Font,
                     Text = page.Text,
                     TextAlign = ContentAlignment.MiddleCenter,
@@ -1877,6 +1968,106 @@ public partial class MainForm : Form
         }
     }
 
+    private void ScheduleBottomTabHeaderFillUpdate()
+    {
+        if (!IsHandleCreated)
+        {
+            UpdateBottomTabHeaderFill();
+            return;
+        }
+
+        try
+        {
+            BeginInvoke((Action)UpdateBottomTabHeaderFill);
+        }
+        catch (Exception ex) when (IsRecoverableException(ex))
+        {
+            AppendOutput($"UI warning (bottom tab header): {ex.Message}{Environment.NewLine}");
+        }
+    }
+
+    private void UpdateBottomTabHeaderFill()
+    {
+        try
+        {
+            if (bottomTabHeaderFill == null || bottomTabs == null || bottomTabHeaderFill.IsDisposed || bottomTabs.IsDisposed)
+            {
+                return;
+            }
+
+            int height = Math.Max(bottomTabs.ItemSize.Height + 7, 32);
+            int hostWidth = Math.Max(bottomTabs.Width, editorOutputSplit.Panel2.ClientSize.Width);
+            bottomTabHeaderFill.BackColor = ThemeBackground();
+            bottomTabHeaderFill.SetBounds(0, 0, hostWidth, height);
+            bottomTabHeaderFill.Visible = bottomTabs.TabPages.Count > 0 && hostWidth > 0;
+            RebuildBottomTabStrip(height);
+            if (bottomTabHeaderFill.Visible)
+            {
+                bottomTabHeaderFill.BringToFront();
+            }
+        }
+        catch (Exception ex) when (IsRecoverableException(ex))
+        {
+            AppendOutput($"UI warning (bottom tab header layout): {ex.Message}{Environment.NewLine}");
+        }
+    }
+
+    private void RebuildBottomTabStrip(int height)
+    {
+        bottomTabHeaderFill.SuspendLayout();
+        try
+        {
+            while (bottomTabHeaderFill.Controls.Count > 0)
+            {
+                Control control = bottomTabHeaderFill.Controls[0];
+                bottomTabHeaderFill.Controls.RemoveAt(0);
+                control.Dispose();
+            }
+
+            bool dark = IsDarkTheme();
+            Color selectedBack = dark ? ColorTranslator.FromHtml("#24242a") : Color.White;
+            Color tabBack = dark ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#eef1f7");
+            Color tabText = ThemeText();
+            int x = 5;
+            int y = 3;
+            int buttonHeight = Math.Max(24, height - 6);
+
+            for (int i = 0; i < bottomTabs.TabPages.Count; i++)
+            {
+                int tabIndex = i;
+                TabPage page = bottomTabs.TabPages[i];
+                bool selected = tabIndex == bottomTabs.SelectedIndex;
+                Label tab = new()
+                {
+                    AutoEllipsis = true,
+                    BackColor = selected ? selectedBack : tabBack,
+                    ForeColor = tabText,
+                    Font = Font,
+                    Text = page.Text,
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Bounds = new Rectangle(x, y, Math.Min(150, Math.Max(112, bottomTabs.ItemSize.Width)), buttonHeight),
+                    Cursor = Cursors.Hand
+                };
+                tab.MouseDown += (_, _) =>
+                {
+                    if (tabIndex < 0 || tabIndex >= bottomTabs.TabPages.Count)
+                    {
+                        return;
+                    }
+
+                    bottomTabs.SelectedIndex = tabIndex;
+                    ScheduleBottomTabHeaderFillUpdate();
+                };
+                bottomTabHeaderFill.Controls.Add(tab);
+                x += tab.Width + 2;
+            }
+        }
+        finally
+        {
+            bottomTabHeaderFill.ResumeLayout(false);
+        }
+    }
+
     private void StyleProblemsGrid(Color background, Color surface, Color surfaceAlt, Color border, Color text, Color primary)
     {
         problemsGrid.BackgroundColor = background;
@@ -1893,6 +2084,83 @@ public partial class MainForm : Form
         problemsGrid.DefaultCellStyle.SelectionForeColor = Color.White;
         problemsGrid.AlternatingRowsDefaultCellStyle.BackColor = surfaceAlt;
         problemsGrid.AlternatingRowsDefaultCellStyle.ForeColor = text;
+    }
+
+    private static void StyleButton(Button button, Color background, Color border, Color text)
+    {
+        button.UseVisualStyleBackColor = false;
+        button.BackColor = background;
+        button.ForeColor = text;
+        button.FlatStyle = FlatStyle.Flat;
+        button.FlatAppearance.BorderColor = border;
+        button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(background);
+        button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(background);
+        button.MinimumSize = new Size(96, 30);
+        button.Width = Math.Max(button.Width, 96);
+        button.Padding = new Padding(8, 2, 8, 2);
+    }
+
+    private void ConfigureWatchListDrawing(Color surface, Color header, Color border, Color text, Color accent)
+    {
+        watchListSurfaceColor = surface;
+        watchListHeaderColor = header;
+        watchListBorderColor = border;
+        watchListTextColor = text;
+        watchListAccentColor = accent;
+        watchList.OwnerDraw = true;
+
+        if (!watchListDrawingConfigured)
+        {
+            watchList.DrawColumnHeader += WatchList_DrawColumnHeader;
+            watchList.DrawItem += WatchList_DrawItem;
+            watchList.DrawSubItem += WatchList_DrawSubItem;
+            watchListDrawingConfigured = true;
+        }
+
+        watchList.Invalidate();
+    }
+
+    private void WatchList_DrawColumnHeader(object? sender, DrawListViewColumnHeaderEventArgs e)
+    {
+        using SolidBrush background = new(watchListHeaderColor);
+        using Pen border = new(watchListBorderColor);
+        e.Graphics.FillRectangle(background, e.Bounds);
+        Rectangle textBounds = Rectangle.Inflate(e.Bounds, -8, 0);
+        TextRenderer.DrawText(
+            e.Graphics,
+            e.Header?.Text ?? "",
+            watchList.Font,
+            textBounds,
+            watchListTextColor,
+            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        e.Graphics.DrawRectangle(border, e.Bounds.X, e.Bounds.Y, e.Bounds.Width - 1, e.Bounds.Height - 1);
+    }
+
+    private void WatchList_DrawItem(object? sender, DrawListViewItemEventArgs e)
+    {
+        if (watchList.View != View.Details)
+        {
+            e.DrawDefault = true;
+        }
+    }
+
+    private void WatchList_DrawSubItem(object? sender, DrawListViewSubItemEventArgs e)
+    {
+        bool selected = e.Item?.Selected == true;
+        Color backgroundColor = selected ? watchListAccentColor : watchListSurfaceColor;
+        Color textColor = selected ? Color.White : watchListTextColor;
+
+        using SolidBrush background = new(backgroundColor);
+        e.Graphics.FillRectangle(background, e.Bounds);
+
+        Rectangle textBounds = Rectangle.Inflate(e.Bounds, -8, 0);
+        TextRenderer.DrawText(
+            e.Graphics,
+            e.SubItem?.Text ?? "",
+            watchList.Font,
+            textBounds,
+            textColor,
+            TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
     }
 
     private void OpenStartupArguments()
@@ -1949,12 +2217,12 @@ public partial class MainForm : Form
         bool dark = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase);
         Color back = selected
             ? (dark ? ColorTranslator.FromHtml("#24242a") : Color.White)
-            : (dark ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#f0f0f5"));
+            : (dark ? ColorTranslator.FromHtml("#1b1b1f") : ColorTranslator.FromHtml("#eef1f7"));
         using SolidBrush backBrush = new(back);
         Rectangle bounds = e.Bounds;
         bounds.Inflate(2, 2);
         e.Graphics.FillRectangle(backBrush, bounds);
-        TextRenderer.DrawText(e.Graphics, page.Text, Font, e.Bounds, dark ? ColorTranslator.FromHtml("#f2f2f2") : Color.Black,
+        TextRenderer.DrawText(e.Graphics, page.Text, Font, e.Bounds, ThemeText(),
             TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
         if (selected)
         {
@@ -1963,13 +2231,13 @@ public partial class MainForm : Form
         }
     }
 
-    private static Bitmap CreateToolbarIcon(string name)
+    private static Bitmap CreateToolbarIcon(string name, int size = 24)
     {
-        const int size = 24;
         Bitmap bitmap = new(size, size);
         using Graphics g = Graphics.FromImage(bitmap);
         g.SmoothingMode = SmoothingMode.AntiAlias;
         g.Clear(Color.Transparent);
+        g.ScaleTransform(size / 24f, size / 24f);
 
         Color strokeColor = Color.FromArgb(242, 242, 242);
         Color mutedColor = Color.FromArgb(169, 169, 179);
@@ -2012,6 +2280,25 @@ public partial class MainForm : Form
             case "Run":
                 g.FillPolygon(fill, [new PointF(8, 5), new PointF(18, 12), new PointF(8, 19)]);
                 break;
+            case "Continue":
+                g.FillPolygon(fill, [new PointF(6, 5), new PointF(16, 12), new PointF(6, 19)]);
+                g.DrawLine(stroke, 19, 6, 19, 18);
+                break;
+            case "Step":
+                g.DrawLine(accent, 5, 12, 16, 12);
+                g.DrawLines(accent, [new PointF(12, 8), new PointF(16, 12), new PointF(12, 16)]);
+                g.DrawLine(stroke, 19, 6, 19, 18);
+                break;
+            case "Step Over":
+                g.DrawArc(accent, 5, 5, 13, 12, 190, 270);
+                g.DrawLines(accent, [new PointF(14, 13), new PointF(18, 17), new PointF(19, 11)]);
+                g.DrawLine(stroke, 7, 20, 19, 20);
+                break;
+            case "Step Out":
+                g.DrawLine(accent, 12, 18, 12, 6);
+                g.DrawLines(accent, [new PointF(8, 10), new PointF(12, 6), new PointF(16, 10)]);
+                g.DrawLine(stroke, 6, 19, 18, 19);
+                break;
             case "Debug":
                 g.DrawEllipse(accent, 6, 6, 12, 12);
                 g.FillEllipse(lightFill, 10, 10, 4, 4);
@@ -2052,8 +2339,8 @@ public partial class MainForm : Form
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
             MinimizeBox = false,
-            BackColor = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase) ? ColorTranslator.FromHtml("#111111") : Color.White,
-            ForeColor = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase) ? ColorTranslator.FromHtml("#f2f2f2") : Color.Black,
+            BackColor = ThemeBackground(),
+            ForeColor = ThemeText(),
             Icon = Icon
         };
         PictureBox icon = new()
@@ -2077,7 +2364,8 @@ public partial class MainForm : Form
             Location = new Point(111, 66),
             AutoSize = true
         };
-        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(310, 180), Width = 80 };
+        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Location = new Point(294, 180), Width = 96 };
+        StyleButton(ok, ThemeSurfaceAlt(), ThemeBorder(), ThemeText());
         form.Controls.AddRange([icon, title, text, ok]);
         form.AcceptButton = ok;
         form.ShowDialog(this);
@@ -2095,18 +2383,65 @@ public partial class MainForm : Form
         }
     }
 
+    private bool IsDarkTheme()
+    {
+        return settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase);
+    }
+
     private Color ThemeBackground()
     {
-        return settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase)
+        return IsDarkTheme()
             ? ColorTranslator.FromHtml("#111111")
-            : SystemColors.Control;
+            : ColorTranslator.FromHtml("#f4f5f8");
+    }
+
+    private Color ThemeSurface()
+    {
+        return IsDarkTheme()
+            ? ColorTranslator.FromHtml("#1b1b1f")
+            : Color.White;
+    }
+
+    private Color ThemeSurfaceAlt()
+    {
+        return IsDarkTheme()
+            ? ColorTranslator.FromHtml("#24242a")
+            : ColorTranslator.FromHtml("#eef1f7");
+    }
+
+    private Color ThemeBorder()
+    {
+        return IsDarkTheme()
+            ? ColorTranslator.FromHtml("#33333a")
+            : ColorTranslator.FromHtml("#c9ced8");
     }
 
     private Color ThemeText()
     {
-        return settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase)
+        return IsDarkTheme()
             ? ColorTranslator.FromHtml("#f2f2f2")
-            : Color.Black;
+            : ColorTranslator.FromHtml("#202026");
+    }
+
+    private Color ThemeMutedText()
+    {
+        return IsDarkTheme()
+            ? ColorTranslator.FromHtml("#a9a9b3")
+            : ColorTranslator.FromHtml("#575866");
+    }
+
+    private Color ThemeEditorBackground()
+    {
+        return IsDarkTheme()
+            ? ColorTranslator.FromHtml("#15151a")
+            : Color.White;
+    }
+
+    private Color ThemeEditorText()
+    {
+        return IsDarkTheme()
+            ? ColorTranslator.FromHtml("#eeeeee")
+            : ColorTranslator.FromHtml("#202026");
     }
 
     private void TryEditorAction(string actionName, Action action)
@@ -2162,13 +2497,13 @@ public partial class MainForm : Form
             return;
         }
 
-        bool dark = settings.Theme.Equals("Dark", StringComparison.OrdinalIgnoreCase);
+        bool dark = IsDarkTheme();
         int useDarkMode = dark ? 1 : 0;
         TrySetDwmAttribute(DwmwaUseImmersiveDarkMode, useDarkMode);
 
-        Color caption = dark ? ColorTranslator.FromHtml("#111111") : SystemColors.Control;
-        Color border = dark ? Color.Black : SystemColors.ControlDark;
-        Color text = dark ? ColorTranslator.FromHtml("#f2f2f2") : SystemColors.ControlText;
+        Color caption = ThemeBackground();
+        Color border = dark ? Color.Black : ThemeBorder();
+        Color text = ThemeText();
         TrySetDwmAttribute(DwmwaCaptionColor, ColorToColorRef(caption));
         TrySetDwmAttribute(DwmwaBorderColor, ColorToColorRef(border));
         TrySetDwmAttribute(DwmwaTextColor, ColorToColorRef(text));
@@ -2484,21 +2819,31 @@ public partial class MainForm : Form
         }
     }
 
-    private static string? Prompt(string title, string label)
+    private string? Prompt(string title, string label)
     {
+        Color background = ThemeBackground();
+        Color surface = ThemeSurface();
+        Color surfaceAlt = ThemeSurfaceAlt();
+        Color border = ThemeBorder();
+        Color text = ThemeText();
+
         using Form form = new()
         {
             Text = title,
             StartPosition = FormStartPosition.CenterParent,
-            Size = new Size(420, 140),
+            Size = new Size(460, 150),
             FormBorderStyle = FormBorderStyle.FixedDialog,
             MaximizeBox = false,
-            MinimizeBox = false
+            MinimizeBox = false,
+            BackColor = background,
+            ForeColor = text
         };
-        Label labelControl = new() { Text = label, Left = 12, Top = 16, Width = 380 };
-        TextBox input = new() { Left = 12, Top = 42, Width = 380 };
-        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Left = 232, Top = 74, Width = 76 };
-        Button cancel = new() { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 316, Top = 74, Width = 76 };
+        Label labelControl = new() { Text = label, Left = 16, Top = 16, Width = 410, ForeColor = text };
+        TextBox input = new() { Left = 16, Top = 44, Width = 410, BackColor = surface, ForeColor = text, BorderStyle = BorderStyle.FixedSingle };
+        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Left = 230, Top = 82, Width = 96 };
+        Button cancel = new() { Text = "Cancel", DialogResult = DialogResult.Cancel, Left = 332, Top = 82, Width = 96 };
+        StyleButton(ok, surfaceAlt, border, text);
+        StyleButton(cancel, surfaceAlt, border, text);
         form.Controls.AddRange([labelControl, input, ok, cancel]);
         form.AcceptButton = ok;
         form.CancelButton = cancel;
@@ -2532,9 +2877,17 @@ public partial class MainForm : Form
 
         protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
         {
-            if (dark)
+            if (!e.Item.Enabled)
             {
-                e.TextColor = ColorTranslator.FromHtml("#f2f2f2");
+                e.TextColor = dark ? ColorTranslator.FromHtml("#777782") : ColorTranslator.FromHtml("#8a8c98");
+            }
+            else if (dark || e.Item.Selected || e.Item.Pressed)
+            {
+                e.TextColor = Color.White;
+            }
+            else
+            {
+                e.TextColor = ColorTranslator.FromHtml("#202026");
             }
             base.OnRenderItemText(e);
         }
@@ -2570,6 +2923,9 @@ public partial class MainForm : Form
         public override Color MenuItemBorder => primary;
         public override Color MenuItemSelectedGradientBegin => primary;
         public override Color MenuItemSelectedGradientEnd => primary;
+        public override Color MenuItemPressedGradientBegin => primary;
+        public override Color MenuItemPressedGradientMiddle => primary;
+        public override Color MenuItemPressedGradientEnd => primary;
         public override Color MenuBorder => dark ? ColorTranslator.FromHtml("#33333a") : base.MenuBorder;
         public override Color SeparatorDark => dark ? ColorTranslator.FromHtml("#33333a") : base.SeparatorDark;
         public override Color SeparatorLight => dark ? ColorTranslator.FromHtml("#33333a") : base.SeparatorLight;
@@ -2577,12 +2933,24 @@ public partial class MainForm : Form
         public override Color ImageMarginGradientBegin => dark ? ColorTranslator.FromHtml("#1b1b1f") : Color.White;
         public override Color ImageMarginGradientMiddle => dark ? ColorTranslator.FromHtml("#1b1b1f") : Color.White;
         public override Color ImageMarginGradientEnd => dark ? ColorTranslator.FromHtml("#1b1b1f") : Color.White;
-        public override Color ToolStripGradientBegin => dark ? ColorTranslator.FromHtml("#111111") : ColorTranslator.FromHtml("#f8f8fb");
+        public override Color ToolStripGradientBegin => dark ? ColorTranslator.FromHtml("#111111") : ColorTranslator.FromHtml("#f4f5f8");
         public override Color ToolStripGradientMiddle => ToolStripGradientBegin;
         public override Color ToolStripGradientEnd => ToolStripGradientBegin;
+        public override Color MenuStripGradientBegin => ToolStripGradientBegin;
+        public override Color MenuStripGradientEnd => ToolStripGradientBegin;
+        public override Color StatusStripGradientBegin => ToolStripGradientBegin;
+        public override Color StatusStripGradientEnd => ToolStripGradientBegin;
+        public override Color ToolStripBorder => dark ? ColorTranslator.FromHtml("#33333a") : ColorTranslator.FromHtml("#c9ced8");
+        public override Color ButtonSelectedBorder => primary;
         public override Color ButtonSelectedGradientBegin => primary;
+        public override Color ButtonSelectedGradientMiddle => primary;
         public override Color ButtonSelectedGradientEnd => primary;
+        public override Color ButtonPressedBorder => primary;
         public override Color ButtonPressedGradientBegin => primary;
+        public override Color ButtonPressedGradientMiddle => primary;
         public override Color ButtonPressedGradientEnd => primary;
+        public override Color ButtonCheckedGradientBegin => primary;
+        public override Color ButtonCheckedGradientMiddle => primary;
+        public override Color ButtonCheckedGradientEnd => primary;
     }
 }

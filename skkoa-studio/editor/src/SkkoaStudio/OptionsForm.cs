@@ -37,8 +37,8 @@ public sealed class OptionsForm : Form
 
         Text = "Options";
         StartPosition = FormStartPosition.CenterParent;
-        Size = new Size(640, 430);
-        MinimumSize = new Size(640, 430);
+        Size = new Size(680, 430);
+        MinimumSize = new Size(680, 430);
         Font = new Font("Segoe UI", 9);
 
         TableLayoutPanel root = new()
@@ -50,7 +50,7 @@ public sealed class OptionsForm : Form
         };
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150));
         root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 92));
+        root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 112));
         for (int i = 0; i < 11; i++)
         {
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
@@ -60,6 +60,7 @@ public sealed class OptionsForm : Form
         themeBox.DropDownStyle = ComboBoxStyle.DropDownList;
         themeBox.Items.AddRange(["Dark", "Light"]);
         themeBox.SelectedItem = Settings.Theme;
+        themeBox.SelectedIndexChanged += (_, _) => ApplyTheme();
         primaryColorBox.Text = Settings.PrimaryColor;
 
         fontBox.Text = Settings.FontFamily;
@@ -105,10 +106,10 @@ public sealed class OptionsForm : Form
         {
             Dock = DockStyle.Bottom,
             FlowDirection = FlowDirection.RightToLeft,
-            Height = 42
+            Height = 46
         };
-        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Width = 88 };
-        Button cancel = new() { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 88 };
+        Button ok = new() { Text = "OK", DialogResult = DialogResult.OK, Width = 100 };
+        Button cancel = new() { Text = "Cancel", DialogResult = DialogResult.Cancel, Width = 100 };
         ok.Click += (_, _) => Commit();
         buttons.Controls.Add(cancel);
         buttons.Controls.Add(ok);
@@ -117,6 +118,7 @@ public sealed class OptionsForm : Form
         Controls.Add(buttons);
         AcceptButton = ok;
         CancelButton = cancel;
+        ApplyTheme();
     }
 
     public SkkoaStudioSettings Settings { get; private set; }
@@ -210,5 +212,77 @@ public sealed class OptionsForm : Form
         Settings.DiagnosticsOnType = diagnosticsOnTypeBox.Checked;
         Settings.CompilerPath = compilerPathBox.Text.Trim();
         Settings.LibPath = libPathBox.Text.Trim();
+    }
+
+    private void ApplyTheme()
+    {
+        bool dark = string.Equals(Convert.ToString(themeBox.SelectedItem), "Dark", StringComparison.OrdinalIgnoreCase);
+        Color background = dark ? ColorTranslator.FromHtml("#111111") : ColorTranslator.FromHtml("#f4f5f8");
+        Color surface = dark ? ColorTranslator.FromHtml("#1b1b1f") : Color.White;
+        Color surfaceAlt = dark ? ColorTranslator.FromHtml("#24242a") : ColorTranslator.FromHtml("#eef1f7");
+        Color border = dark ? ColorTranslator.FromHtml("#33333a") : ColorTranslator.FromHtml("#c9ced8");
+        Color text = dark ? ColorTranslator.FromHtml("#f2f2f2") : ColorTranslator.FromHtml("#202026");
+
+        BackColor = background;
+        ForeColor = text;
+        ApplyThemeToControls(Controls, background, surface, surfaceAlt, border, text);
+    }
+
+    private static void ApplyThemeToControls(Control.ControlCollection controls, Color background, Color surface, Color surfaceAlt, Color border, Color text)
+    {
+        foreach (Control control in controls)
+        {
+            control.ForeColor = text;
+
+            switch (control)
+            {
+                case Button button:
+                    StyleButton(button, surfaceAlt, border, text);
+                    break;
+                case TextBox textBox:
+                    textBox.BackColor = surface;
+                    textBox.ForeColor = text;
+                    textBox.BorderStyle = BorderStyle.FixedSingle;
+                    break;
+                case ComboBox comboBox:
+                    comboBox.BackColor = surface;
+                    comboBox.ForeColor = text;
+                    break;
+                case NumericUpDown numeric:
+                    numeric.BackColor = surface;
+                    numeric.ForeColor = text;
+                    break;
+                case CheckBox checkBox:
+                    checkBox.BackColor = background;
+                    checkBox.ForeColor = text;
+                    break;
+                case Label label:
+                    label.BackColor = background;
+                    label.ForeColor = text;
+                    break;
+                case Panel or TableLayoutPanel or FlowLayoutPanel:
+                    control.BackColor = background;
+                    break;
+            }
+
+            if (control.HasChildren)
+            {
+                ApplyThemeToControls(control.Controls, background, surface, surfaceAlt, border, text);
+            }
+        }
+    }
+
+    private static void StyleButton(Button button, Color background, Color border, Color text)
+    {
+        button.UseVisualStyleBackColor = false;
+        button.BackColor = background;
+        button.ForeColor = text;
+        button.FlatStyle = FlatStyle.Flat;
+        button.FlatAppearance.BorderColor = border;
+        button.FlatAppearance.MouseOverBackColor = ControlPaint.Light(background);
+        button.FlatAppearance.MouseDownBackColor = ControlPaint.Dark(background);
+        button.MinimumSize = new Size(96, 30);
+        button.Width = Math.Max(button.Width, 96);
+        button.Padding = new Padding(8, 2, 8, 2);
     }
 }

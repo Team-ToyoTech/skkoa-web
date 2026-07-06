@@ -33,7 +33,7 @@ skkoa-studio/
 - Light/Dark theme support, defaulting to Dark
 - Primary brand color `#a259ff`
 - Single-file and `.skkoaproj` project mode
-- Bundled `skkoa.exe` plus standard modules
+- Bundled `skkoa.exe`, standard modules, NASM, and GCC toolchain
 - Compile, run, stdin/stdout console, and stop
 - Minimal language-level step debugger
 - Installer registration for Start Menu, Apps & Features, uninstall, and file associations
@@ -44,7 +44,11 @@ Required build tools:
 
 - .NET 8 SDK
 - Python 3 with `skkoa-studio/installer/scripts/requirements.txt`
-- MinGW-w64/MSYS2 `g++`
+- Existing MinGW-w64/MSYS2 with GCC/NASM, or network access so the script can bootstrap MSYS2
+
+The release build stages a bundled MSYS2 toolchain under `tools/skkoa/toolchain/msys64`.
+If an existing MSYS2 install with GCC and NASM is available, it is copied into the
+artifact; otherwise the build script downloads MSYS2 and installs the needed packages.
 
 ```powershell
 python -m pip install -r .\skkoa-studio\installer\scripts\requirements.txt
@@ -98,7 +102,7 @@ Run `SKKOA-Studio-Setup-x64.exe`. The installer defaults to:
 %LocalAppData%\Programs\SKKOA Studio
 ```
 
-It can create Start Menu and desktop shortcuts, associate `.koa` and `.skkoaproj`, optionally add the bundled compiler to the user PATH, and launch Studio after install.
+It can create Start Menu and desktop shortcuts, associate `.koa` and `.skkoaproj`, optionally add the bundled compiler, NASM, and GCC paths to the user PATH, and launch Studio after install.
 
 ## Uninstall
 
@@ -115,4 +119,4 @@ Use Windows Settings > Apps > Installed apps, or the Start Menu uninstall shortc
 
 - Step debugging supports the core education-oriented subset. Native compile/run remains the full compiler path.
 - The installer currently produces an Inno Setup EXE. MSI is not generated in this implementation.
-- NASM/GCC are required for native linking; Studio offers a toolchain repair/install action.
+- The installer EXE can be large because it includes the native NASM/GCC toolchain required for compile/run.

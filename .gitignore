@@ -13,5 +13,7 @@ TestResults/
 coverage/
 coverage.*/
 skkoa-studio/editor/artifacts/
+skkoa-studio/editor/tools/skkoa/source/
+skkoa-studio/editor/tools/skkoa/toolchain/
 skkoa-studio/installer/output/
 skkoa-studio/installer/.tools/

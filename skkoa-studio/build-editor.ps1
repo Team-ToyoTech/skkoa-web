@@ -1,7 +1,8 @@
 param(
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
-    [switch]$SkipTests
+    [switch]$SkipTests,
+    [switch]$SkipBundledToolchain
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,6 +14,10 @@ $ArtifactsRoot = Join-Path $EditorRoot "artifacts"
 $PublishDir = Join-Path $ArtifactsRoot "SKKOA-Studio-win-x64"
 $ZipPath = Join-Path $ArtifactsRoot "SKKOA-Studio-win-x64.zip"
 $CompilerOut = Join-Path $EditorRoot "tools\skkoa\skkoa.exe"
+$BundledToolchainRoot = Join-Path $EditorRoot "tools\skkoa\toolchain"
+$BundledMsysRoot = Join-Path $BundledToolchainRoot "msys64"
+$BundledMingwBin = Join-Path $BundledMsysRoot "mingw64\bin"
+$BundledUsrBin = Join-Path $BundledMsysRoot "usr\bin"
 
 function Write-Step($Message) {
     Write-Host "[skkoa-studio] $Message"
@@ -54,6 +59,142 @@ function Assert-RequiredFile($Path, $Message) {
     }
 }
 
+function Add-BundledToolchainPath {
+    $Paths = @($BundledMingwBin, $BundledUsrBin) + ($env:Path -split ";")
+    $env:Path = ($Paths | Where-Object { $_ -and (Test-Path $_) } | Select-Object -Unique) -join ";"
+}
+
+function Test-MsysToolchain($MsysRoot) {
+    return (
+        (Test-Path (Join-Path $MsysRoot "mingw64\bin\gcc.exe")) -and
+        (Test-Path (Join-Path $MsysRoot "mingw64\bin\g++.exe")) -and
+        (Test-Path (Join-Path $MsysRoot "mingw64\bin\nasm.exe")) -and
+        (Test-Path (Join-Path $MsysRoot "usr\bin\bash.exe"))
+    )
+}
+
+function Find-ExistingMsysRoot {
+    $Candidates = @()
+    foreach ($Tool in @("g++", "gcc", "nasm")) {
+        $Command = Get-Command $Tool -ErrorAction SilentlyContinue
+        if ($Command) {
+            $ToolPath = Split-Path -Parent $Command.Source
+            $MingwRoot = Split-Path -Parent $ToolPath
+            $Candidate = Split-Path -Parent $MingwRoot
+            $Candidates += $Candidate
+        }
+    }
+    $Candidates += $env:MSYS2_LOCATION
+    $Candidates += "C:\msys64"
+    $Candidates += "C:\tools\msys64"
+    if ($env:LOCALAPPDATA) {
+        $Candidates += (Join-Path $env:LOCALAPPDATA "Programs\msys64")
+    }
+
+    foreach ($Candidate in $Candidates | Where-Object { $_ } | Select-Object -Unique) {
+        try {
+            if (Test-MsysToolchain $Candidate) {
+                return (Resolve-Path $Candidate).Path
+            }
+        }
+        catch {
+        }
+    }
+    return $null
+}
+
+function Invoke-RobocopyMirror($Source, $Destination) {
+    New-Item -ItemType Directory -Force -Path (Split-Path $Destination) | Out-Null
+    & robocopy $Source $Destination /MIR /R:2 /W:2 /NFL /NDL /NJH /NJS /NP | Out-Host
+    if ($LASTEXITCODE -gt 7) {
+        throw "Toolchain copy failed. robocopy exit code: $LASTEXITCODE"
+    }
+    $global:LASTEXITCODE = 0
+}
+
+function Remove-ToolchainCaches {
+    foreach ($Path in @(
+        (Join-Path $BundledMsysRoot "var\cache\pacman\pkg"),
+        (Join-Path $BundledMsysRoot "tmp")
+    )) {
+        if (Test-Path $Path) {
+            Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+function Install-MsysToolchainIntoBundle {
+    Write-Step "Downloading MSYS2 toolchain for bundled NASM/GCC"
+    New-Item -ItemType Directory -Force -Path $BundledToolchainRoot | Out-Null
+    $Headers = @{ "User-Agent" = "SKKOA Studio release build" }
+    $Release = Invoke-RestMethod -Headers $Headers "https://api.github.com/repos/msys2/msys2-installer/releases/latest"
+    $Asset = $Release.assets |
+        Where-Object { $_.name -match "^msys2-base-x86_64-.*\.sfx\.exe$" } |
+        Select-Object -First 1
+    if (!$Asset) {
+        throw "Could not find an MSYS2 self-extracting installer asset."
+    }
+
+    $TempRoot = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
+    $InstallerPath = Join-Path $TempRoot $Asset.name
+    $PartialPath = "$InstallerPath.partial"
+    Remove-Item -LiteralPath $PartialPath -Force -ErrorAction SilentlyContinue
+    Invoke-WebRequest -UseBasicParsing -Uri $Asset.browser_download_url -OutFile $PartialPath
+    Move-Item -LiteralPath $PartialPath -Destination $InstallerPath -Force
+    & $InstallerPath -y "-o$BundledToolchainRoot"
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSYS2 extraction failed. Exit code: $LASTEXITCODE"
+    }
+    Remove-Item -LiteralPath $InstallerPath -Force -ErrorAction SilentlyContinue
+
+    Add-BundledToolchainPath
+    $Bash = Join-Path $BundledUsrBin "bash.exe"
+    Assert-RequiredFile $Bash "MSYS2 bash was not found after extraction."
+    & $Bash -lc "pacman --noconfirm -Syu || true"
+    & $Bash -lc "pacman --noconfirm --needed -S mingw-w64-x86_64-gcc mingw-w64-x86_64-nasm"
+    if ($LASTEXITCODE -ne 0) {
+        throw "MSYS2 package installation failed. Exit code: $LASTEXITCODE"
+    }
+}
+
+function Ensure-BundledToolchain {
+    if ($SkipBundledToolchain) {
+        Write-Step "Skipping bundled NASM/GCC toolchain staging"
+        return
+    }
+
+    if (Test-MsysToolchain $BundledMsysRoot) {
+        Write-Step "Using existing bundled NASM/GCC toolchain"
+        Add-BundledToolchainPath
+        return
+    }
+
+    $ExistingMsysRoot = Find-ExistingMsysRoot
+    if ($ExistingMsysRoot) {
+        Write-Step "Copying MSYS2 NASM/GCC toolchain from $ExistingMsysRoot"
+        Invoke-RobocopyMirror $ExistingMsysRoot $BundledMsysRoot
+    }
+    else {
+        Install-MsysToolchainIntoBundle
+    }
+
+    Remove-ToolchainCaches
+    if (!(Test-MsysToolchain $BundledMsysRoot)) {
+        throw "Bundled toolchain is incomplete. Expected gcc.exe, g++.exe, nasm.exe, and bash.exe under $BundledMsysRoot."
+    }
+    Add-BundledToolchainPath
+}
+
+function Write-CompilerLauncher {
+    $Launcher = Join-Path $EditorRoot "tools\skkoa\skkoa.cmd"
+    @"
+@echo off
+set "SKKOA_HOME=%~dp0"
+set "PATH=%SKKOA_HOME%toolchain\msys64\mingw64\bin;%SKKOA_HOME%toolchain\msys64\usr\bin;%PATH%"
+"%SKKOA_HOME%skkoa.exe" %*
+"@ | Set-Content -Path $Launcher -Encoding ASCII
+}
+
 Write-Step "Generating icons"
 $Python = @(Find-Python)
 $PythonArgs = @()
@@ -62,6 +203,8 @@ if ($Python.Length -gt 1) {
 }
 $PythonArgs += (Join-Path $Root "installer\scripts\generate-icons.py")
 Invoke-Native $Python[0] $PythonArgs "Icon generation failed."
+
+Ensure-BundledToolchain
 
 Write-Step "Building bundled SKKOA compiler"
 New-Item -ItemType Directory -Force -Path (Split-Path $CompilerOut) | Out-Null
@@ -85,6 +228,7 @@ New-Item -ItemType Directory -Force -Path (Join-Path $EditorRoot "tools\skkoa\do
 Assert-RequiredFile (Join-Path $RepoRoot "compiler\download\skkoa-windows.ps1") "Bundled toolchain script was not found."
 Copy-Item -Path (Join-Path $RepoRoot "compiler\lib\*.koa") -Destination (Join-Path $EditorRoot "tools\skkoa\lib") -Force
 Copy-Item -LiteralPath (Join-Path $RepoRoot "compiler\download\skkoa-windows.ps1") -Destination (Join-Path $EditorRoot "tools\skkoa\download\skkoa-windows.ps1") -Force
+Write-CompilerLauncher
 
 $Dotnet = Find-RequiredCommand "dotnet" "Install the .NET 8 SDK."
 $Solution = Join-Path $EditorRoot "SkkoaStudio.sln"
@@ -107,15 +251,25 @@ $Project = Join-Path $EditorRoot "src\SkkoaStudio\SkkoaStudio.csproj"
 Assert-RequiredFile $Project "Editor project was not found."
 Invoke-Native $Dotnet @("publish", $Project, "-c", $Configuration, "-r", $Runtime, "--self-contained", "false", "-o", $PublishDir) "dotnet publish failed."
 
-foreach ($Required in @(
+$RequiredFiles = @(
     (Join-Path $PublishDir "SkkoaStudio.exe"),
     (Join-Path $PublishDir "assets\icons\skkoa.ico"),
     (Join-Path $PublishDir "assets\icons\skkoa-file.ico"),
     (Join-Path $PublishDir "tools\skkoa\skkoa.exe"),
+    (Join-Path $PublishDir "tools\skkoa\skkoa.cmd"),
     (Join-Path $PublishDir "tools\skkoa\lib\stack.koa"),
     (Join-Path $PublishDir "tools\skkoa\lib\queue.koa"),
     (Join-Path $PublishDir "tools\skkoa\lib\structures.koa")
-)) {
+)
+if (!$SkipBundledToolchain) {
+    $RequiredFiles += @(
+        (Join-Path $PublishDir "tools\skkoa\toolchain\msys64\mingw64\bin\gcc.exe"),
+        (Join-Path $PublishDir "tools\skkoa\toolchain\msys64\mingw64\bin\g++.exe"),
+        (Join-Path $PublishDir "tools\skkoa\toolchain\msys64\mingw64\bin\nasm.exe"),
+        (Join-Path $PublishDir "tools\skkoa\toolchain\msys64\usr\bin\bash.exe")
+    )
+}
+foreach ($Required in $RequiredFiles) {
     Assert-RequiredFile $Required "Required publish file missing."
 }
 

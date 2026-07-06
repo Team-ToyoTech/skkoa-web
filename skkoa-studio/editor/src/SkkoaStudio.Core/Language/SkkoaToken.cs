@@ -42,7 +42,15 @@ public enum SkkoaHighlightStyle
     Brace = 10,
     FunctionName = 11,
     StructName = 12,
-    VariableName = 13
+    VariableName = 13,
+    BlockKeyword = 14,
+    DeclarationKeyword = 15,
+    ConditionalKeyword = 16,
+    LoopKeyword = 17,
+    IoKeyword = 18,
+    FunctionKeyword = 19,
+    ImportKeyword = 20,
+    LogicalKeyword = 21
 }
 
 public sealed record SkkoaHighlightSpan(int Start, int Length, SkkoaHighlightStyle Style);

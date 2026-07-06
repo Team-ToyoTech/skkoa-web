@@ -19,7 +19,7 @@ public sealed class SkkoaSyntaxHighlighter
 
             SkkoaHighlightStyle style = token.Kind switch
             {
-                SkkoaTokenKind.Keyword => SkkoaHighlightStyle.Keyword,
+                SkkoaTokenKind.Keyword => ClassifyKeyword(token.Text),
                 SkkoaTokenKind.Type => SkkoaHighlightStyle.Type,
                 SkkoaTokenKind.BooleanLiteral => SkkoaHighlightStyle.Literal,
                 SkkoaTokenKind.StandardFunction or SkkoaTokenKind.StandardModuleFunction => SkkoaHighlightStyle.StandardFunction,
@@ -56,6 +56,22 @@ public sealed class SkkoaSyntaxHighlighter
             return SkkoaHighlightStyle.StructName;
         }
         return SkkoaHighlightStyle.VariableName;
+    }
+
+    private static SkkoaHighlightStyle ClassifyKeyword(string text)
+    {
+        return text switch
+        {
+            "시작" or "끝" => SkkoaHighlightStyle.BlockKeyword,
+            "변수" or "상수" or "구조체" => SkkoaHighlightStyle.DeclarationKeyword,
+            "만약" or "이면" or "아니면만약" or "아니면" => SkkoaHighlightStyle.ConditionalKeyword,
+            "동안" or "반복" or "부터" or "까지" or "중단" or "계속" => SkkoaHighlightStyle.LoopKeyword,
+            "출력" or "입력" => SkkoaHighlightStyle.IoKeyword,
+            "함수" or "반환" => SkkoaHighlightStyle.FunctionKeyword,
+            "가져오기" => SkkoaHighlightStyle.ImportKeyword,
+            "그리고" or "또는" or "아님" => SkkoaHighlightStyle.LogicalKeyword,
+            _ => SkkoaHighlightStyle.Keyword
+        };
     }
 
     private static SkkoaToken? PreviousSignificant(IReadOnlyList<SkkoaToken> tokens, int index)

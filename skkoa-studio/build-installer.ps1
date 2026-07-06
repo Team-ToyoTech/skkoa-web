@@ -84,6 +84,11 @@ function Install-LocalInnoSetup {
 
 Assert-RequiredFile (Join-Path $EditorArtifact "SkkoaStudio.exe") "Editor publish output was not found. Run skkoa-studio\build-editor.ps1 first."
 Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\skkoa.exe") "Bundled SKKOA compiler was not found in the editor artifact."
+Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\skkoa.cmd") "Bundled SKKOA compiler launcher was not found in the editor artifact."
+Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\mingw64\bin\gcc.exe") "Bundled GCC was not found in the editor artifact."
+Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\mingw64\bin\g++.exe") "Bundled G++ was not found in the editor artifact."
+Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\mingw64\bin\nasm.exe") "Bundled NASM was not found in the editor artifact."
+Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\usr\bin\bash.exe") "Bundled MSYS2 runtime tools were not found in the editor artifact."
 Assert-RequiredFile (Join-Path $EditorArtifact "assets\icons\skkoa.ico") "Editor icon was not found in the editor artifact."
 
 Write-Step "Generating icons"

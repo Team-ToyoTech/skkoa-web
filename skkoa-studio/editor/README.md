@@ -8,7 +8,7 @@ SKKOA Studio is a Windows desktop IDE for SKKOA; LTW `.koa` files. It includes a
 - .NET 8 SDK for building
 - Visual Studio 2022 or `dotnet` CLI
 
-The app looks for the bundled compiler at `tools/skkoa/skkoa.exe` relative to the app folder. The repository copy is under `editor/tools/skkoa/`.
+The app looks for the bundled compiler at `tools/skkoa/skkoa.exe` relative to the app folder. The bundled NASM/GCC toolchain is expected at `tools/skkoa/toolchain/msys64/`. The repository copy is under `editor/tools/skkoa/`.
 
 ## Build
 
@@ -32,11 +32,11 @@ cd skkoa-studio/editor
 dotnet publish .\src\SkkoaStudio\SkkoaStudio.csproj -c Release -r win-x64 --self-contained false
 ```
 
-The publish output includes `tools/skkoa/skkoa.exe`, `stack.koa`, `queue.koa`, `structures.koa`, and the Windows toolchain installer script.
+The publish output includes `tools/skkoa/skkoa.exe`, `stack.koa`, `queue.koa`, `structures.koa`, the Windows toolchain repair script, and the bundled MSYS2 NASM/GCC toolchain.
 
 ## Toolchain
 
-`--check` diagnostics only need the bundled compiler. Native compile/run also needs NASM and GCC. SKKOA Studio checks for them before compile and exposes `Tools > Install/Repair Toolchain`, which runs the bundled `skkoa-windows.ps1` into `%LOCALAPPDATA%\SKKOA Studio\skkoa` without changing the user PATH.
+`--check` diagnostics only need the bundled compiler. Native compile/run also needs NASM and GCC, which are included in installer builds under `tools/skkoa/toolchain/msys64`. SKKOA Studio still exposes `Tools > Install/Repair Toolchain` as a recovery action if a development checkout or damaged install is missing the bundled toolchain.
 
 ## Main Features
 

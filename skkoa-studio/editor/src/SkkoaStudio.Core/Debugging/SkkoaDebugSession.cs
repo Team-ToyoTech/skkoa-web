@@ -24,6 +24,8 @@ public sealed record SkkoaDebugSnapshot(
 
 public sealed class SkkoaDebugSession
 {
+    private const int MaxAutomaticSteps = 10000;
+
     private readonly DebugProgram program;
     private readonly HashSet<int> breakpoints;
     private readonly List<DebugFrame> stack = [];
@@ -100,12 +102,18 @@ public sealed class SkkoaDebugSession
     {
         int initialDepth = stack.Count;
         int? initialLine = CurrentLine();
+        int steps = 0;
         StepInto();
         while (State == SkkoaDebugState.Paused &&
                stack.Count > initialDepth &&
                CurrentLine() != initialLine)
         {
             StepInto();
+            steps++;
+            if (StopIfAutomaticStepLimitExceeded(steps))
+            {
+                break;
+            }
         }
         return Snapshot();
     }
@@ -113,9 +121,15 @@ public sealed class SkkoaDebugSession
     public SkkoaDebugSnapshot StepOut()
     {
         int targetDepth = Math.Max(0, stack.Count - 1);
+        int steps = 0;
         while (State == SkkoaDebugState.Paused && stack.Count > targetDepth)
         {
             StepInto();
+            steps++;
+            if (StopIfAutomaticStepLimitExceeded(steps))
+            {
+                break;
+            }
         }
         return Snapshot();
     }
@@ -123,6 +137,7 @@ public sealed class SkkoaDebugSession
     public SkkoaDebugSnapshot Continue()
     {
         bool first = true;
+        int steps = 0;
         while (State == SkkoaDebugState.Paused)
         {
             int? line = CurrentLine();
@@ -133,6 +148,11 @@ public sealed class SkkoaDebugSession
             first = false;
             StepInto();
             if (State == SkkoaDebugState.WaitingForInput)
+            {
+                break;
+            }
+            steps++;
+            if (StopIfAutomaticStepLimitExceeded(steps))
             {
                 break;
             }
@@ -193,6 +213,18 @@ public sealed class SkkoaDebugSession
                 ExecuteSimple(frame, statement);
                 return;
         }
+    }
+
+    private bool StopIfAutomaticStepLimitExceeded(int steps)
+    {
+        if (steps <= MaxAutomaticSteps)
+        {
+            return false;
+        }
+
+        State = SkkoaDebugState.Faulted;
+        message = "자동 디버그 진행이 너무 오래 실행되어 중단했습니다. 반복 조건이나 중단점을 확인하세요.";
+        return true;
     }
 
     private void ExecuteRepeat(DebugFrame frame, DebugStatement statement)

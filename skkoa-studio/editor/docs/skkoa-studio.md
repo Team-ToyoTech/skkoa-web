@@ -10,7 +10,7 @@
     - `stack.koa`
     - `queue.koa`
     - `structures.koa`
-- Windows install scripts already exist under `compiler/download/` and can install MSYS2 GCC/NASM.
+- Windows release artifacts bundle MSYS2 GCC/NASM under `tools/skkoa/toolchain/msys64`; the `compiler/download/` script remains available as a repair path for development checkouts or damaged installs.
 - The existing web compiler contains a JavaScript line simulator. SKKOA Studio uses the same broad strategy for debugging: native compile/run remains compiler-based, but step debugging uses a SKKOA-specific execution layer.
 
 ## Editor Component
