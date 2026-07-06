@@ -1,0 +1,15 @@
+{
+    "theme": "Light",
+    "primary": "#a259ff",
+    "background": "#f8f8fb",
+    "surface": "#ffffff",
+    "surfaceAlt": "#f0f0f5",
+    "border": "#d8d8e0",
+    "text": "#202026",
+    "mutedText": "#666674",
+    "editorBackground": "#ffffff",
+    "editorText": "#202026",
+    "lineNumber": "#777782",
+    "currentLine": "#edf1ff",
+    "selection": "#d8c7ff"
+}

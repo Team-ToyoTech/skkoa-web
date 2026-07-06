@@ -1,0 +1,40 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0/win-x64",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {},
+    ".NETCoreApp,Version=v8.0/win-x64": {
+      "SkkoaStudio.Updater/0.1.1": {
+        "dependencies": {
+          "SkkoaStudio.Core": "1.0.0"
+        },
+        "runtime": {
+          "SkkoaStudio.Updater.dll": {}
+        }
+      },
+      "SkkoaStudio.Core/1.0.0": {
+        "runtime": {
+          "SkkoaStudio.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SkkoaStudio.Updater/0.1.1": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "SkkoaStudio.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

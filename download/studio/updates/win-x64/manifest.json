@@ -1,0 +1,172 @@
+﻿{
+    "schemaVersion":  1,
+    "application":  "SKKOA Studio",
+    "version":  "0.1.1",
+    "runtime":  "win-x64",
+    "publishedAt":  "2026-07-06T10:47:33.9204593+00:00",
+    "minimumUpdaterVersion":  "0.1.0",
+    "filesBaseUrl":  "files/",
+    "installerUrl":  "/download/studio/SKKOA-Studio-Setup-x64.exe",
+    "releaseNotes":  "업데이트 알림 창에서 긴 변경 내역이 잘리지 않도록 스크롤 가능한 표시 영역으로 수정했습니다.",
+    "files":  [
+                  {
+                      "path":  "assets/icons/skkoa.ico",
+                      "size":  51537,
+                      "sha256":  "b355109503b7b9172d474dd84dbad9434a1855709dcb7f98f81fa428e2d09f77",
+                      "url":  "assets/icons/skkoa.ico"
+                  },
+                  {
+                      "path":  "assets/icons/skkoa-file.ico",
+                      "size":  51537,
+                      "sha256":  "b355109503b7b9172d474dd84dbad9434a1855709dcb7f98f81fa428e2d09f77",
+                      "url":  "assets/icons/skkoa-file.ico"
+                  },
+                  {
+                      "path":  "assets/themes/dark.json",
+                      "size":  361,
+                      "sha256":  "a65051a58f2331568343f610472c4a9bc9c58b8803a3c8ebd2269183e2e2837a",
+                      "url":  "assets/themes/dark.json"
+                  },
+                  {
+                      "path":  "assets/themes/light.json",
+                      "size":  362,
+                      "sha256":  "802a9132e20643e77c7deef0c17d41fad5a520ae1bd3b051a23e22ba1f0f56a6",
+                      "url":  "assets/themes/light.json"
+                  },
+                  {
+                      "path":  "Lexilla.dll",
+                      "size":  1200128,
+                      "sha256":  "887221e241e871990f9fd1877e599ef1f54b973d7f5d4c671e8be787d5a257da",
+                      "url":  "Lexilla.dll"
+                  },
+                  {
+                      "path":  "Scintilla.dll",
+                      "size":  1018368,
+                      "sha256":  "6ee03c24461168d89982afe22edccdaee70061788059b75c6ae2fbf794cef496",
+                      "url":  "Scintilla.dll"
+                  },
+                  {
+                      "path":  "Scintilla.NET.Abstractions.dll",
+                      "size":  202752,
+                      "sha256":  "f709f1d615a6913b5052e4d9298541745e4e1fa8cfbdf878d86c16696933c8a2",
+                      "url":  "Scintilla.NET.Abstractions.dll"
+                  },
+                  {
+                      "path":  "Scintilla.NET.WinForms.dll",
+                      "size":  116224,
+                      "sha256":  "2b483c29794d5156076fa4ca8b66ac9da7f22394b1c86eafe82c333c7becb517",
+                      "url":  "Scintilla.NET.WinForms.dll"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Core.dll",
+                      "size":  121856,
+                      "sha256":  "3bf165623dea587b601d4404c7371339a87f807cb2726fd0fdc06a029f9fcf71",
+                      "url":  "SkkoaStudio.Core.dll"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Core.pdb",
+                      "size":  41276,
+                      "sha256":  "646492ea2b04e31b6682820ba9be50cfcc868f29825cb1758eb0056bcb15faa6",
+                      "url":  "SkkoaStudio.Core.pdb"
+                  },
+                  {
+                      "path":  "SkkoaStudio.deps.json",
+                      "size":  2217,
+                      "sha256":  "09b9fda9ac9a091f6ef3db33a4fb870385ae8bb69cc726fa072b4e33a51d9502",
+                      "url":  "SkkoaStudio.deps.json"
+                  },
+                  {
+                      "path":  "SkkoaStudio.dll",
+                      "size":  173056,
+                      "sha256":  "e4bffd19f75ac1ec91b67f1632db8371665709d626b68ef0e1f714826405a4f8",
+                      "url":  "SkkoaStudio.dll"
+                  },
+                  {
+                      "path":  "SkkoaStudio.exe",
+                      "size":  204288,
+                      "sha256":  "2e1241ab0d5cbae8a5b435082e6ea1715a96bcf8c80c36efc98b92e97b0c7e58",
+                      "url":  "SkkoaStudio.exe"
+                  },
+                  {
+                      "path":  "SkkoaStudio.pdb",
+                      "size":  42228,
+                      "sha256":  "8fa351bfdb8b147f3c3d4335471c7d29076d63fe0611eff846984fd6f14b9840",
+                      "url":  "SkkoaStudio.pdb"
+                  },
+                  {
+                      "path":  "SkkoaStudio.runtimeconfig.json",
+                      "size":  429,
+                      "sha256":  "73b37384bb001e78db2014d328750eb2990393712fd63cd00c0f41965b3dbe96",
+                      "url":  "SkkoaStudio.runtimeconfig.json"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Updater.deps.json",
+                      "size":  905,
+                      "sha256":  "9dfce244f256d4465693724ec9ae12e655f5b86a38a7debe1eba726c28515d21",
+                      "url":  "SkkoaStudio.Updater.deps.json"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Updater.dll",
+                      "size":  12288,
+                      "sha256":  "75d72d187dedc7c1c622a46c2cf91beeb479094cae1b5e540f0a683abcf1e1b9",
+                      "url":  "SkkoaStudio.Updater.dll"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Updater.exe",
+                      "size":  151552,
+                      "sha256":  "b269c04a3a91cc6a1bc14c67b26c8555d1bcae2118c9c500f752ebb8814e8875",
+                      "url":  "SkkoaStudio.Updater.exe"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Updater.pdb",
+                      "size":  13248,
+                      "sha256":  "d99bca8918770b300cfbd87d3c5282bb53619d54004ca25a0171514b5df3d52e",
+                      "url":  "SkkoaStudio.Updater.pdb"
+                  },
+                  {
+                      "path":  "SkkoaStudio.Updater.runtimeconfig.json",
+                      "size":  397,
+                      "sha256":  "ca1a6b5b185174698e0f5f9ae732ad3d2d3ed5b122ed666f35cc214283e83b7f",
+                      "url":  "SkkoaStudio.Updater.runtimeconfig.json"
+                  },
+                  {
+                      "path":  "tools/skkoa/download/skkoa-windows.ps1",
+                      "size":  7594,
+                      "sha256":  "f0e9485f8b903a6b10b483eb590def1cbb1dfc37583864b99fad757bb8c0e217",
+                      "url":  "tools/skkoa/download/skkoa-windows.ps1"
+                  },
+                  {
+                      "path":  "tools/skkoa/lib/queue.koa",
+                      "size":  1382,
+                      "sha256":  "fd91ae396900f22d831a61ab3816c4af20b95245d8030c4a97e3ab68e46bf88a",
+                      "url":  "tools/skkoa/lib/queue.koa"
+                  },
+                  {
+                      "path":  "tools/skkoa/lib/stack.koa",
+                      "size":  1110,
+                      "sha256":  "aa8de6087a423be890fd1421182f814437f1a151dc12a90edf7a3ff92f045c5d",
+                      "url":  "tools/skkoa/lib/stack.koa"
+                  },
+                  {
+                      "path":  "tools/skkoa/lib/structures.koa",
+                      "size":  52,
+                      "sha256":  "5415ff6d40c911bfdc977ca16417244b813c3849e5bc48f0eb2cbec63fdfcba5",
+                      "url":  "tools/skkoa/lib/structures.koa"
+                  },
+                  {
+                      "path":  "tools/skkoa/skkoa.cmd",
+                      "size":  157,
+                      "sha256":  "7abc5e6d17bcc9f0a8471901e670302ac4f3c7aeeebf026ee7df52dc5c7c8a86",
+                      "url":  "tools/skkoa/skkoa.cmd"
+                  },
+                  {
+                      "path":  "tools/skkoa/skkoa.exe",
+                      "size":  516060,
+                      "sha256":  "39415e27ec0ca8d6a60aa7f5861db40201500a328aef0a9fa7e154bd0ec97d0d",
+                      "url":  "tools/skkoa/skkoa.exe"
+                  }
+              ],
+    "delete":  [
+
+               ]
+}

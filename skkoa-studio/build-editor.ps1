@@ -1,6 +1,7 @@
 param(
     [string]$Configuration = "Release",
     [string]$Runtime = "win-x64",
+    [string]$ReleaseNotes = "",
     [switch]$SkipTests,
     [switch]$SkipBundledToolchain
 )
@@ -290,7 +291,7 @@ if ([string]::IsNullOrWhiteSpace($AppVersion)) {
 }
 $UpdateManifestScript = Join-Path $Root "update\New-SkkoaStudioUpdateManifest.ps1"
 Assert-RequiredFile $UpdateManifestScript "Update manifest script was not found."
-& $UpdateManifestScript -SourceDir $PublishDir -OutputDir $UpdateArtifactsDir -Version $AppVersion -Runtime $Runtime
+& $UpdateManifestScript -SourceDir $PublishDir -OutputDir $UpdateArtifactsDir -Version $AppVersion -Runtime $Runtime -ReleaseNotes $ReleaseNotes
 
 Write-Step "Creating zip artifact"
 if (Test-Path $ZipPath) {

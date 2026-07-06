@@ -1732,15 +1732,25 @@ public partial class MainForm : Form
             Location = new Point(24, 22),
             AutoSize = true
         };
-        string releaseNotes = string.IsNullOrWhiteSpace(manifest.ReleaseNotes)
-            ? ""
-            : Environment.NewLine + Environment.NewLine + manifest.ReleaseNotes.Trim();
-        Label body = new()
+        string releaseNotes = string.IsNullOrWhiteSpace(manifest.ReleaseNotes) ? "" : manifest.ReleaseNotes.Trim();
+        string bodyText = $"현재 버전: {result.CurrentVersion}{Environment.NewLine}새 버전: {manifest.Version}{Environment.NewLine}변경된 파일만 다운로드한 뒤 SKKOA Studio를 다시 시작합니다.";
+        if (!string.IsNullOrWhiteSpace(releaseNotes))
         {
-            Text = $"현재 버전: {result.CurrentVersion}{Environment.NewLine}새 버전: {manifest.Version}{Environment.NewLine}변경된 파일만 다운로드한 뒤 SKKOA Studio를 다시 시작합니다.{releaseNotes}",
+            bodyText += Environment.NewLine + Environment.NewLine + releaseNotes;
+        }
+
+        TextBox body = new()
+        {
+            Text = bodyText,
             Location = new Point(26, 64),
-            AutoSize = true,
-            MaximumSize = new Size(500, 0)
+            Size = new Size(510, 108),
+            Multiline = true,
+            ReadOnly = true,
+            BorderStyle = BorderStyle.FixedSingle,
+            ScrollBars = ScrollBars.Vertical,
+            BackColor = ThemeSurface(),
+            ForeColor = ThemeText(),
+            TabStop = false
         };
         Button update = new()
         {

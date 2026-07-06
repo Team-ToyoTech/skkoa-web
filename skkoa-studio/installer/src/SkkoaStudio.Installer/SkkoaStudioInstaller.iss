@@ -1,6 +1,6 @@
 #define AppName "SKKOA Studio"
 #ifndef AppVersion
-#define AppVersion "0.1.0"
+#define AppVersion "0.1.1"
 #endif
 #define AppPublisher "Team ToyoTech"
 #define AppExeName "SkkoaStudio.exe"

@@ -58,6 +58,12 @@ python -m pip install -r .\skkoa-studio\installer\scripts\requirements.txt
 .\skkoa-studio\build-editor.ps1
 ```
 
+Release notes for the in-app update dialog can be attached to the generated manifest:
+
+```powershell
+.\skkoa-studio\build-editor.ps1 -ReleaseNotes "업데이트 알림 창의 긴 변경 내역 표시 문제를 수정했습니다."
+```
+
 This restores, tests, publishes, verifies required assets, and creates:
 
 ```text

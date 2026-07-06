@@ -1,0 +1,74 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0/win-x64",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {},
+    ".NETCoreApp,Version=v8.0/win-x64": {
+      "SkkoaStudio/0.1.1": {
+        "dependencies": {
+          "Scintilla.NET.WinForms": "1.0.11.5320",
+          "SkkoaStudio.Core": "1.0.0"
+        },
+        "runtime": {
+          "SkkoaStudio.dll": {}
+        }
+      },
+      "Scintilla.NET.Abstractions/1.0.11": {
+        "runtime": {
+          "lib/netstandard2.1/Scintilla.NET.Abstractions.dll": {
+            "assemblyVersion": "1.0.11.0",
+            "fileVersion": "1.0.11.0"
+          }
+        }
+      },
+      "Scintilla.NET.WinForms/1.0.11.5320": {
+        "dependencies": {
+          "Scintilla.NET.Abstractions": "1.0.11"
+        },
+        "runtime": {
+          "lib/net7.0-windows7.0/Scintilla.NET.WinForms.dll": {
+            "assemblyVersion": "1.0.11.5320",
+            "fileVersion": "1.0.11.5320"
+          }
+        }
+      },
+      "SkkoaStudio.Core/1.0.0": {
+        "runtime": {
+          "SkkoaStudio.Core.dll": {
+            "assemblyVersion": "1.0.0.0",
+            "fileVersion": "1.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "SkkoaStudio/0.1.1": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Scintilla.NET.Abstractions/1.0.11": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-Wa3/27juL7jOsFw1yWH83S4omqhJK1oUOzf4wqhNMdhOZ8gTwz2J17ugu4LRicphcFLEPpREVAzZSMmiPeWicQ==",
+      "path": "scintilla.net.abstractions/1.0.11",
+      "hashPath": "scintilla.net.abstractions.1.0.11.nupkg.sha512"
+    },
+    "Scintilla.NET.WinForms/1.0.11.5320": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-p3jNq74kroZdgEGDN0lB5vzKAagFDIYy+1EROMlqJj62YWoCrj7rTIVkf+Th/+UPoAs27xx//Suqk2Rd+iKvIQ==",
+      "path": "scintilla.net.winforms/1.0.11.5320",
+      "hashPath": "scintilla.net.winforms.1.0.11.5320.nupkg.sha512"
+    },
+    "SkkoaStudio.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
