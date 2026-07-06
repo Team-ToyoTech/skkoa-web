@@ -13,6 +13,8 @@ public sealed class SkkoaStudioSettings
     public bool FormatOnEnter { get; set; } = true;
     public bool FormatOnSave { get; set; }
     public bool DiagnosticsOnType { get; set; } = true;
+    public bool CheckForUpdatesOnStartup { get; set; } = true;
+    public string UpdateManifestUrl { get; set; } = "";
     public string CompilerPath { get; set; } = "";
     public string LibPath { get; set; } = "";
     public List<string> RecentFiles { get; set; } = [];
@@ -116,6 +118,7 @@ public sealed class SkkoaSettingsService
         settings.TabSize = Math.Clamp(settings.TabSize, 1, 12);
         settings.CompilerPath ??= "";
         settings.LibPath ??= "";
+        settings.UpdateManifestUrl ??= "";
         settings.RecentFiles = CleanRecentList(settings.RecentFiles, File.Exists);
         settings.RecentProjects = CleanRecentList(settings.RecentProjects, File.Exists);
         return settings;

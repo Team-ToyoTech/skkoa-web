@@ -12,6 +12,8 @@ skkoa-studio/
     tools/skkoa/
     assets/
     docs/
+  update/
+    New-SkkoaStudioUpdateManifest.ps1
   installer/
     SkkoaStudioInstaller.sln
     src/SkkoaStudio.Installer/
@@ -37,6 +39,7 @@ skkoa-studio/
 - Compile, run, stdin/stdout console, and stop
 - Minimal language-level step debugger
 - Installer registration for Start Menu, Apps & Features, uninstall, and file associations
+- Startup update notification backed by a static update manifest
 
 ## Build Editor
 
@@ -60,6 +63,8 @@ This restores, tests, publishes, verifies required assets, and creates:
 ```text
 skkoa-studio/editor/artifacts/SKKOA-Studio-win-x64/
 skkoa-studio/editor/artifacts/SKKOA-Studio-win-x64.zip
+skkoa-studio/editor/artifacts/updates/win-x64/manifest.json
+skkoa-studio/editor/artifacts/updates/win-x64/files/
 ```
 
 ## Build Installer
@@ -86,6 +91,8 @@ skkoa-studio/installer/output/SKKOA-Studio-Setup-x64.exe
 
 ```text
 download/studio/SKKOA-Studio-Setup-x64.exe
+download/studio/updates/win-x64/manifest.json
+download/studio/updates/win-x64/files/
 ```
 
 The public download page for the IDE is:
@@ -93,6 +100,21 @@ The public download page for the IDE is:
 ```text
 download/studio/index.html
 ```
+
+## Updates
+
+At startup, SKKOA Studio checks the update manifest once. The default sources are:
+
+```text
+https://skkoa.toyotech.dev/download/studio/updates/win-x64/manifest.json
+https://raw.githubusercontent.com/Team-ToyoTech/skkoa-web/main/download/studio/updates/win-x64/manifest.json
+```
+
+When a newer manifest version is found, the app shows an update dialog. Pressing the update button launches `SkkoaStudio.Updater.exe` from a temporary copy, closes Studio, verifies local file hashes, downloads only files whose SHA-256 differs from the manifest, applies them, and restarts Studio.
+
+`SKKOA_STUDIO_UPDATE_MANIFEST_URL` or `UpdateManifestUrl` in the user settings file can override or prepend custom manifest locations.
+
+Release version is read from `skkoa-studio/editor/src/SkkoaStudio/SkkoaStudio.csproj` by the update manifest and installer build scripts, so bump that project version before publishing a new update.
 
 ## Install
 

@@ -1,5 +1,7 @@
 #define AppName "SKKOA Studio"
+#ifndef AppVersion
 #define AppVersion "0.1.0"
+#endif
 #define AppPublisher "Team ToyoTech"
 #define AppExeName "SkkoaStudio.exe"
 #ifndef SourceDir
@@ -16,7 +18,7 @@ AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL=https://skkoa.toyotech.dev/
 AppSupportURL=https://skkoa.toyotech.dev/docs/
-AppUpdatesURL=https://skkoa.toyotech.dev/
+AppUpdatesURL=https://skkoa.toyotech.dev/download/studio/
 DefaultDirName={autopf}\SKKOA Studio
 DefaultGroupName=SKKOA Studio
 DisableProgramGroupPage=no
@@ -443,6 +445,9 @@ procedure ValidateInstalledFiles();
 begin
   if not FileExists(ExpandConstant('{app}\{#AppExeName}')) then
     MsgBox('SKKOA Studio was installed, but the main executable is missing. Rebuild the editor artifact and run setup again.', mbError, MB_OK);
+
+  if not FileExists(ExpandConstant('{app}\SkkoaStudio.Updater.exe')) then
+    MsgBox('SKKOA Studio was installed, but the updater is missing. In-app updates will not work until the installer artifact is rebuilt.', mbError, MB_OK);
 
   if not FileExists(ExpandConstant('{app}\tools\skkoa\skkoa.exe')) then
     MsgBox('SKKOA Studio was installed, but the bundled compiler is missing. Compile and Run will not work until the installer artifact is rebuilt.', mbError, MB_OK);

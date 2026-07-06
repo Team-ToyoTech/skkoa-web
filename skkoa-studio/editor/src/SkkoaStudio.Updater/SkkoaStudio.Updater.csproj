@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>SkkoaStudio.Updater</AssemblyName>
+    <RootNamespace>SkkoaStudio.Updater</RootNamespace>
+    <Product>SKKOA Studio Updater</Product>
+    <Company>Team ToyoTech</Company>
+    <AssemblyTitle>SKKOA Studio Updater</AssemblyTitle>
+    <Version>0.1.0</Version>
+    <FileVersion>0.1.0.0</FileVersion>
+    <AssemblyVersion>0.1.0.0</AssemblyVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SkkoaStudio.Core\SkkoaStudio.Core.csproj" />
+  </ItemGroup>
+</Project>

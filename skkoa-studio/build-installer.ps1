@@ -7,6 +7,7 @@ Set-StrictMode -Version Latest
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $InstallerRoot = Join-Path $Root "installer"
 $EditorArtifact = Join-Path $Root "editor\artifacts\SKKOA-Studio-win-x64"
+$EditorProject = Join-Path $Root "editor\src\SkkoaStudio\SkkoaStudio.csproj"
 $OutputDir = Join-Path $InstallerRoot "output"
 $IssPath = Join-Path $InstallerRoot "src\SkkoaStudio.Installer\SkkoaStudioInstaller.iss"
 $ToolsDir = Join-Path $InstallerRoot ".tools"
@@ -83,6 +84,7 @@ function Install-LocalInnoSetup {
 }
 
 Assert-RequiredFile (Join-Path $EditorArtifact "SkkoaStudio.exe") "Editor publish output was not found. Run skkoa-studio\build-editor.ps1 first."
+Assert-RequiredFile (Join-Path $EditorArtifact "SkkoaStudio.Updater.exe") "Editor updater was not found in the editor artifact."
 Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\skkoa.exe") "Bundled SKKOA compiler was not found in the editor artifact."
 Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\skkoa.cmd") "Bundled SKKOA compiler launcher was not found in the editor artifact."
 Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\mingw64\bin\gcc.exe") "Bundled GCC was not found in the editor artifact."
@@ -90,6 +92,13 @@ Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\min
 Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\mingw64\bin\nasm.exe") "Bundled NASM was not found in the editor artifact."
 Assert-RequiredFile (Join-Path $EditorArtifact "tools\skkoa\toolchain\msys64\usr\bin\bash.exe") "Bundled MSYS2 runtime tools were not found in the editor artifact."
 Assert-RequiredFile (Join-Path $EditorArtifact "assets\icons\skkoa.ico") "Editor icon was not found in the editor artifact."
+Assert-RequiredFile $EditorProject "Editor project was not found."
+
+[xml]$EditorProjectXml = Get-Content -LiteralPath $EditorProject
+$AppVersion = ($EditorProjectXml.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+if ([string]::IsNullOrWhiteSpace($AppVersion)) {
+    throw "Could not read editor version from $EditorProject"
+}
 
 Write-Step "Generating icons"
 $Python = @(Find-Python)
@@ -131,7 +140,7 @@ if (!$Iscc) {
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 Write-Step "Building installer with $Iscc"
 Assert-RequiredFile $IssPath "Installer script was not found."
-Invoke-Native $Iscc @("/DSourceDir=$EditorArtifact", "/DOutputDir=$OutputDir", $IssPath) "Installer build failed."
+Invoke-Native $Iscc @("/DSourceDir=$EditorArtifact", "/DOutputDir=$OutputDir", "/DAppVersion=$AppVersion", $IssPath) "Installer build failed."
 
 $Setup = Join-Path $OutputDir "SKKOA-Studio-Setup-x64.exe"
 Assert-RequiredFile $Setup "Installer output missing."

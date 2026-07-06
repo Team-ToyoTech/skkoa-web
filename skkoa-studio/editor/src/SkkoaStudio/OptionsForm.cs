@@ -29,6 +29,8 @@ public sealed class OptionsForm : Form
             FormatOnEnter = source.FormatOnEnter,
             FormatOnSave = source.FormatOnSave,
             DiagnosticsOnType = source.DiagnosticsOnType,
+            CheckForUpdatesOnStartup = source.CheckForUpdatesOnStartup,
+            UpdateManifestUrl = source.UpdateManifestUrl ?? "",
             CompilerPath = source.CompilerPath ?? "",
             LibPath = source.LibPath ?? "",
             RecentFiles = [.. (source.RecentFiles ?? [])],

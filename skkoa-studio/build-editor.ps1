@@ -13,6 +13,7 @@ $EditorRoot = Join-Path $Root "editor"
 $ArtifactsRoot = Join-Path $EditorRoot "artifacts"
 $PublishDir = Join-Path $ArtifactsRoot "SKKOA-Studio-win-x64"
 $ZipPath = Join-Path $ArtifactsRoot "SKKOA-Studio-win-x64.zip"
+$UpdateArtifactsDir = Join-Path $ArtifactsRoot "updates\$Runtime"
 $CompilerOut = Join-Path $EditorRoot "tools\skkoa\skkoa.exe"
 $BundledToolchainRoot = Join-Path $EditorRoot "tools\skkoa\toolchain"
 $BundledMsysRoot = Join-Path $BundledToolchainRoot "msys64"
@@ -251,8 +252,16 @@ $Project = Join-Path $EditorRoot "src\SkkoaStudio\SkkoaStudio.csproj"
 Assert-RequiredFile $Project "Editor project was not found."
 Invoke-Native $Dotnet @("publish", $Project, "-c", $Configuration, "-r", $Runtime, "--self-contained", "false", "-o", $PublishDir) "dotnet publish failed."
 
+Write-Step "Publishing updater"
+$UpdaterProject = Join-Path $EditorRoot "src\SkkoaStudio.Updater\SkkoaStudio.Updater.csproj"
+Assert-RequiredFile $UpdaterProject "Updater project was not found."
+Invoke-Native $Dotnet @("publish", $UpdaterProject, "-c", $Configuration, "-r", $Runtime, "--self-contained", "false", "-o", $PublishDir) "dotnet updater publish failed."
+
 $RequiredFiles = @(
     (Join-Path $PublishDir "SkkoaStudio.exe"),
+    (Join-Path $PublishDir "SkkoaStudio.Updater.exe"),
+    (Join-Path $PublishDir "SkkoaStudio.Updater.deps.json"),
+    (Join-Path $PublishDir "SkkoaStudio.Updater.runtimeconfig.json"),
     (Join-Path $PublishDir "assets\icons\skkoa.ico"),
     (Join-Path $PublishDir "assets\icons\skkoa-file.ico"),
     (Join-Path $PublishDir "tools\skkoa\skkoa.exe"),
@@ -273,6 +282,16 @@ foreach ($Required in $RequiredFiles) {
     Assert-RequiredFile $Required "Required publish file missing."
 }
 
+Write-Step "Generating update manifest"
+[xml]$ProjectXml = Get-Content -LiteralPath $Project
+$AppVersion = ($ProjectXml.Project.PropertyGroup | Where-Object { $_.Version } | Select-Object -First 1).Version
+if ([string]::IsNullOrWhiteSpace($AppVersion)) {
+    throw "Could not read editor version from $Project"
+}
+$UpdateManifestScript = Join-Path $Root "update\New-SkkoaStudioUpdateManifest.ps1"
+Assert-RequiredFile $UpdateManifestScript "Update manifest script was not found."
+& $UpdateManifestScript -SourceDir $PublishDir -OutputDir $UpdateArtifactsDir -Version $AppVersion -Runtime $Runtime
+
 Write-Step "Creating zip artifact"
 if (Test-Path $ZipPath) {
     Remove-Item -LiteralPath $ZipPath -Force
@@ -281,3 +300,4 @@ Compress-Archive -Path (Join-Path $PublishDir "*") -DestinationPath $ZipPath -Fo
 
 Write-Step "Editor artifact: $PublishDir"
 Write-Step "Editor zip: $ZipPath"
+Write-Step "Update manifest: $(Join-Path $UpdateArtifactsDir 'manifest.json')"

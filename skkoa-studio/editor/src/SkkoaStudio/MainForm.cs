@@ -12,6 +12,7 @@ using SkkoaStudio.Core.Formatting;
 using SkkoaStudio.Core.Language;
 using SkkoaStudio.Core.ProjectSystem;
 using SkkoaStudio.Core.Settings;
+using SkkoaStudio.Core.Updates;
 
 namespace SkkoaStudio;
 
@@ -38,6 +39,7 @@ public partial class MainForm : Form
     private readonly SkkoaSyntaxHighlighter highlighter = new();
     private readonly SkkoaCompletionProvider completionProvider = new();
     private readonly SkkoaFormatter formatter = new();
+    private readonly SkkoaUpdateService updateService = new();
     private readonly System.Windows.Forms.Timer diagnosticsTimer = new();
     private readonly ToolTip diagnosticsToolTip = new();
     private readonly HashSet<string> reportedEditorErrors = [];
@@ -58,6 +60,7 @@ public partial class MainForm : Form
     private CancellationTokenSource? buildCts;
     private int untitledCounter = 1;
     private string completionPrefix = "";
+    private bool startupUpdateCheckStarted;
 
     private readonly string[] startupArgs;
 
@@ -92,6 +95,7 @@ public partial class MainForm : Form
         bottomTabs.SelectedIndexChanged += (_, _) => ScheduleBottomTabHeaderFillUpdate();
         editorOutputSplit.Panel2.SizeChanged += (_, _) => UpdateBottomTabHeaderFill();
         Shown += (_, _) => ScheduleBottomTabHeaderFillUpdate();
+        Shown += async (_, _) => await CheckForUpdatesOnStartupAsync();
         diagnosticsTimer.Interval = 420;
         diagnosticsTimer.Tick += async (_, _) => await RunDiagnosticsForActiveEditorAsync();
 
@@ -196,14 +200,10 @@ public partial class MainForm : Form
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
-        foreach (TabPage page in editorTabs.TabPages)
+        if (!ConfirmSaveAllTabs())
         {
-            editorTabs.SelectedTab = page;
-            if (!ConfirmSaveActiveTab())
-            {
-                e.Cancel = true;
-                return;
-            }
+            e.Cancel = true;
+            return;
         }
         runningProcess?.Stop();
         runningProcess?.Dispose();
@@ -388,6 +388,20 @@ public partial class MainForm : Form
             return false;
         }
         return result != DialogResult.Yes || SaveFile();
+    }
+
+    private bool ConfirmSaveAllTabs()
+    {
+        foreach (TabPage page in editorTabs.TabPages)
+        {
+            editorTabs.SelectedTab = page;
+            if (!ConfirmSaveActiveTab())
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void CreateEditorTab(SkkoaDocument document)
@@ -1645,6 +1659,224 @@ public partial class MainForm : Form
         ApplySettingsToUi();
     }
 
+    private async Task CheckForUpdatesOnStartupAsync()
+    {
+        if (startupUpdateCheckStarted)
+        {
+            return;
+        }
+        startupUpdateCheckStarted = true;
+
+        if (!settings.CheckForUpdatesOnStartup)
+        {
+            return;
+        }
+
+        try
+        {
+            IReadOnlyList<Uri> manifestUris = SkkoaUpdateService.GetManifestUris(settings.UpdateManifestUrl);
+            if (manifestUris.Count == 0)
+            {
+                return;
+            }
+
+            using CancellationTokenSource cts = new(TimeSpan.FromSeconds(12));
+            string currentVersion = SkkoaUpdateService.GetCurrentVersion();
+            SkkoaUpdateCheckResult result = await updateService.CheckForUpdatesAsync(manifestUris, currentVersion, cts.Token);
+            if (IsDisposed || !IsHandleCreated || !result.IsUpdateAvailable)
+            {
+                if (result.Errors.Count >= manifestUris.Count)
+                {
+                    AppendOutput("업데이트 확인 실패: " + result.Errors[0] + Environment.NewLine);
+                }
+                return;
+            }
+
+            buildStatus.Text = "Update available";
+            if (ShowUpdatePrompt(result) == DialogResult.OK)
+            {
+                StartStudioUpdate(result);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            AppendOutput("업데이트 확인 시간이 초과되었습니다." + Environment.NewLine);
+        }
+        catch (Exception ex) when (IsRecoverableException(ex))
+        {
+            AppendOutput("업데이트 확인 실패: " + ex.Message + Environment.NewLine);
+        }
+    }
+
+    private DialogResult ShowUpdatePrompt(SkkoaUpdateCheckResult result)
+    {
+        SkkoaUpdateManifest manifest = result.Manifest ?? throw new InvalidOperationException("Update manifest is missing.");
+        using Form form = new()
+        {
+            Text = "SKKOA Studio 업데이트",
+            StartPosition = FormStartPosition.CenterParent,
+            Size = new Size(560, 270),
+            FormBorderStyle = FormBorderStyle.FixedDialog,
+            MaximizeBox = false,
+            MinimizeBox = false,
+            BackColor = ThemeBackground(),
+            ForeColor = ThemeText(),
+            Icon = Icon
+        };
+
+        Label title = new()
+        {
+            Text = "새 버전이 있습니다",
+            Font = new Font(Font.FontFamily, 15, FontStyle.Bold),
+            ForeColor = PrimaryColor(),
+            Location = new Point(24, 22),
+            AutoSize = true
+        };
+        string releaseNotes = string.IsNullOrWhiteSpace(manifest.ReleaseNotes)
+            ? ""
+            : Environment.NewLine + Environment.NewLine + manifest.ReleaseNotes.Trim();
+        Label body = new()
+        {
+            Text = $"현재 버전: {result.CurrentVersion}{Environment.NewLine}새 버전: {manifest.Version}{Environment.NewLine}변경된 파일만 다운로드한 뒤 SKKOA Studio를 다시 시작합니다.{releaseNotes}",
+            Location = new Point(26, 64),
+            AutoSize = true,
+            MaximumSize = new Size(500, 0)
+        };
+        Button update = new()
+        {
+            Text = "업데이트",
+            DialogResult = DialogResult.OK,
+            Location = new Point(338, 190),
+            Width = 96
+        };
+        Button later = new()
+        {
+            Text = "나중에",
+            DialogResult = DialogResult.Cancel,
+            Location = new Point(440, 190),
+            Width = 96
+        };
+        StyleButton(update, PrimaryColor(), PrimaryColor(), Color.White);
+        StyleButton(later, ThemeSurfaceAlt(), ThemeBorder(), ThemeText());
+        form.Controls.AddRange([title, body, update, later]);
+        form.AcceptButton = update;
+        form.CancelButton = later;
+        return form.ShowDialog(this);
+    }
+
+    private void StartStudioUpdate(SkkoaUpdateCheckResult result)
+    {
+        if (result.ManifestUri == null)
+        {
+            return;
+        }
+
+        if (!ConfirmSaveAllTabs())
+        {
+            return;
+        }
+
+        try
+        {
+            string updaterPath = PrepareUpdaterCopy();
+            string installDirectory = AppContext.BaseDirectory;
+            ProcessStartInfo startInfo = new(updaterPath)
+            {
+                WorkingDirectory = Path.GetDirectoryName(updaterPath) ?? installDirectory,
+                UseShellExecute = false
+            };
+            startInfo.ArgumentList.Add("--manifest-url");
+            startInfo.ArgumentList.Add(result.ManifestUri.ToString());
+            startInfo.ArgumentList.Add("--install-dir");
+            startInfo.ArgumentList.Add(installDirectory);
+            startInfo.ArgumentList.Add("--current-pid");
+            startInfo.ArgumentList.Add(Process.GetCurrentProcess().Id.ToString());
+            startInfo.ArgumentList.Add("--restart");
+            startInfo.ArgumentList.Add("SkkoaStudio.exe");
+
+            Process.Start(startInfo);
+            buildStatus.Text = "Updating";
+            Close();
+        }
+        catch (Exception ex) when (IsRecoverableException(ex))
+        {
+            ShowError("업데이트를 시작할 수 없습니다." + Environment.NewLine + ex.Message);
+        }
+    }
+
+    private static string PrepareUpdaterCopy()
+    {
+        string appDirectory = AppContext.BaseDirectory;
+        string sourceUpdaterPath = Path.Combine(appDirectory, "SkkoaStudio.Updater.exe");
+        if (!File.Exists(sourceUpdaterPath))
+        {
+            throw new FileNotFoundException("업데이트 관리자 실행 파일을 찾을 수 없습니다.", sourceUpdaterPath);
+        }
+
+        string tempRoot = Path.Combine(Path.GetTempPath(), "SKKOA Studio", "updater");
+        CleanupOldUpdaterCopies(tempRoot);
+        string targetDirectory = Path.Combine(tempRoot, Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(targetDirectory);
+
+        foreach (string sourcePath in Directory.EnumerateFiles(appDirectory, "SkkoaStudio.Updater.*"))
+        {
+            CopyUpdaterDependency(sourcePath, targetDirectory);
+        }
+        CopyUpdaterDependency(Path.Combine(appDirectory, "SkkoaStudio.Core.dll"), targetDirectory, required: true);
+        CopyUpdaterDependency(Path.Combine(appDirectory, "SkkoaStudio.Core.pdb"), targetDirectory, required: false);
+
+        string targetUpdaterPath = Path.Combine(targetDirectory, "SkkoaStudio.Updater.exe");
+        if (!File.Exists(targetUpdaterPath))
+        {
+            throw new FileNotFoundException("업데이트 관리자 복사본을 만들 수 없습니다.", targetUpdaterPath);
+        }
+
+        return targetUpdaterPath;
+    }
+
+    private static void CopyUpdaterDependency(string sourcePath, string targetDirectory, bool required = false)
+    {
+        if (!File.Exists(sourcePath))
+        {
+            if (required)
+            {
+                throw new FileNotFoundException("업데이트 관리자 의존 파일을 찾을 수 없습니다.", sourcePath);
+            }
+            return;
+        }
+
+        File.Copy(sourcePath, Path.Combine(targetDirectory, Path.GetFileName(sourcePath)), overwrite: true);
+    }
+
+    private static void CleanupOldUpdaterCopies(string tempRoot)
+    {
+        try
+        {
+            if (!Directory.Exists(tempRoot))
+            {
+                return;
+            }
+
+            foreach (string directory in Directory.GetDirectories(tempRoot))
+            {
+                try
+                {
+                    DirectoryInfo info = new(directory);
+                    if (info.CreationTimeUtc < DateTime.UtcNow.AddDays(-2))
+                    {
+                        info.Delete(recursive: true);
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+        catch
+        {
+        }
+    }
+
     private async Task InstallToolchainAsync()
     {
         try
@@ -2360,7 +2592,7 @@ public partial class MainForm : Form
         };
         Label text = new()
         {
-            Text = "SKKOA; LTW IDE\r\nStarter Kit with Korean Oriented Architecture; Language to Write\r\nVersion 0.1.0\r\nTeam ToyoTech",
+            Text = $"SKKOA; LTW IDE\r\nStarter Kit with Korean Oriented Architecture; Language to Write\r\nVersion {SkkoaUpdateService.GetCurrentVersion()}\r\nTeam ToyoTech",
             Location = new Point(111, 66),
             AutoSize = true,
             MaximumSize = new Size(400, 0)

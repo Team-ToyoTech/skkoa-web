@@ -34,6 +34,14 @@ dotnet publish .\src\SkkoaStudio\SkkoaStudio.csproj -c Release -r win-x64 --self
 
 The publish output includes `tools/skkoa/skkoa.exe`, `stack.koa`, `queue.koa`, `structures.koa`, the Windows toolchain repair script, and the bundled MSYS2 NASM/GCC toolchain.
 
+The release build script also publishes `SkkoaStudio.Updater.exe` and generates an update manifest under:
+
+```text
+skkoa-studio/editor/artifacts/updates/win-x64/
+```
+
+The manifest lists every shipped file with size and SHA-256. During an update, only files whose local hash differs from that manifest are downloaded.
+
 ## Toolchain
 
 `--check` diagnostics only need the bundled compiler. Native compile/run also needs NASM and GCC, which are included in installer builds under `tools/skkoa/toolchain/msys64`. SKKOA Studio still exposes `Tools > Install/Repair Toolchain` as a recovery action if a development checkout or damaged install is missing the bundled toolchain.
