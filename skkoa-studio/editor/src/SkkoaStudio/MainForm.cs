@@ -61,6 +61,7 @@ public partial class MainForm : Form
     private int untitledCounter = 1;
     private string completionPrefix = "";
     private bool startupUpdateCheckStarted;
+    private bool updateShutdownInProgress;
 
     private readonly string[] startupArgs;
 
@@ -200,7 +201,7 @@ public partial class MainForm : Form
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
-        if (!ConfirmSaveAllTabs())
+        if (!updateShutdownInProgress && !ConfirmSaveAllTabs())
         {
             e.Cancel = true;
             return;
@@ -1693,7 +1694,7 @@ public partial class MainForm : Form
             }
 
             buildStatus.Text = "Update available";
-            if (ShowUpdatePrompt(result) == DialogResult.OK)
+            if (ShowUpdatePrompt(result))
             {
                 StartStudioUpdate(result);
             }
@@ -1708,9 +1709,10 @@ public partial class MainForm : Form
         }
     }
 
-    private DialogResult ShowUpdatePrompt(SkkoaUpdateCheckResult result)
+    private bool ShowUpdatePrompt(SkkoaUpdateCheckResult result)
     {
         SkkoaUpdateManifest manifest = result.Manifest ?? throw new InvalidOperationException("Update manifest is missing.");
+        bool updateApproved = false;
         using Form form = new()
         {
             Text = "SKKOA Studio 업데이트",
@@ -1755,7 +1757,6 @@ public partial class MainForm : Form
         Button update = new()
         {
             Text = "업데이트",
-            DialogResult = DialogResult.OK,
             Location = new Point(338, 190),
             Width = 96
         };
@@ -1766,12 +1767,17 @@ public partial class MainForm : Form
             Location = new Point(440, 190),
             Width = 96
         };
+        update.Click += (_, _) =>
+        {
+            updateApproved = true;
+            form.DialogResult = DialogResult.OK;
+            form.Close();
+        };
         StyleButton(update, PrimaryColor(), PrimaryColor(), Color.White);
         StyleButton(later, ThemeSurfaceAlt(), ThemeBorder(), ThemeText());
         form.Controls.AddRange([title, body, update, later]);
-        form.AcceptButton = update;
         form.CancelButton = later;
-        return form.ShowDialog(this);
+        return form.ShowDialog(this) == DialogResult.OK && updateApproved;
     }
 
     private void StartStudioUpdate(SkkoaUpdateCheckResult result)
@@ -1804,7 +1810,11 @@ public partial class MainForm : Form
             startInfo.ArgumentList.Add("--restart");
             startInfo.ArgumentList.Add("SkkoaStudio.exe");
 
-            Process.Start(startInfo);
+            if (Process.Start(startInfo) == null)
+            {
+                throw new InvalidOperationException("업데이트 관리자를 시작하지 못했습니다.");
+            }
+            updateShutdownInProgress = true;
             buildStatus.Text = "Updating";
             Close();
         }
