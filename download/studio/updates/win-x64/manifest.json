@@ -1,13 +1,13 @@
 ﻿{
     "schemaVersion":  1,
     "application":  "SKKOA Studio",
-    "version":  "0.1.1",
+    "version":  "0.1.2",
     "runtime":  "win-x64",
-    "publishedAt":  "2026-07-06T10:47:33.9204593+00:00",
+    "publishedAt":  "2026-07-06T11:32:01.7286482+00:00",
     "minimumUpdaterVersion":  "0.1.0",
     "filesBaseUrl":  "files/",
     "installerUrl":  "/download/studio/SKKOA-Studio-Setup-x64.exe",
-    "releaseNotes":  "업데이트 알림 창에서 긴 변경 내역이 잘리지 않도록 스크롤 가능한 표시 영역으로 수정했습니다.",
+    "releaseNotes":  "업데이트를 나중에 하기로 선택했을 때 상태 표시줄에 업데이트 가능 문구가 계속 남는 문제를 수정했습니다.",
     "files":  [
                   {
                       "path":  "assets/icons/skkoa.ico",
@@ -60,37 +60,37 @@
                   {
                       "path":  "SkkoaStudio.Core.dll",
                       "size":  121856,
-                      "sha256":  "3bf165623dea587b601d4404c7371339a87f807cb2726fd0fdc06a029f9fcf71",
+                      "sha256":  "7b47d7973383f05832db02a05d2f31c7b910c678716000da575cd748b2c781db",
                       "url":  "SkkoaStudio.Core.dll"
                   },
                   {
                       "path":  "SkkoaStudio.Core.pdb",
                       "size":  41276,
-                      "sha256":  "646492ea2b04e31b6682820ba9be50cfcc868f29825cb1758eb0056bcb15faa6",
+                      "sha256":  "2d4ee46d9cecf86fac4f4ac0713397ea53880436e2fb3ce29f62bd65cb5d0147",
                       "url":  "SkkoaStudio.Core.pdb"
                   },
                   {
                       "path":  "SkkoaStudio.deps.json",
                       "size":  2217,
-                      "sha256":  "09b9fda9ac9a091f6ef3db33a4fb870385ae8bb69cc726fa072b4e33a51d9502",
+                      "sha256":  "860c5f765efd998d496d49aabd7f46ec22abb017686035e7cbafd9ff80f0d392",
                       "url":  "SkkoaStudio.deps.json"
                   },
                   {
                       "path":  "SkkoaStudio.dll",
-                      "size":  173056,
-                      "sha256":  "e4bffd19f75ac1ec91b67f1632db8371665709d626b68ef0e1f714826405a4f8",
+                      "size":  173568,
+                      "sha256":  "2c7c2cc7564627d32eb980801c6b4fe8f0599a5380c506907fadb46b1ec0a832",
                       "url":  "SkkoaStudio.dll"
                   },
                   {
                       "path":  "SkkoaStudio.exe",
                       "size":  204288,
-                      "sha256":  "2e1241ab0d5cbae8a5b435082e6ea1715a96bcf8c80c36efc98b92e97b0c7e58",
+                      "sha256":  "8f07abae18bb62fda15b553269f75f97eb270796c9f51fd25389e174ce44d522",
                       "url":  "SkkoaStudio.exe"
                   },
                   {
                       "path":  "SkkoaStudio.pdb",
-                      "size":  42228,
-                      "sha256":  "8fa351bfdb8b147f3c3d4335471c7d29076d63fe0611eff846984fd6f14b9840",
+                      "size":  42300,
+                      "sha256":  "2285fb84865696707cac236066364ffd075825637efe1058c638fabfe28052e4",
                       "url":  "SkkoaStudio.pdb"
                   },
                   {
@@ -102,25 +102,25 @@
                   {
                       "path":  "SkkoaStudio.Updater.deps.json",
                       "size":  905,
-                      "sha256":  "9dfce244f256d4465693724ec9ae12e655f5b86a38a7debe1eba726c28515d21",
+                      "sha256":  "e8656cb8217a7cf13dfb63e253a3518199a655dc5cc9c49b3f736c770b1cc457",
                       "url":  "SkkoaStudio.Updater.deps.json"
                   },
                   {
                       "path":  "SkkoaStudio.Updater.dll",
                       "size":  12288,
-                      "sha256":  "75d72d187dedc7c1c622a46c2cf91beeb479094cae1b5e540f0a683abcf1e1b9",
+                      "sha256":  "10d6720e57ddc4604565e39fd7076adb91c777e375d91ad0ae53126940601e3a",
                       "url":  "SkkoaStudio.Updater.dll"
                   },
                   {
                       "path":  "SkkoaStudio.Updater.exe",
                       "size":  151552,
-                      "sha256":  "b269c04a3a91cc6a1bc14c67b26c8555d1bcae2118c9c500f752ebb8814e8875",
+                      "sha256":  "a07013a221198e7c4fa77f9a6c7a542bcd6286b8d75fed0cd6f327091d04ba63",
                       "url":  "SkkoaStudio.Updater.exe"
                   },
                   {
                       "path":  "SkkoaStudio.Updater.pdb",
                       "size":  13248,
-                      "sha256":  "d99bca8918770b300cfbd87d3c5282bb53619d54004ca25a0171514b5df3d52e",
+                      "sha256":  "d2a867650b43aec77e61b2e04200466662b3e832de1a886ddb8c18b95ceccf80",
                       "url":  "SkkoaStudio.Updater.pdb"
                   },
                   {
@@ -162,7 +162,7 @@
                   {
                       "path":  "tools/skkoa/skkoa.exe",
                       "size":  516060,
-                      "sha256":  "39415e27ec0ca8d6a60aa7f5861db40201500a328aef0a9fa7e154bd0ec97d0d",
+                      "sha256":  "f44d087b344573a35e5300b1bfd8beddf8539dcc98df43e92857b5cda1ebda37",
                       "url":  "tools/skkoa/skkoa.exe"
                   }
               ],

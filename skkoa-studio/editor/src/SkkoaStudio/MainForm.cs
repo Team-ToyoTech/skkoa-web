@@ -1698,6 +1698,10 @@ public partial class MainForm : Form
             {
                 StartStudioUpdate(result);
             }
+            else
+            {
+                buildStatus.Text = "Update skipped";
+            }
         }
         catch (OperationCanceledException)
         {
