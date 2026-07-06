@@ -85,19 +85,19 @@ Default settings include:
 
 ```json
 {
-  "theme": "Dark",
-  "primaryColor": "#a259ff",
-  "fontFamily": "Consolas",
-  "fontSize": 12,
-  "tabSize": 4,
-  "insertSpaces": true,
-  "formatOnEnter": true,
-  "formatOnSave": false,
-  "diagnosticsOnType": true,
-  "compilerPath": "",
-  "libPath": "",
-  "recentFiles": [],
-  "recentProjects": []
+    "theme": "Dark",
+    "primaryColor": "#a259ff",
+    "fontFamily": "Consolas",
+    "fontSize": 12,
+    "tabSize": 4,
+    "insertSpaces": true,
+    "formatOnEnter": true,
+    "formatOnSave": false,
+    "diagnosticsOnType": true,
+    "compilerPath": "",
+    "libPath": "",
+    "recentFiles": [],
+    "recentProjects": []
 }
 ```
 

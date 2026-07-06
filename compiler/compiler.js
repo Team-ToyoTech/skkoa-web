@@ -192,7 +192,9 @@ function normalizeLines(code) {
 }
 
 function normalizeImportPath(path) {
-    const normalized = String(path || "").trim().replace(/\\/g, "/");
+    const normalized = String(path || "")
+        .trim()
+        .replace(/\\/g, "/");
     if (
         !normalized ||
         normalized.startsWith("/") ||
@@ -220,8 +222,7 @@ async function fetchImportSource(path) {
         try {
             const response = await fetch(candidate);
             if (response.ok) return response.text();
-        } catch {
-        }
+        } catch {}
     }
 
     throw new Error(`가져오기 파일을 찾을 수 없습니다: ${normalized}`);
@@ -582,7 +583,7 @@ function takeConsoleLine() {
 
     const value = consoleInputBuffer.slice(0, newline.index);
     consoleInputBuffer = consoleInputBuffer.slice(
-        newline.index + newline[0].length
+        newline.index + newline[0].length,
     );
     return value;
 }

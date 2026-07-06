@@ -2,8 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
         const defaultCompilerDownloadPath =
             "/compiler/download/skkoa-windows.exe";
-        const studioDownloadPath =
-            "/download/studio/SKKOA-Studio-Setup-x64.exe";
+        const studioPagePath = "/download/studio/";
 
         function startDownload(path, fileName) {
             const link = document.createElement("a");
@@ -51,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (studioBtn) {
             studioBtn.addEventListener("click", function (e) {
                 e.preventDefault();
-                startDownload(studioDownloadPath, "SKKOA-Studio-Setup-x64.exe");
+                window.location.href = studioPagePath;
             });
         }
 
