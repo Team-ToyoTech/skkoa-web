@@ -16,9 +16,9 @@
     <Company>Team ToyoTech</Company>
     <AssemblyTitle>SKKOA; LTW IDE</AssemblyTitle>
     <Description>IDE for SKKOA; LTW, Starter Kit with Korean Oriented Architecture; Language to Write</Description>
-    <Version>0.1.2</Version>
-    <FileVersion>0.1.2.0</FileVersion>
-    <AssemblyVersion>0.1.2.0</AssemblyVersion>
+    <Version>0.1.3</Version>
+    <FileVersion>0.1.3.0</FileVersion>
+    <AssemblyVersion>0.1.3.0</AssemblyVersion>
     <Copyright>Copyright © Team ToyoTech</Copyright>
   </PropertyGroup>
 

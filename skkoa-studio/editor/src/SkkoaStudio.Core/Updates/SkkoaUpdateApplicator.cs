@@ -113,7 +113,7 @@ public sealed class SkkoaUpdateApplicator
         CancellationToken cancellationToken)
     {
         using HttpRequestMessage request = new(HttpMethod.Get, fileUri);
-        request.Headers.UserAgent.Add(new ProductInfoHeaderValue("SKKOA-Studio-Updater", "0.1.0"));
+        request.Headers.UserAgent.Add(new ProductInfoHeaderValue("SKKOA-Studio-Updater", SkkoaUpdateService.GetCurrentVersion()));
 
         using HttpResponseMessage response = await httpClient.SendAsync(
             request,
